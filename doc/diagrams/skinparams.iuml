@@ -1,0 +1,184 @@
+'-------------------------------------------------------------------------------
+' Diagram-level General:
+'-------------------------------------------------------------------------------
+
+skinparam roundcorner 20
+skinparam padding 2
+skinparam shadowing false
+skinparam noteshadowing false
+skinparam backgroundColor #FAFAFA
+skinparam titleFontSize 12
+skinparam defaultFontSize 12
+skinparam defaultFontColor #222021
+skinparam svglinktarget _blank
+skinparam hyperlinkColor #222021
+skinparam hypderlinkunderline false
+' skinparam linetype polyline
+' skinparam linetype ortho
+
+skinparam stereotypePosition bottom
+skinparam nodesep 0
+skinparam ranksep 100
+
+'-------------------------------------------
+' Common:
+'-------------------------------------------
+skinparam note {
+    FontSize 19
+    'FontSize 20
+    'FontStyle italic
+    'BorderColor #888099
+    BorderColor #000000
+    BorderThickness 1
+    FontColor #222222
+    Padding 8
+    BackgroundColor #ffffff
+    'BackgroundColor #eeeeee
+}
+
+
+'-------------------------------------------
+' Sequence Diagrams:
+'-------------------------------------------
+skinparam sequenceGroup {
+    HeaderFontStyle bold
+    HeaderFontSize 16
+    FontSize 20
+    FontStyle bold
+    'BorderColor #999088
+    'BorderColor #000000
+    BorderColor #00000066
+    BorderThickness 1
+    HeaderFontSize 24
+    HeaderFontColor #222222
+    BackgroundColor #EEEEEE
+}
+
+skinparam sequenceGroupBody {
+    'BackgroundColor #FFFFFFEE
+    'BackgroundColor #FFFFFF99
+    BackgroundColor #FFFFFF66
+}
+
+skinparam sequenceAltBody {
+    'BackgroundColor #FFFFFFEE
+    'BackgroundColor #FFFFFF99
+    BackgroundColor #FFFFFF66
+}
+skinparam sequenceDivider {
+    Thickness 1
+    FontSize 24
+    FontStyle bold
+    BackgroundColor #F5EFE5
+    BorderThickness 2
+    BorderColor #B5AFA0
+    FontColor #221111
+}
+
+skinparam sequenceArrow {
+    'Color #BB5566
+    Color #AA5566
+    FontColor #44404F
+    Thickness 3
+    FontSize 18
+}
+
+skinparam sequenceBox {
+    FontSize 22
+    FontStyle bold
+    'BorderColor #222222
+    BorderColor #FFFFFF00
+    BackgroundColor #FFFFFF
+}
+
+skinparam sequenceParticipant {
+    FontStyle bold
+    FontSize 18
+    'FontColor #333333
+    'BackgroundColor #FFFFFF
+    FontColor #EEEEEE
+    BackgroundColor #222222
+    BorderColor #555566
+    BorderThickness 2
+}
+
+skinparam sequenceLifeLine {
+    'BorderColor #DDDDDD
+    'BorderColor #111111
+    BorderColor #000000
+    BackgroundColor #BBAAAF
+    BorderThickness 1
+}
+
+skinparam Activity {
+    BorderThickness 4
+}
+
+'ActivityBackgroundColor
+'ActivityBarColor
+'ActivityBorderColor
+'ActivityBorderThickness
+'ActivityDiamondBackgroundColor
+'ActivityDiamondBorderColor
+'ActivityDiamondFontColor
+'ActivityDiamondFontName
+'ActivityDiamondFontSize
+'ActivityDiamondFontStyle
+'ActivityEndColor
+'ActivityFontColor
+'ActivityFontName
+'ActivityFontSize
+'ActivityFontStyle
+'ActivityStartColor
+'SequenceActorBorderThickness
+'SequenceArrowThickness
+'SequenceBoxBackgroundColor
+'SequenceBoxBorderColor
+'SequenceBoxFontColor
+'SequenceBoxFontName
+'SequenceBoxFontSize
+'SequenceBoxFontStyle
+'SequenceDelayFontColor
+'SequenceDelayFontName
+'SequenceDelayFontSize
+'SequenceDelayFontStyle
+'SequenceDividerBackgroundColor
+'SequenceDividerBorderColor
+'SequenceDividerBorderThickness
+'SequenceDividerFontColor
+'SequenceDividerFontName
+'SequenceDividerFontSize
+'SequenceDividerFontStyle
+'SequenceGroupBackgroundColor
+'SequenceGroupBodyBackgroundColor
+'SequenceGroupBorderColor
+'SequenceGroupBorderThickness
+'SequenceGroupFontColor
+'SequenceGroupFontName
+'SequenceGroupFontSize
+'SequenceGroupFontStyle
+'SequenceGroupHeaderFontColor
+'SequenceGroupHeaderFontName
+'SequenceGroupHeaderFontSize
+'SequenceGroupHeaderFontStyle
+'SequenceLifeLineBackgroundColor
+'SequenceLifeLineBorderColor
+'SequenceLifeLineBorderThickness
+'SequenceMessageAlignment
+'SequenceMessageTextAlignment
+'SequenceNewpageSeparatorColor
+'SequenceParticipant
+'SequenceParticipantBorderThickness
+'SequenceReferenceAlignment
+'SequenceReferenceBackgroundColor
+'SequenceReferenceBorderColor
+'SequenceReferenceBorderThickness
+'SequenceReferenceFontColor
+'SequenceReferenceFontName
+'SequenceReferenceFontSize
+'SequenceReferenceFontStyle
+'SequenceReferenceHeaderBackgroundColor
+'SequenceStereotypeFontColor
+'SequenceStereotypeFontName
+'SequenceStereotypeFontSize
+'SequenceStereotypeFontStyle

@@ -21,3 +21,53 @@
 *.i*86
 *.x86_64
 *.hex
+
+# Autogen'ed files:
+Makefile.in
+aclocal.m4
+ar-lib
+autom4te.cache
+build
+build-aux
+compile
+config.guess
+config.h.in
+config.h.in~
+ymo_config.h.in
+ymo_config.h.in~
+config.sub
+configure
+depcomp
+install-sh
+ltmain.sh
+m4/*
+missing
+test-driver
+
+# Vim temp files:
+*.swp
+
+# Vim YouCompleteMe C flags files:
+.ycm_extra_conf.py
+
+# Tag files, etc
+cscope.out
+tags
+
+# Python bytecode:
+*.pyc
+*.pyo
+
+# TCPFlow Files:
+alerts.txt
+report.xml
+
+# Local development files
+local_dev
+
+# Exceptions:
+!m4/ymo_*
+!m4/ax_*
+
+# Backup files:
+*~

@@ -1,0 +1,505 @@
+/*==============================================================================
+ *
+ * yimmo docs CSS
+ *
+ *----------------------------------------------------------------------------*/
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+	background: #445;
+	/* font-family: Verdana, Helvetica, sans-serif; */
+
+	/* Merriweather style: */
+	/*
+	font-family: 'Merriweather', 'Times New Roman', serif;
+	font-size: 1.15rem;
+	*/
+}
+
+div.document,
+div.documentwrapper,
+div.body,
+div.bodywrapper {
+	min-height: 400px;
+}
+
+
+/*------------------------------------------------------------------------
+ * Media Queries:
+ *------------------------------------------------------------------------*/
+div.documentwrapper {
+	background: #f0f0f0;
+	border-left: 1px solid #bbb;
+	border-bottom: 1px solid #bbb;
+}
+
+@media all and (min-width: 1280px) {
+	div.body {
+		min-width: 800px;
+		width: auto;
+		max-width: max-content;
+	}
+
+	div.document {
+		min-width: 800px;
+		width: auto;
+		max-width: 1280px;
+	}
+
+	/*
+	div.sphinxsidebar {
+		min-height: 90%;
+	}
+	*/
+}
+
+@media only screen and (max-width: 900px) {
+	div.document {
+		width: 100%;
+	}
+
+	body {
+		padding: 0;
+		max-width: 100%;
+	}
+}
+
+@media only screen {
+	div.sphinxsidebar {
+		background-color: #222;
+	}
+
+	div.document {
+		padding: 0;
+		margin: 0;
+	}
+
+	div.body {
+		padding: 8px 12px;
+		overflow: wrap;
+		min-width: 200px;
+		max-width: 100%;
+	}
+
+	div.sphinxsidebar {
+		margin-bottom: 0px;
+	}
+
+	div.sphinxsidebarwrapper {
+		padding: 18px 30px;
+	}
+}
+
+@media screen and (min-width: 900px) {
+	div.sphinxsidebar {
+		background-color: #ddd;
+	}
+
+	div.body {
+		padding: 1.5em 1.8em;
+		border-left: 1px solid #bbb;
+		border-right: 1px solid #bbb;
+	}
+
+	div.contents {
+		background-color: #fff;
+		border: none;
+	}
+
+	div.sphinxsidebar {
+		background: #f0f0f0;
+		/*
+		border-left: 1px solid #bbb;
+		border-bottom: 1px solid #bbb;
+		*/
+	}
+
+	/* Adjust doc margins: */
+	div.document {
+		margin: 0px auto 0 auto;
+	}
+}
+
+
+/*------------------------------------------------------------------------
+ * Body/Wrappers
+ *------------------------------------------------------------------------*/
+div.body div#contents,
+div.body section div.toctree-wrapper,
+div#table-of-contents {
+    border: 1px solid #222;
+    max-width: 720px;
+    background-color: #fbfbfb;
+}
+
+div.body > section {
+	padding: 0 0.2em;
+}
+
+/*------------------------------------------------------------------------
+ * Pargraph Styles
+ *------------------------------------------------------------------------*/
+div.body > section > section > p {
+	/* font-size: 0.95em; */
+	line-height: 140%;
+	padding: 0;
+	margin: 0;
+}
+
+div.body > section > section > dl + p {
+	margin-top: 0.5em;
+}
+
+div.bodywrapper > div.body > section p + p {
+	margin-top: 0.5em;
+}
+
+div.body > section li p {
+	line-height: 100%;
+	padding: 0;
+	margin: 0;
+}
+
+
+div.bodywrapper > div.body > section div.contents p.topic-title {
+	font-size: 1.3em;
+	margin-left: 0.5em;
+	margin-bottom: 0.25em;
+	color: #533;
+	padding: 0 4px 0 1px;
+	border-bottom: 2px solid #411;
+	max-width: max-content;
+}
+
+
+/*------------------------------------------------------------------------
+ * Headings
+ *------------------------------------------------------------------------*/
+div.document h1 {
+	font-family: Verdana, Helvetica, sans-serif;
+	font-weight: 700;
+}
+
+div.body h1 {
+	position: relative;
+	top: -0.125em;
+	left: -0.375em;
+	margin: 0em auto 0.25em 0em;
+	padding: 0.25em 0em 0.375em 0.25em;
+	border-left: 1px solid #622;
+	border-top: 1px solid #622;
+	max-width: max-content;
+}
+
+div.body h1 > a {
+	padding: 0;
+	margin: 0;
+}
+
+
+div.document h2,
+div.document h3,
+div.document h4,
+div.document h5,
+div.document h6 {
+	font-family: Verdana, Helvetica, sans-serif;
+	font-weight: 700;
+	letter-spacing: -0.025em;
+}
+
+div.document h1,
+div.document h1 a.toc-backref,
+div.document h1 a.toc-backref:visited,
+div.document h2 a.toc-backref,
+div.document h2 a.toc-backref:visited,
+div.document h3 a.toc-backref,
+div.document h3 a.toc-backref:visited,
+div.document h4 a.toc-backref,
+div.document h4 a.toc-backref:visited,
+div.document h5 a.toc-backref,
+div.document h5 a.toc-backref:visited,
+div.document h6 a.toc-backref,
+div.document h6 a.toc-backref:visited
+{
+	color: #522;
+}
+
+div.document h2 {
+	margin-top: 1.75em;
+	border-bottom: 2.0px solid #22222288;
+}
+
+/* Neat...but gross */
+/*
+div.document div.body h2::before {
+	content: "";
+	display: block;
+	width: 100%;
+	border-bottom: 80px dotted #445;
+	margin-top: 100px;
+	margin-bottom: 100px;
+}
+*/
+
+div.document h2 a.toc-backref,
+div.document h2 a.toc-backref:visited {
+	/* font-family: Arial, Helvetica, sans-serif; */
+	font-size: 1.2em;
+	margin-top: 4.0rem;
+	padding-top: 0.25em;
+	text-decoration: none;
+	min-width: max-content;
+}
+
+div.document h3,
+div.document h3 a.toc-backref,
+div.document h3 a.toc-backref:visited {
+	/* color: #444; */
+	font-style: none;
+	margin-top: 2.0rem;
+	padding-top: 0.5rem;
+	border-top: 1.0px solid #0000001E;
+}
+
+section#core-overview h1 {
+	padding: 0.25em;
+	text-align: center;
+	/* padding-top: 0.75rem; */
+	border-top: 2.0px solid #2222221E;
+	color: #f0f0f0;
+	background-color: #222;
+	text-decoration: none;
+}
+
+div.document h4,
+div.document h4 a.toc-backref,
+div.document h4 a.toc-backref:visited {
+	color: #444;
+	font-style: none;
+	text-decoration: none;
+	margin-top: 2.0rem;
+	padding-top: 0.5rem;
+	border-top: 1.0px solid #0000001E;
+    max-width: max-content;
+}
+
+
+/*------------------------------------------------------------------------
+ * Sidebar
+ *------------------------------------------------------------------------*/
+div.sphinxsidebarwrapper hr {
+	margin-top: 2.2em;
+	margin-bottom: 0.5em;
+	width: 100%;
+	color: #4444449A;
+}
+
+div.sphinxsidebarwrapper hr + ul::before {
+	content: "External Links";
+	display: block;
+	color: #444;
+	font-size: 1.3em;
+	font-weight: 700;
+	font-family: Verdana, Helvetica, sans-serif;
+	letter-spacing: -0.025em;
+	margin-bottom: 0.25rem;
+}
+
+@media only screen and (max-width: 900px) {
+	div.sphinxsidebarwrapper * {
+		color: #eee;
+	}
+}
+
+div.sphinxsidebarwrapper hr + ul {
+	margin-bottom: 1.5rem;
+}
+
+div.sphinxsidebarwrapper h3 {
+	font-size: 1.3em;
+}
+
+div.section + div.section {
+	border-top: 1.0px solid #0000001E;
+	margin-top: 3.0rem;
+	padding-top: 1.0rem;
+}
+
+div.sphinxsidebar {
+	padding-top: 10px;
+}
+
+
+/*------------------------------------------------------------------------
+ * Toc Tree
+ *------------------------------------------------------------------------*/
+div.toctree-wrapper li * {
+	font-weight: 500;
+	/*font-family: Arial, sans-serif;*/
+	/* color: #333368; */
+	color: #01344a;
+}
+
+@media only screen and (max-width: 900px) {
+	div.toctree-wrapper li * {
+		color: #eee;
+	}
+}
+
+li.toctree-l1 ul {
+	margin-top: 0px;
+}
+
+li.toctree-l1 ul > li {
+	margin-top: 0.15em;
+}
+
+
+/*------------------------------------------------------------------------
+ * Table of Contents
+ *------------------------------------------------------------------------*/
+div.contents {
+	font-family: Verdana, Helvetica, sans-serif;
+	font-weight: 700;
+	margin-left: 0em;
+	margin-right: auto;
+	padding: 0.5em 0.25em 0.5em 0.25em;
+	max-width: 720px;
+	/* padding: 7px 4px 7px 4px; */
+	/*
+	float: right;
+	position: absolute;
+	top: 0;
+	right: 0;
+	*/
+}
+
+@media all and (max-width: 900px) {
+	/* WHY? */
+	div.contents {
+		padding: 0.5em 0.25em 0.5em 1.25em;
+	}
+}
+
+div.contents ul {
+	margin-top: 0.1em;
+	margin-bottom: 0.1em;
+}
+
+
+/*------------------------------------------------------------------------
+ * Syntax Highlighting
+ *------------------------------------------------------------------------*/
+/* Make the function signatures less giant: */
+dt.sig * {
+	font-size: 1.0rem;
+}
+
+/* Add some spacing between API entities, instead of jamming them together: */
+dl.py {
+	padding-top: 0.5rem;
+	padding-bottom: 0.5rem;
+	/* border-top: 1.0px solid #0000001E; */
+}
+
+dl.function,
+dl.type,
+dl.macro,
+dl.enum,
+dl.struct,
+dl.method,
+dl.attribute,
+dl.exception,
+dl.py.data,
+dl.py.class,
+dl.py.function {
+	margin-top: 2.0rem;
+	padding-top: 0.5rem;
+	border-top: 1.0px solid #0000001E;
+}
+
+div.highlight {
+	max-width: min-content;
+	border: 1.0px solid #00000030;
+	/*
+	border-top: 1.0px solid #00000030;
+	border-bottom: 1.0px solid #00000030;
+	*/
+	margin-left: 0.5em;
+	/* Not sure about these: */
+	/* border-left: 2.0px dotted #00000030; */
+	/* border-right: 2.0px dotted #00000030; */
+}
+
+div.highlight > pre {
+	font-size: 0.9rem;
+	padding: 12px 14px;
+	background-color: #f4f4f4;
+}
+
+
+/*------------------------------------------------------------------------
+ * Block Layout/Padding
+ *------------------------------------------------------------------------*/
+/* Add some spacing between sections, instead of jamming them together: */
+div.bodywrapper > div.body > section {
+	margin-bottom: 4.0rem;
+}
+
+div.bodywrapper > div.body > section p {
+	max-width: 800px;
+	line-height: 140%;
+}
+
+/* Make the background NOT banana yellow: */
+div.admonition.note {
+	background-color: #FFFFDE;
+    max-width: max-content;
+}
+
+/* Make the code background blend (esp, when when inside an admonition): */
+code.xref {
+	background-color: rgba(240,240,240,0.6);
+}
+
+div.admonition > code.xref {
+	background-color: rgba(240,240,240,0.3);
+}
+
+/* Space out the project name a bit: */
+h1.logo > a {
+	display: block;
+	font-size: 1.5rem;
+	margin-top: 0.5rem;
+	margin-bottom: 1.5rem;
+}
+
+
+
+/*------------------------------------------------------------------------
+ * Highlight Tweaks:
+ *------------------------------------------------------------------------*/
+div.highlight-bash span.nv {
+	font-weight: 700;
+	color: #161;
+}
+
+div.highlight-bash span.o {
+	font-weight: 700;
+	color: #C2A;
+	margin-left: 0.1em;
+	margin-right: 0.1em;
+}
+
+code.docutils.literal {
+	/*
+	font-family: 'Courier New', 'Courier', monospace;
+	font-weight: 600;
+	*/
+	font-size: 0.91rem;
+	background-color: #f2f2f2;
+	padding: 2px 3px 2px 3px;
+}

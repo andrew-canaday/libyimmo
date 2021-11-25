@@ -1,0 +1,101 @@
+@startuml
+
+title
+YIMMO_WSGI_NO_PROC=1
+YIMMO_WSGI_NO_THREADS=2
+
+end title
+
+
+'skinparam LineType ortho
+'skinparam nodesep 0
+'skinparam ranksep 100
+
+skinparam padding 2
+skinparam shadowing false
+skinparam component {
+    FontSize 12
+    FontStyle bold
+    BorderColor #888099
+    BorderThickness 2
+    FontColor #444444
+    'BackgroundColor #EEEEEE
+    BackgroundColor #FFFFFF
+}
+
+skinparam node {
+    FontSize 14
+    FontStyle bold
+    BorderColor #888099
+    BorderThickness 2
+    FontColor #444444
+    BackgroundColor #EEE8E2
+}
+
+skinparam ComponentArrow {
+    FontSize 12
+    FontStyle bold
+    Thickness 2
+    'FontColor #113311
+    FontColor #000000
+    Color #BB444499
+}
+
+skinparam frame {
+    'BackgroundColor #FFF5EB
+    BackgroundColor #f9f9f9
+    BorderColor #AAAAAA
+    'FontSize 24
+    'Padding 20
+}
+
+skinparam note {
+    FontSize 14
+    'FontSize 20
+    'FontStyle italic
+    'BorderColor #888099
+    BorderColor #000000
+    BorderThickness 1
+    FontColor #222222
+    Padding 8
+    BackgroundColor #ffffff
+    'BackgroundColor #eeeeee
+}
+
+
+frame "yimmo-wsgi" {
+    node "yimmo-wsgi Process" as proc_worker_1 {
+        component "Server Thread" as server_1
+        component "Worker Thread 1" as worker_1_1
+        component "Worker Thread 2" as worker_2_1
+        component "Python VM" as python_1
+
+        server_1 --> worker_1_1 : request
+        server_1 --> worker_2_1 : request
+        worker_1_1 .. python_1 : WSGI\nContext
+        worker_2_1 .. python_1 : WSGI\nContext
+        server_1 <-- worker_2_1 : response
+        server_1 <-- worker_1_1 : response
+    }
+
+    note right of worker_2_1
+    **NOTE**: a client is assigned
+    to __only and only one thread__ at
+    connection time. For the duration
+    of their TCP session, all of their
+    requests will be served by one
+    thread.
+    end note
+}
+
+node "Client" as client_1
+
+client_1 <--> server_1 : HTTP
+
+note right of python_1
+**NOTE**: There is only one python
+VM per __process__, which is shared
+by the worker threads.
+end note
+
+@enduml

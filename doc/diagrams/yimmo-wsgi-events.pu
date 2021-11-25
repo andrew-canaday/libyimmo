@@ -1,0 +1,142 @@
+@startuml
+
+!include skinparams.iuml
+skinparam backgroundColor #FFFFFF
+skinparam sequenceMessageAlign left
+skinparam ParticipantPadding 4
+skinparam BoxPadding 0
+skinparam padding 4
+skinparam roundcorner 8
+skinparam sequenceArrowBackgroundColor #ffffff
+skinparam sequenceGroupBodyBackgroundColor #FFFFFFBB
+'skinparam sequenceLifelineBackgroundColor #00000066
+skinparam sequenceLifelineBorderColor #00000066
+hide footbox
+
+box "Clients" #E5EEF0
+    participant "client fd" as client
+end box
+
+box "yimmo-wsgi\n(Main Thread)" #EEF0E5
+participant "yimmo_http" as http
+participant "ymo_http_session" as session
+participant "ymo_wsgi_server" as server
+end box
+
+box "yimmo-wsgi\n(Shared Data)" #EEEEEE
+participant "Output" as queue_out
+'participant "Lock\n(Output)" as lock_out
+'participant "Lock\nInput" as lock_in
+participant "Input" as queue_in
+end box
+
+box "yimmo-wsgi\n(Worker Thread)" #F5E5E2
+participant "ymo_wsgi_worker" as worker
+participant "yimmo.Context" as context
+participant "python" as python
+participant "application" as app
+end box
+
+activate worker
+queue_in <--> worker: Check Queue\nexchanges == 0
+worker -> worker   -- : **pthread_cond_wait()**
+
+autonumber 1
+|||
+group Connecting
+
+client -> http ++   : Client connects
+
+create session
+http -> session: Create ymo_http_session
+http -> server   ++  : **session_init_cb()**
+server -> session --   : add **ymo_wsgi_session**
+activate session #889988
+
+deactivate http
+end
+
+autonumber 1
+|||
+group Request
+    client -> http ++   : HTTP request
+    http -> http : parse
+
+    http -> server   ++ : **ymo_http_cb_t()**
+    server -> session: add:\n**ymo_wsgi_exchange**
+    activate session #AABBAA
+    server -> session   ++ #331111: INCREF\nExchange
+
+    server <-->o queue_in : acquire input lock
+
+    group #FF000011 Lock Input
+        server -> queue_in   ++ #9999BB: queue exchange
+        server -> worker --++ : **pthread_cond_signal()**
+    end group
+
+'    group#cccccc #cccccc meanwhile...
+'        autonumber stop
+'        [--> server
+'        server -> server: Handle other\npending I/O
+'        [<-- server
+'        deactivate server
+'    end
+
+    autonumber 9
+    worker <-->o queue_in: acquire input lock
+    queue_in <--> worker: Check Queue\nexchanges == 1
+
+    group #FF000011 Lock Input
+        worker -> session   ++ #881111: INCREF\nExchange
+        queue_in o-> worker --++ #9999BB: dequeue exchange
+    end group
+
+    group #FF11EE05 GIL
+        autonumber 12
+        worker -> python   ++ : create
+        create context
+        python -> context   ++ : new and init
+        context -> session --++ #BB1111: INCREF\nExchange
+        deactivate python
+        worker -> python --++ :**app**(environ, start_response)
+        deactivate queue_in
+        python -> python: handle request
+        python -> context   ++ : **start_response()**
+        context -> worker: queue headers
+        context -x session: DECREF\nExchange
+        deactivate session
+        destroy context
+        python --> worker --++ #9999BB: **return** body
+    end group
+
+    worker <-->o queue_out: acquire output lock
+    group #FF000011 Lock Output
+        worker -> queue_out --++ #9999BB: enqueue exchange
+        worker -x session: DECREF\nExchange
+        deactivate session
+        worker -> server   ++: notify
+    end group
+|||
+end
+
+autonumber stop
+queue_in <--> worker: Check Queue\nexchanges == 0
+worker -> worker   -- : **pthread_cond_wait()**
+|||
+
+autonumber 1
+group Response
+    server <-->o queue_out: acquire output lock
+    group #FF000011 Lock Output
+        queue_out o-> server --++ #9999BB: dequeue exchange
+    end group
+    server ->o http --++ #9999BB: response
+    server -x session: DECREF\nExchange
+    deactivate session
+    session -x session   -- : ref count 0\nfree exchange
+    server -> http --   : complete
+    http -> client --   : **sendmsg()**
+end
+|||
+@enduml
+

@@ -1,0 +1,149 @@
+#!/usr/bin/env python
+#==============================================================================
+# libyimmo docs sphinx config
+#------------------------------------------------------------------------------
+import os.path
+import glob # For Epilog
+import sys
+
+
+#------------------------------
+#   General Configuration:
+#------------------------------
+extensions = [
+    # Built-in:
+    "sphinx.ext.autodoc",
+    "sphinx.ext.todo",
+    "sphinx.ext.viewcode",
+    "sphinx.ext.napoleon",
+
+    # 3rd Party:
+    "sphinx_codefence",
+]
+source_suffix = ['.rst']
+
+USE_MYST_PARSER = True
+if USE_MYST_PARSER:
+    extensions.append("myst_parser")
+    source_suffix.append( '.md' )
+
+templates_path = ['_templates']
+master_doc = 'index'
+project = 'libyimmo'
+copyright = "@PACKAGE_COPYRIGHT@"[1:] # Strip off the leading copyright symbol
+author = "@PACKAGE_AUTHOR@"
+version = '@PACKAGE_VERSION@'
+release = '@PACKAGE_VERSION@'
+language = None
+
+exclude_patterns = [
+        '_build',
+        'Thumbs.db',
+        '.DS_Store',
+        'epilog',
+        ]
+
+#------------------------------
+#          Epilog:
+#------------------------------
+def _load_epilog(epilog_dir):
+    """
+    Concatenate all the files in epilog_dir into a single RST file.
+    """
+    epilog_files = glob.glob(os.path.join(epilog_dir, "*.rst"))
+
+    epilog_lines = [f'..\n   START Epilog from {epilog_dir}:\n\n']
+    for epilog_path in epilog_files:
+        # Add a comment with the name of the file:
+        epilog_lines.append(f'..\n   {os.path.basename(epilog_path)}:\n\n')
+        with open(epilog_path, 'r') as f:
+            epilog_lines.append(f.read())
+
+    epilog_lines.append(f'..\n   END Epilog from {epilog_dir}:\n\n')
+    return '\n'.join(epilog_lines)
+
+rst_epilog = _load_epilog('@srcdir@/epilog')
+
+
+#------------------------------
+#   Syntax Highlighting:
+#------------------------------
+pygments_style = 'sphinx'
+
+NOPE_c_extra_keywords = [
+        'size_t',
+        'ssize_t',
+        'time_t',
+        'pid_t',
+        'ptrdiff_t',
+        ]
+
+NOPE_c_extra_keywords = [
+        'static',
+        'inline',
+        ]
+
+c_id_attributes = [
+        'YMO_FUNC_ATTR_UNUSED',
+        'register',
+        ]
+
+#------------------------------
+#           Lists:
+#------------------------------
+todo_include_todos = True
+todo_emit_warnings = False
+
+#------------------------------
+#       HTML Output:
+#------------------------------
+
+html_favicon = '@srcdir@/img/favicon.ico'
+
+use_custom_theme = False
+if not use_custom_theme:
+    #--- Alabaster: ---
+    html_theme = 'alabaster'
+    html_theme_options = {
+        "show_powered_by": False,
+        "github_button": False,
+        "github_user": "andrew-canaday",
+        "github_repo": "libyimmo",
+        "github_banner": False,
+        "show_related": False,
+        "fixed_sidebar": True,
+        "extra_nav_links": {
+            "Blog": "http://blog.yimmo.org",
+            "Source": "https://github.com/andrew-canaday/libyimmo",
+            },
+    }
+else:
+    #--- Yimmo: ---
+    html_theme = 'yimmo'
+    html_theme_path = ['@srcdir@/theme']
+
+# Alabaster static files search directory:
+html_static_path = [
+        '@srcdir@/_static',
+        '@top_srcdir@/example',
+        ]
+html_extra_path = [
+        '@srcdir@/img',
+        ]
+html_split_index = False
+
+
+
+
+#------------------------------
+#    man page configuration:
+#------------------------------
+
+# One entry per manual page. List of tuples
+# (source start file, name, description, authors, manual section).
+man_pages = [
+    (master_doc, 'libyimmo',
+     'libyimmo Documentation',
+     [author], 1)
+]
+

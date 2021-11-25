@@ -1,0 +1,107 @@
+@startuml
+
+title
+YIMMO_WSGI_NO_PROC=2
+YIMMO_WSGI_NO_THREADS=2
+
+end title
+
+
+'skinparam LineType ortho
+'skinparam nodesep 0
+'skinparam ranksep 100
+
+skinparam padding 2
+skinparam shadowing false
+skinparam component {
+    FontSize 12
+    FontStyle bold
+    BorderColor #888099
+    BorderThickness 2
+    FontColor #444444
+    'BackgroundColor #EEEEEE
+    BackgroundColor #FFFFFF
+}
+
+skinparam node {
+    FontSize 14
+    FontStyle bold
+    BorderColor #888099
+    BorderThickness 2
+    FontColor #444444
+    BackgroundColor #EEE8E2
+}
+
+skinparam ComponentArrow {
+    FontSize 12
+    FontStyle bold
+    Thickness 2
+    'FontColor #113311
+    FontColor #000000
+    Color #BB444499
+}
+
+skinparam frame {
+    'BackgroundColor #FFF5EB
+    BackgroundColor #f9f9f9
+    BorderColor #AAAAAA
+    'FontSize 24
+    'Padding 20
+}
+
+skinparam note {
+    FontSize 14
+    'FontSize 20
+    'FontStyle italic
+    'BorderColor #888099
+    BorderColor #000000
+    BorderThickness 1
+    FontColor #222222
+    Padding 8
+    BackgroundColor #ffffff
+    'BackgroundColor #eeeeee
+}
+
+
+frame "yimmo-wsgi" {
+    node "Manager Process" as main
+
+    node "Worker Process 1" as proc_worker_1 {
+        component "Server Thread" as server_1
+        component "Worker Thread 1" as worker_1_1
+        component "Worker Thread 2" as worker_2_1
+        component "Python VM" as python_1
+
+        server_1 --> worker_1_1 : request
+        server_1 --> worker_2_1 : request
+        worker_1_1 .. python_1 : WSGI\nContext
+        worker_2_1 .. python_1 : WSGI\nContext
+        server_1 <-- worker_2_1 : response
+        server_1 <-- worker_1_1 : response
+    }
+
+    node "Worker Process N" as proc_worker_N {
+        component "Server Thread" as server_N
+        component "Worker Thread 1" as worker_1_N
+        component "Worker Thread 2" as worker_2_N
+        component "Python VM" as python_N
+
+        server_N --> worker_1_N : request
+        server_N --> worker_2_N : request
+        worker_1_N .. python_N : WSGI\nContext
+        worker_2_N .. python_N : WSGI\nContext
+        server_N <-- worker_2_N : response
+        server_N <-- worker_1_N : response
+    }
+
+    main .. proc_worker_1
+    main .. proc_worker_N
+}
+
+node "Client" as client_1
+node "Client" as client_N
+
+client_1 <--> server_1 : HTTP
+client_N <--> server_N : HTTP
+
+@enduml

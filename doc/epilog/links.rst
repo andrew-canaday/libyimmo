@@ -1,0 +1,21 @@
+.. _libev: http://software.schmorp.de/pkg/libev.html
+.. _Python Embedding: <https://docs.python.org/3/extending/embedding.html>
+.. _greenlets: https://greenlet.readthedocs.io/en/latest/
+.. _gevent: http://www.gevent.org/
+.. _libbsat: https://github.com/andrew-canaday/libbsat
+.. _libyimmo: https://github.com/andrew-canaday/libyimmo
+.. _libyimmo_http: ymo_http_h.html
+.. _PEP3333: https://www.python.org/dev/peps/pep-3333/
+.. _ev_prepare_watcher: http://pod.tst.eu/http://cvs.schmorp.de/libev/ev.pod#code_ev_prepare_code_and_code_ev_che
+.. _ev_check_watcher: http://pod.tst.eu/http://cvs.schmorp.de/libev/ev.pod#code_ev_prepare_code_and_code_ev_che
+.. _ev_async_send: http://pod.tst.eu/http://cvs.schmorp.de/libev/ev.pod#Watcher_Specific_Functions_and_Data_-12
+.. _ev_async_watcher: http://pod.tst.eu/http://cvs.schmorp.de/libev/ev.pod#code_ev_async_code_how_to_wake_up_an
+.. _Sphinx: https://www.sphinx-doc.org/en/master/
+.. _c2sphinx: https://github.com/andrew-canaday/c2sphinx
+.. _PlantUML: https://plantuml.com/
+.. _RFC6544: https://datatracker.ietf.org/doc/html/rfc6544
+.. _Writing Autoconf Macros: https://www.gnu.org/software/autoconf/manual/autoconf-2.60/html_node/Writing-Autoconf-Macros.html#Writing-Autoconf-Macros
+.. _M4: https://www.gnu.org/software/autoconf/manual/autoconf-2.60/html_node/Programming-in-M4.html#Programming-in-M4
+.. _MQTT v3.1.1: http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html
+.. _PEP 3333: https://www.python.org/dev/peps/pep-3333/
+.. _GPL Guidelines: https://www.gnu.org/licenses/gpl-howto.en.html

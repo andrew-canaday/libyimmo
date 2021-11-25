@@ -1,0 +1,105 @@
+@startuml
+
+title
+YIMMO_WSGI_NO_PROC=1
+YIMMO_WSGI_NO_THREADS=1
+
+end title
+
+skinparam titleFontSize 18
+skinparam titleHorizontalAlignment left
+
+'skinparam LineType ortho
+'skinparam nodesep 0
+'skinparam ranksep 100
+
+skinparam padding 2
+skinparam shadowing false
+skinparam component {
+    FontSize 12
+    FontStyle bold
+    BorderColor #888099
+    BorderThickness 2
+    FontColor #444444
+    'BackgroundColor #EEEEEE
+    BackgroundColor #FFFFFF
+}
+
+skinparam node {
+    FontSize 14
+    FontStyle bold
+    BorderColor #888099
+    BorderThickness 2
+    FontColor #444444
+    BackgroundColor #EEE8E2
+}
+
+skinparam ComponentArrow {
+    FontSize 12
+    FontStyle bold
+    Thickness 2
+    'FontColor #113311
+    FontColor #000000
+    Color #BB444499
+}
+
+skinparam frame {
+    'BackgroundColor #FFF5EB
+    BackgroundColor #f9f9f9
+    BorderColor #AAAAAA
+    'FontSize 24
+    'Padding 20
+}
+
+skinparam note {
+    FontSize 14
+    'FontSize 20
+    'FontStyle italic
+    'BorderColor #888099
+    BorderColor #000000
+    BorderThickness 1
+    FontColor #222222
+    Padding 8
+    BackgroundColor #ffffff
+    'BackgroundColor #eeeeee
+}
+
+
+frame "yimmo-wsgi" {
+    node "yimmo-wsgi Process" as proc_worker_1 {
+        component "Server Thread" as server_1
+        component "Worker Thread" as worker_1_1
+        component "Python VM" as python_1
+
+        server_1 --> worker_1_1 : request
+        worker_1_1 .. python_1 : WSGI\nContext
+        server_1 <-- worker_1_1 : response
+
+    }
+
+    note right of proc_worker_1
+    No "manager process" in this
+    case. Just a single process
+    for everything.
+
+    **NOTE**: this still means
+    __two__ threads.
+    end note
+}
+
+node "Client" as client_1
+
+client_1 <--> server_1 : HTTP
+
+note right of server_1
+All of the network I/O and HTTP
+protocol handling happens here.
+end note
+
+note right of worker_1_1
+This thread provides the glue
+between libyimmo and Python.
+It provides the WSGI interface.
+end note
+
+@enduml

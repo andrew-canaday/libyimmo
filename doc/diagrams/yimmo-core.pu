@@ -1,0 +1,236 @@
+@startuml
+
+!include skinparams.iuml
+skinparam backgroundColor #FFFFFF
+skinparam sequenceMessageAlign right
+skinparam ParticipantPadding 4
+skinparam BoxPadding 0
+skinparam padding 4
+skinparam roundcorner 8
+hide footbox
+
+box "IO/Timers" #E5EEF0
+    participant "libbsat" as bsat
+    participant "client fd" as client
+    participant "libev" as ev
+end box
+
+box "libyimmo" #EEF0E5
+    participant "server" as server
+    participant "ymo_conn_t" as conn
+    participant "protocol" as proto
+end box
+
+box  #F2EEFF
+    participant "application" as app
+end box
+
+rnote over ev
+IO readiness
+notifications.
+endrnote
+
+/ rnote over bsat
+    timeouts
+endrnote
+
+/ rnote over server
+    connection management
+    and low-level IO
+endrnote
+
+/ rnote over proto
+    bridge between low-level
+    IO and application code
+endrnote
+
+autonumber 1
+|||
+group Connecting
+    ev o-> server: **EV_READ** on listen fd
+    server++
+    create client
+    server <--> client: **accept()**
+    activate client #22222255
+    create conn
+    rnote over server
+        Server tracks connection state
+        using a **ymo_conn_t**. This
+        includes one **ev_io_watcher**
+        read operations, one for writes,
+        and a **bsat_timeout_t** to track
+        idle disconnects.
+    endrnote
+    server -> conn: **ymo_conn_create()**
+    rnote over server
+        The server will invoke the protocol
+        connection init callback to allow
+        some proto-specific session data to
+        be attached to the connection.
+    endrnote
+    activate conn #22222255
+    server -> proto   ++ : **proto->conn_init_cb()**
+    conn o<-- proto: add session data to conn
+    activate conn #889988
+    rnote over proto
+        Most protocols will also provide
+        a "session" object to which
+        applications can add their
+        own data.
+    endrnote
+    proto -> app   ++ : **session_init_cb()**
+    conn o<-- app   -- : add app data to session
+    proto--
+    activate conn #AABBAA
+    rnote over server
+        Finally, the server will start
+        the read **ev_io_watcher**
+        associated with the connection,
+        as well as the **bsat_timeout_t**.
+    endrnote
+    server -> ev: notify on readable
+    server -> bsat: **bsat_timeout_start()**
+    server--
+    |||
+end
+
+...
+...
+
+autonumber 1
+group Receiving Data
+    ev o-> server --++ : **EV_READ** on client fd
+    rnote over server
+        After receiving a read-ready
+        notification from libev, data
+        will be read from the client FD
+        into the server's read buffer,
+        which is subsequently passed
+        to the protocol for parsing.
+
+        **NOTE**: connection idle
+        disconnect timer gets reset!
+    endrnote
+    server -> bsat: **bsat_timeout_reset()**
+    server <--> client: **recv()**
+    activate server #9999BB
+    server -> proto --++ : **proto->read_cb()**
+    rnote over proto
+        The protocol parses the input data,
+        using the session attached to the
+        connection to track state.
+    endrnote
+    proto -> proto: parse
+    activate proto #9999BB
+    conn <--> proto: update session state
+    rnote over app
+        The application
+        message callback
+        is invoked with
+        parsed data.
+    endrnote
+    proto ->o app: message_cb(...)
+    deactivate proto
+    deactivate proto
+    deactivate server
+    |||
+end
+
+...
+...
+
+autonumber 1
+group Sending Data
+    rnote over app
+        The application
+        invokes a protocol
+        send function.
+    endrnote
+    app o-> proto --++ : send data
+    rnote over proto
+        The protocol frames and/or
+        encodes the message for
+        transfer over the wire,
+        and enqueues the data
+        in one or more "buckets".
+    endrnote
+    proto -> proto : frame/encode message
+    activate proto #9999BB
+    proto -->o conn    : enqueue bucket
+    deactivate proto
+    activate conn #9999BB
+    rnote over conn
+       The connection notifies the
+       server that there is writable
+       data available by toggling its
+       write **ev_io_watcher**.
+    endrnote
+    proto -> conn   ++ : write enable
+    conn -> ev --   : notify on writable
+    deactivate proto
+    |||
+    ev o-> server   ++ : **EV_WRITE** on client fd
+    rnote over server
+       After receiving the write-ready
+       notification from libev, the
+       server will dequeu data from
+       the connection object, using
+       **sendmsg** to transfer protocol
+       data over the socket.
+
+        **NOTE**: connection idle
+        disconnect timer gets reset!
+    endrnote
+    server -> bsat: **bsat_timeout_reset()**
+    conn o-->o server --    : dequeue bucket
+    activate server #9999BB
+    server ->o client --   : **sendmsg()**
+    server--
+    |||
+end
+
+...
+...
+
+autonumber stop
+group Close Triggers
+    |||
+    rnote over client, conn: Client-initiated close
+    ev o-> server   ++ : **EV_READ** / closed
+    |||
+else
+    |||
+    rnote over server, conn: Idle timeout
+    bsat o-> server: **bsat_callback_t**
+    |||
+else
+    |||
+    rnote over conn, app: Proto/App-initiated close
+    app o-> proto: close connection
+    proto -> server: **ymo_conn_close()**
+    |||
+end
+|||
+
+autonumber 1
+group Closing
+    server -> proto   ++: **proto->close_cb()**
+    proto -> app   ++ : **session_close_cb()**
+    app -->x conn --   : free app data
+    deactivate conn
+    proto -->x conn --   : free session data
+    deactivate conn
+    server -> bsat: **bsat_timeout_stop()**
+    server -> conn: **ymo_conn_free()**
+    deactivate conn
+    destroy conn
+    server -> client --   : **close()**
+    deactivate client
+    destroy client
+    |||
+end
+
+|||
+
+@enduml
+
