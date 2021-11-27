@@ -27,8 +27,8 @@
 #include "yimmo.h"
 #include "ymo_log.h"
 #include "ymo_alloc.h"
-#include "ymo_http_hdr_hash.h"
 #include "ymo_http_exchange.h"
+#include "ymo_http_hdr_table.h"
 
 ymo_http_exchange_t* ymo_http_exchange_create(void)
 {
@@ -44,7 +44,7 @@ ymo_http_exchange_t* ymo_http_exchange_create(void)
             errno = ENOMEM;
         }
 
-        exchange->h_id = YMO_HDR_HASH_INIT;
+        exchange->h_id = YMO_HTTP_HDR_HASH_INIT();
         exchange->request.content_length = 0;
         exchange->recv_current = exchange->recv_buf;
         exchange->request.method = exchange->recv_buf;
@@ -77,7 +77,7 @@ void ymo_http_exchange_reset(ymo_http_exchange_t* exchange)
 
     /* ymo_http_exchange_t: */
     exchange->hdr_name = exchange->hdr_value = NULL;
-    exchange->h_id = YMO_HDR_HASH_INIT;
+    exchange->h_id = YMO_HTTP_HDR_HASH_INIT();
     exchange->request.content_length = 0;
     exchange->request.body_received = 0;
     exchange->recv_current = exchange->recv_buf;
@@ -103,7 +103,7 @@ void ymo_http_exchange_free(ymo_http_exchange_t* exchange)
         if( exchange->request.body ) {
             /* HACK: make the limit configurable! */
 #define HTTP_MAX_BODY 4096
-            YMO_FREE(HTTP_MAX_BODY, exchange->request.body);
+            YMO_FREE(exchange->request.body);
         }
     }
     YMO_DELETE(ymo_http_exchange_t, exchange);

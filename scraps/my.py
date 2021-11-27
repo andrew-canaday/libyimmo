@@ -1,5 +1,15 @@
-# from gevent import monkey
-# monkey.patch_all(thread=False)
+#!/usr/bin/env python3
+#==============================================================================
+#
+# A pretty bogus flask app that I use for loose testing of the WSGI server.
+#
+#------------------------------------------------------------------------------
+
+USE_GEVENT=False
+
+if USE_GEVENT:
+    from gevent import monkey
+    monkey.patch_all(thread=False)
 
 import os
 import sys
@@ -119,27 +129,6 @@ def site_map():
 @app.route('/py-info')
 def py_info():
     return sys.version
-
-#@app.route('/gc-info')
-#def gc_info():
-#    import gc
-#    import _thread
-#    def gc_progress():
-#        yield '\n\n-----------------------\n'
-#        yield 'Collecting garbage\n'
-#        gc.collect()
-#        yield 'Writing GC file\n'
-#        def bg_save(*args):
-#            print('Saving GC info')
-#            try:
-#                with open('/Users/acanaday/Desktop/gc-info.txt', 'w') as f:
-#                    f.write(pprint.pformat(gc.get_objects()))
-#            except Exception as e:
-#                print(e)
-#            print('GC Info saved')
-#        _thread.start_new_thread(bg_save, (None, None))
-#        yield 'gc-saved\n'
-#    return Response(gc_progress(), mimetype='text/plain')
 
 @app.route('/r-info')
 def r_info():

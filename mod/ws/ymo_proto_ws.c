@@ -442,7 +442,7 @@ ymo_ws_issue_101(
     /* Compute the SHA-1: */
     unsigned char hashed_hdr[20];
     SHA1(input, input_len, hashed_hdr);
-    YMO_FREE(input_len, input);
+    YMO_FREE(input);
 
     char* accept_hdr = ymo_blalloc(request->ws, sizeof(char), YMO_BASE64_LEN(20));
     if( !accept_hdr ) {

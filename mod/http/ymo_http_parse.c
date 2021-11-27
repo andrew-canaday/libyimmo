@@ -76,7 +76,7 @@ static const char* state_names[] = {
  *---------------------------------------------------------------*/
 static inline ssize_t parser_saw_cr(
         ymo_http_exchange_t* exchange,
-        http_state_t next_state) YMO_FUNC_ATTR_FLATTEN;
+        http_state_t next_state) YMO_FUNC_FLATTEN;
 
 
 /** Used by parsing functions to mark CR and set up parser to
@@ -560,7 +560,7 @@ ssize_t ymo_parse_http_headers(
                         default:
                             break;
                     }
-                    exchange->h_id = YMO_HDR_HASH_INIT;
+                    exchange->h_id = YMO_HTTP_HDR_HASH_INIT();
                     current += parser_saw_cr(
                             exchange, HTTP_STATE_HEADER_NAME);
                     goto http_header_parse_done;

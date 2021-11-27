@@ -19,10 +19,25 @@
  *===========================================================================*/
 
 
-
+/** .. _protocols: */
 
 /** Protocols
  * ===========
+ *
+ * Protocols are used to implement parsing and domain-specific functionality on
+ * top of the raw I/O functionality provided by the :ref:`server <server>`.
+ *
+ * .. admonition:: Implementing Protocols
+ *    :class: admonition-info
+ *
+ *    New protocols can be implemented by:
+ *
+ *    - Providing an implementation for each of the
+ *      :ref:`protocol callback <protocol callbacks>` types.
+ *    - Populating a :c:struct:`ymo_proto` with some protocol metadata and
+ *      filling out the :c:struct:`ymo_proto_vt` ``vtable``.
+ *    - Providing a pointer to that structure in an invocation to
+ *      :c:func:`ymo_server_create`.
  *
  */
 
@@ -32,10 +47,11 @@
 #include <stddef.h>
 #include "yimmo.h"
 
-/**---------------------------------------------------------------
- * Types
- *---------------------------------------------------------------*/
+/** .. _protocol callbacks: */
 
+/**---------------------------------------------------------------
+ * Callbacks
+ *---------------------------------------------------------------*/
 
 /** Protocol alloc/init callback type. [REQUIRED]
  *
@@ -116,10 +132,14 @@ typedef ymo_status_t (* ymo_proto_write_cb_t)(
         void* conn_data,
         int socket);
 
+/**---------------------------------------------------------------
+ * Types
+ *---------------------------------------------------------------*/
+
 /* Predeclarations Definition below. */
 typedef struct ymo_proto_vt ymo_proto_vt_t;
 
-/** Data structure used to provide callback mappings for a protocol. */
+/** Protocol callback "vtable". */
 struct ymo_proto_vt {
     ymo_proto_init_cb_t          init_cb;         /* Protocol init callback */
     ymo_proto_cleanup_cb_t       cleanup_cb;      /* Protocol cleanup callback */

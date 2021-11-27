@@ -107,7 +107,7 @@ ymo_bucket_t* ymo_bucket_from_file(
 
         if( no_read != (unsigned long)fsize ) {
             errno = EFBIG;
-            YMO_FREE(fsize, buffer);
+            YMO_FREE(buffer);
             return NULL;
         }
 
@@ -157,7 +157,7 @@ ymo_bucket_t* ymo_bucket_append(
 
 void ymo_bucket_free(ymo_bucket_t* bucket)
 {
-    YMO_FREE(bucket->buf_len, bucket->buf);
+    YMO_FREE(bucket->buf);
     YMO_DELETE(ymo_bucket_t, bucket);
     return;
 }

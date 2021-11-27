@@ -46,7 +46,7 @@ typedef struct ymo_mqtt_str {
 
 #define YMO_MQTT_STR_FREE(mqtt_str) \
     if( mqtt_str.val ) { \
-        YMO_FREE(mqtt_str.len, mqtt_str.val); \
+        YMO_FREE(mqtt_str.val); \
         mqtt_str.val = NULL;  \
         mqtt_str.len = 0; \
     }

@@ -29,13 +29,57 @@
 #include "ymo_log.h"
 #include "ymo_alloc.h"
 #include "ymo_http_hdr_table.h"
-#include "ymo_http_hdr_hash.h"
 
 #if defined(YMO_TRACE_HDR_TABLE) && YMO_TRACE_HDR_TABLE == 1
 #define YMO_HDR_TABLE_TRACE(fmt, ...) ymo_log_trace(fmt, __VA_ARGS__);
 #else
 #define YMO_HDR_TABLE_TRACE(fmt, ...)
 #endif /* YMO_TRACE_HDR_TABLE */
+
+/* TODO: replace this with constant, ala YMO_ALLOC_LT_OVERRIDE */
+const char* ymo_http_hdr_hash_override_method(void)
+{
+    return YMO_HTTP_HDR_HASH_OVERRIDE_METHOD;
+}
+
+/*---------------------------------------------------------------------------*
+ * WEAK override:
+ *--------------------------------------------------------------------------*/
+#if defined(HAVE_FUNC_ATTRIBUTE_WEAK) \
+    && (HAVE_FUNC_ATTRIBUTE_WEAK == 1) \
+    && defined(YMO_HTTP_HDR_HASH_ALLOW_WEAK) \
+    && YMO_HTTP_HDR_HASH_ALLOW_WEAK
+__attribute__((weak)) ymo_http_hdr_id_t ymo_http_hdr_hash_init(void)
+{
+    return 5;
+}
+
+__attribute__((weak)) ymo_http_hdr_id_t ymo_http_hdr_hash_ch(
+        ymo_http_hdr_id_t h, char c)
+{
+    return (h*283) + (c & 0xdf);
+}
+
+__attribute__((weak)) ymo_http_hdr_id_t ymo_http_hdr_hash(
+        const char* str_in, size_t* len)
+{
+    const char* hdr_start = str_in;
+    char c;
+    ymo_http_hdr_id_t h = YMO_HTTP_HDR_HASH_INIT();
+    while( (c = *str_in++) ) {
+        h = YMO_HDR_HASH_CH(h,c);
+    }
+
+    if( len ) {
+        *len = (size_t)(str_in - hdr_start)-1;
+    }
+    return h & YMO_HDR_TABLE_MASK;
+}
+#endif /* HAVE_FUNC_ATTRIBUTE_WEAK */
+
+/* TODO: allow override for this too / optional strcmp, at least! */
+#define YMO_HTTP_HDR_CMP(current, hdr, h_id) \
+    current->h_id == h_id
 
 ymo_http_hdr_table_t* ymo_http_hdr_table_create()
 {
@@ -128,7 +172,7 @@ ymo_http_hdr_id_t ymo_http_hdr_table_insert(
     ymo_http_hdr_id_t index = h_id % YMO_HDR_TABLE_BUCKET_SIZE;
     ymo_http_hdr_table_node_t* current = table->bucket[index];
     while( current ) {
-        if( current->h_id == h_id ) {
+        if( YMO_HTTP_HDR_CMP(current, hdr, h_id) ) {
             if( current->buffer ) {
                 free(current->buffer);
             }
@@ -153,8 +197,19 @@ ymo_http_hdr_id_t ymo_http_hdr_table_add(
     ymo_http_hdr_id_t index = h_id % YMO_HDR_TABLE_BUCKET_SIZE;
     ymo_http_hdr_table_node_t* current = table->bucket[index];
     while( current ) {
-        if( current->h_id == h_id ) {
-            /* HACK HACK HACK HACK: tidy up all of this... */
+        if( YMO_HTTP_HDR_CMP(current, hdr, h_id) ) {
+#define YMO_HTTP_HDR_SET_COOKIE_HACK 1
+#if defined(YMO_HTTP_HDR_SET_COOKIE_HACK) && YMO_HTTP_HDR_SET_COOKIE_HACK
+            /* HACK HACK HACK: This will break if the hash function is
+             * overridden! */
+            if( current->h_id == HDR_ID_SET_COOKIE ) {
+                return table_insert_first(
+                        table, HDR_ID_SET_COOKIE, index,
+                        hdr_len, hdr, value);
+            }
+#endif /* YMO_HTTP_HDR_SET_COOKIE_HACK */
+
+            /* TODO: tidy this up! */
             size_t value_len = strlen(value);
             if( !current->buffer ) {
                 size_t buff_size =
@@ -201,7 +256,7 @@ ymo_http_hdr_id_t ymo_http_hdr_table_add_precompute(
     ymo_http_hdr_id_t index = h_id % YMO_HDR_TABLE_BUCKET_SIZE;
     ymo_http_hdr_table_node_t* current = table->bucket[index];
     while( current ) {
-        if( current->h_id == h_id ) {
+        if( YMO_HTTP_HDR_CMP(current, hdr, h_id) ) {
             /* HACK HACK HACK HACK: tidy up all of this... */
             size_t value_len = strlen(value);
             if( !current->buffer ) {
@@ -252,7 +307,7 @@ const char* ymo_http_hdr_table_get_id(ymo_http_hdr_table_t* table, ymo_http_hdr_
     ymo_http_hdr_table_node_t* current = table->bucket[index];
     while( current ) {
         /* TODO: compare strings to ensure it's not just hash collision. */
-        if( current->h_id == h_id ) {
+        if( YMO_HTTP_HDR_CMP(current, hdr, h_id) ) {
             if( !current->buffer ) {
                 data = current->value;
             } else {

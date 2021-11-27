@@ -84,7 +84,7 @@ NOPE_c_extra_keywords = [
         ]
 
 c_id_attributes = [
-        'YMO_FUNC_ATTR_UNUSED',
+        'YMO_FUNC_UNUSED',
         'register',
         ]
 

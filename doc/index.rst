@@ -1,11 +1,22 @@
 YIMMO
 =====
 
-Yimmo (yup, I made my own) is a streaming socket framework, that I made for the
-fun of it (C is fun!).
+Yimmo (yup, I made my own) is a streaming socket framework.
 
-The I/O architecture is a traditional reactor pattern which uses `libev`_ for
-I/O readiness notifications.
+It favors **ease of use** and performance over feature richness. It provides
+some basics and attempts to provide a flexible, intuitive interface upon which
+more complicated functionality can be built.
+
+It has a single-process, single-threaded operating model
+(multi-proc/multi-thread support is WIP).  The I/O architecture is a traditional
+reactor pattern which uses `libev`_ for I/O readiness notifications.
+
+.. admonition:: Want to get the gist?
+   :class: admonition-info
+
+   - To get a feel for the overall architecture, see :ref:`Core Overview`.
+   - Have a peek at the simple `HTTP Example Server`_ or `Websocket
+     Echo Server`_ to get a sense for the usage.
 
 .. contents:: Contents
    :local:

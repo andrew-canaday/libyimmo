@@ -99,10 +99,9 @@ server (see `wsgi <../wsgi/README.md>`_ for more info).
 Writing Docs
 ------------
 
-- automake ``subdirs`` that have docs provide a ``docs-local`` target
+- ``docs-local`` automake targets are provided by Makefiles in subdirs which have docs
 - `c2sphinx`_ is used to generate RST/MD files from C sources
 - `Sphinx`_ is used to generate documentation from RST/MD files
-- the ``.. c:namespace:: <name>`` directive is used to group sources
 - `PlantUML`_ is used to generate diagrams
 
 
@@ -283,7 +282,48 @@ Headers
 Types
 -----
 
-Opaque types are preferred. Exceptions are made for the following cases:
+Users should be provided access mediated by *nominally* opaque data types — i.e.
+they should *appear* to be opaque, but:
+
+1. We don't want to hide ``struct`` definitions from the compiler, if we can
+   help it. LTO not withstanding, it's best to give the compiler as much info
+   as possible, to maximize opportunity for optimization.
+2. This is C. If the user is willing to get into the guts for good reason,
+   let 'em (though, the consequences are theirs alone to bear).
+
+"Nominally opaque" really means "through typedefs, documented in the public
+API," e.g.:
+
+.. code-block:: c
+
+   /* The definition for this struct can
+    * be in an internal API header OR
+    * even defined in a public API header:
+    */
+    struct ymo_whatever {
+       /* ...stuff... */
+    };
+
+   /* BUT — unless the user really needs
+    * to access the fields (e.g. like with
+    * ymo_http_request_t) this is the view
+    * we present to the user:
+    */
+
+   /**
+    * This is the type used to do whatever.
+    */
+   typedef struct ymo_whatever ymo_whatever_t;
+
+   /**
+    * This is how your perform some
+    * operation on whatever.
+    */
+   ymo_whatever_some_operation(ymo_whatever_t* whatever);
+
+
+Rules of thumb for exposing the user to data structure internals (for more info
+see `Parameter Accessibility`_):
 
 1. **Providing direct access to struct fields provides a more intuitive API**.
 2. The structure contains relatively simple configuration data.

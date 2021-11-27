@@ -1,10 +1,14 @@
 # Example: WebSocket Echo Server
 
+A simple WebSocket echo server in three easy steps:
+
  1. [Define some WebSocket event callbacks](#1-websocket-protocol-callbacks)
  2. [Add a default HTTP handler](#2-add-an-http-callback-for-non-upgrade-requests)
  3. [Create and start the server](#3-create-and-start-the-server)
 
+*Fin!*
 
+Let's have a peek:
 <br />
 
 ## 1. WebSocket Protocol Callbacks
@@ -27,7 +31,7 @@ Otherwise, the connection is closed, and the return value is used to set
 `errno`.
 
 > **NOTE:** Yimmo sends all _payload_ data (i.e. message _bodies_) using
-> Apache-style "bucket brigades" (`ymo_bucket_t`).
+> Apache-esque "bucket brigades" (`ymo_bucket_t`).
 
 
 

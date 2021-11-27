@@ -19,11 +19,30 @@
  *===========================================================================*/
 
 
-
+/** .. _server: */
 
 /** The Server
  * ============
  *
+ * The :c:struct:`ymo_server` is a relatively plain, TCP socket server. It
+ * is responsible for binding and listening on the server socket, handling
+ * connections (accepting, closing, and idle disconnects), and is responsible
+ * for sending and receiving raw data over the wire.
+ *
+ * Server objects are paired with :ref:`protocols`, which handle higher-level
+ * functions like parsing and domain-specific user-facing functionality. Data
+ * and event notifications are relayed to protocols via a set of
+ * :ref:`protocol callbacks`.
+ *
+ * Data is read from the wire into a *single* server-owned read buffer.
+ * From there, it is dispatched to the read handler for a specific
+ * :c:type:`ymo_proto_t`. The protocol is *free to modify the contents of the
+ * receive buffer*, but be aware: *the buffer is considered free for reuse
+ * by the server after the protocol read callback has returned!*
+ *
+ * .. admonition:: Info
+ *
+ *    For more information on parsing, see :ref:`protocols`.
  *
  */
 
@@ -44,9 +63,10 @@
 
 #include "ymo_proto.h"
 
-/*---------------------------------------------------------------*
+/**---------------------------------------------------------------
  *  Types
  *---------------------------------------------------------------*/
+
 /** Internal structure used to manage a yimmo server. */
 struct ymo_server {
     struct ev_io         w_accept;                           /* EV IO watcher for events on accept socket */
@@ -62,17 +82,28 @@ struct ymo_server {
 #endif /* YIMMO_WSGI */
 };
 
-/*---------------------------------------------------------------*
+/**---------------------------------------------------------------
  *  Functions
  *---------------------------------------------------------------*/
 
-/** libev accept callback. */
+/**
+ * This is the libev accept callback. It is invoked whenever a readiness
+ * notification is received from libev on the server *listen* socket.
+ */
 void ymo_accept_cb(struct ev_loop* loop, struct ev_io* watcher, int revents);
 
-/** libev recv callback. */
+/**
+ * This is the libev read callback. It is invoked whenever a readiness
+ * notification is received from libev on a particular *client connection*
+ * socket indicating that a read may be performed.
+ */
 void ymo_read_cb(struct ev_loop* loop, struct ev_io* watcher, int revents);
 
-/** libev recv callback. */
+/**
+ * This is the libev write callback. It is invoked whenever a readiness
+ * notification is received from libev on a particular *client connection*
+ * socket, indicating that a write may be performed.
+ */
 void ymo_write_cb(struct ev_loop* loop, struct ev_io* watcher, int revents);
 
 #endif /* YMO_SERVER_H */

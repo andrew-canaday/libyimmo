@@ -41,6 +41,15 @@
 /* TODO: HACK HACK HACK: per-header NAME buffer size limit. */
 #define HDR_NAME_BUFFER_SIZE 256
 
+#include "ymo_alloc.h"
+#if YMO_ALLOC_LT_OVERRIDE
+void* ymo_alloc(size_t n)
+{
+    fprintf(stderr, "Allocating %zu bytes!\n", n);
+    return malloc(n);
+}
+#endif /* YMO_ALLOC_LT_OVERRIDE */
+
 /** # ymo_wsgi_context.c
  * Contains the WSGI PEP3333 interface seen by python
  *
@@ -59,6 +68,7 @@ struct yimmo_context {
 /* TEMPORARY HACK: */
 #define BODY_PTR self->exchange->request->body
 #define BODY_LEN self->exchange->request->content_length
+
 
 /*---------------------------------------------------------------------------*
  *                              yimmo.Context Methods:
@@ -328,7 +338,7 @@ PyObject* yimmo_Context_write(
         body = YMO_BUCKET_FROM_CPY(content, content_length);
         ymo_wsgi_worker_response_body_append(self->exchange, body, 1);
     }
-    PyLong_FromSize_t(content_length);
+    return PyLong_FromSize_t(content_length);
 }
 
 

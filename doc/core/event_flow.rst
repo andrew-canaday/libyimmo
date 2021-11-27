@@ -1,3 +1,5 @@
+.. _Core Event Flow:
+
 Core Event Flow
 ===============
 

@@ -33,15 +33,62 @@
  * HTTP header hash table.
  */
 
-/**---------------------------------------------------------------
- * Data structures
- *---------------------------------------------------------------*/
+#if defined(HAVE_FUNC_ATTRIBUTE_WEAK) \
+    && (HAVE_FUNC_ATTRIBUTE_WEAK == 1) \
+    && defined(YMO_HTTP_HDR_HASH_ALLOW_WEAK) \
+    && YMO_HTTP_HDR_HASH_ALLOW_WEAK
 
-#ifndef YMO_HDR_HASH_FN
-# define YMO_HDR_HASH_FN ymo_http_hdr_hash_283_5
-# define YMO_HDR_HASH_CH(h,c) (h*283) + (c & 0xdf)
-# define YMO_HDR_HASH_INIT 5
-#endif /* YMO_HDR_HASH_FN */
+/*---------------------------------------------------------------------------*
+ * WEAK override:
+ *--------------------------------------------------------------------------*/
+#  define YMO_HTTP_HDR_HASH_OVERRIDE_METHOD "weak"
+#  define YMO_HDR_HASH_FN ymo_http_hdr_hash
+#  define YMO_HDR_HASH_CH ymo_http_hdr_hash_ch
+#  define YMO_HTTP_HDR_HASH_INIT ymo_http_hdr_hash_init
+
+/** Default hash function used by header table.
+ *
+ */
+ymo_http_hdr_id_t ymo_http_hdr_hash_init(void);
+ymo_http_hdr_id_t ymo_http_hdr_hash(const char* str_in, size_t* len);
+ymo_http_hdr_id_t ymo_http_hdr_hash_ch(ymo_http_hdr_id_t h, char c);
+
+#else
+
+/*---------------------------------------------------------------------------*
+ * PREPROC override:
+ *--------------------------------------------------------------------------*/
+#  define YMO_HTTP_HDR_HASH_OVERRIDE_METHOD "preproc"
+#  ifndef YMO_HDR_HASH_FN
+#    define YMO_HDR_HASH_FN ymo_http_hdr_hash_283_5
+#  endif /* YMO_HDR_HASH_FN */
+
+#  ifndef YMO_HDR_HASH_CH
+#    define YMO_HDR_HASH_CH(h,c) ((h*283) + (c & 0xdf))
+#  endif /* YMO_HDR_HASH_CH */
+
+#  ifndef YMO_HTTP_HDR_HASH_INIT
+#    define YMO_HTTP_HDR_HASH_INIT() 5
+#  endif /* YMO_HTTP_HDR_HASH_INIT */
+
+
+YMO_FUNC_UNUSED static inline ymo_http_hdr_id_t ymo_http_hdr_hash_283_5(
+        const char* str_in, size_t* len)
+{
+    const char* hdr_start = str_in;
+    char c;
+    ymo_http_hdr_id_t h = YMO_HTTP_HDR_HASH_INIT();
+    while( (c = *str_in++) ) {
+        h = YMO_HDR_HASH_CH(h,c);
+    }
+
+    if( len ) {
+        *len = (size_t)(str_in - hdr_start)-1;
+    }
+    return h & YMO_HDR_TABLE_MASK;
+}
+#endif /* HAVE_FUNC_ATTRIBUTE_WEAK && YMO_HTTP_HDR_HASH_ALLOW_WEAK */
+
 
 
 /* Flags */
@@ -63,28 +110,6 @@ ymo_http_hdr_id_t ymo_http_hdr_table_add_precompute(
 
 /** */
 const char* ymo_http_hdr_table_get_id(ymo_http_hdr_table_t* table, ymo_http_hdr_id_t h_id);
-
-/** Default hash function used by header table.
- *
- * .. todo:: Collision detection not yet implemented.
- *      (No collisions over 283 common headers == cool, but also LUCK).
- *      FIXME.
- */
-YMO_FUNC_ATTR_UNUSED static inline ymo_http_hdr_id_t ymo_http_hdr_hash_283_5(
-        const char* str_in, size_t* len)
-{
-    const char* hdr_start = str_in;
-    char c;
-    ymo_http_hdr_id_t h = YMO_HDR_HASH_INIT;
-    while( (c = *str_in++) ) {
-        h = YMO_HDR_HASH_CH(h,c);
-    }
-
-    if( len ) {
-        *len = (size_t)(str_in - hdr_start)-1;
-    }
-    return h & YMO_HDR_TABLE_MASK;
-}
 
 
 /*----------------------------------------------------------------------------

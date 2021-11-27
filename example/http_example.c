@@ -19,12 +19,16 @@
  *
  *===========================================================================*/
 
-
 /** # Example: HTTP Server
+ *
+ * A simple HTTP server with a single endpoint in two easy steps:
  *
  * 1. [Define an HTTP Callback](#1-define-an-http-callback)
  * 2. [Create and Start the Server](#2-create-and-start-the-server)
  *
+ * *Fin!*
+ *
+ * Let's have a peek:
  * <br />
  */
 
@@ -39,7 +43,7 @@
 
 #include "start_info.h"
 
-/** Default port to listen on for http connections. */
+/* Default port to listen on for http connections. */
 #define HTTP_PORT 8081
 
 
@@ -61,7 +65,7 @@ static void sigint_handler(struct ev_loop* loop, ev_signal* w, int revents);
  * Return `YMO_OKAY` on success; a value from errno.h on error.
  *
  * > **NOTE:** Yimmo sends all _payload_ data (i.e. message _bodies_) using
- * > Apache-style "bucket brigades" (`ymo_bucket_t`).
+ * > Apache-esque "bucket brigades" (`ymo_bucket_t`).
  *
  * Set the content type to "text/html" and set the body using EXAMPLE_TEXT.
  */

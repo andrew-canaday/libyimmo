@@ -22,6 +22,8 @@
 
 /** # Example: MQTT Server
  *
+ * **WARNING**: This is stale + MQTT is not WIP/high-priority, at the moment!
+ *
  */
 
 #include <unistd.h>

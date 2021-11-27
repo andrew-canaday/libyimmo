@@ -18,18 +18,17 @@ body {
 	box-sizing: content-box;
 	padding: 0;
 	background: #445;
-	font-size: 1.0rem;
+	font-size: 1.03rem;
 	height: 100%;
 	min-height: 100%;
 	max-height: 100%;
 	margin-bottom: 0;
-	/* font-family: Verdana, Helvetica, sans-serif; */
+}
 
-	/* Merriweather style: */
-	/*
-	font-family: 'Merriweather', 'Times New Roman', serif;
-	font-size: 1.15rem;
-	*/
+body div.document,
+body div.document div.documentwrapper,
+body div.document div.documentwrapper div.bodywrapper {
+	max-width: max-content;
 }
 
 body div.document,
@@ -39,7 +38,15 @@ body div.document div.documentwrapper div.bodywrapper div.body {
 	height: 100%;
 	min-height: 920px;
 	max-height: 100%;
-	max-width: max-content;
+}
+
+div.body * {
+	overflow-wrap: normal;
+}
+
+div.body,
+div.bodywrapper {
+	max-width: 920px;
 }
 
 div.body > section {
@@ -60,7 +67,6 @@ div.footer {
 	width: max-content;
 	text-align: left;
 	color: #aaa;
-	/* margin-left: 40px; */
 	margin: 0 auto 0 auto;
 	clear: both;
 }
@@ -93,11 +99,6 @@ div.documentwrapper {
 	width: auto;
 }
 
-div.body {
-	max-width: max-content;
-}
-
-
 @media screen and (max-width: 375px),
 screen and (max-width: 400px),
 screen and (max-width: 870px),
@@ -105,16 +106,25 @@ screen and (max-width: 875px) {
 	div.document {
 		padding: 0;
 		margin: 0;
+		min-width: 100%;
 		width: 100%;
 		max-width: 100%;
 		border: none;
+	}
+
+	div.documentwrapper,
+	div.bodywrapper,
+	div.body > section {
+		min-width: 100%;
+		width: 100%;
+		max-width: 100%;
 	}
 
 	div.body {
 		padding: 8px 12px;
 		border: none;
 		overflow-wrap: break-word;
-		min-width: auto;
+		min-width: 100%;
 		width: 100%;
 		max-width: 100%;
 	}
@@ -125,6 +135,7 @@ screen and (max-width: 875px) {
 		/*background: #23232b;*/
 		background: #24242e;
 		/* background: #2b2b36; */
+		min-width: 100%;
 		width: 100%;
 	}
 
@@ -241,6 +252,11 @@ screen and (max-width: 875px) {
 		border-right: 20px solid #445;
 	}
 
+	div.body {
+		min-width: 600px;
+		max-width: 750px;
+	}
+
 	/*
 	div.documentwrapper {
 		padding-right: 20px;
@@ -269,6 +285,8 @@ screen and (max-width: 875px) {
 		border-right: 1px solid #bbb;
 		width: auto;
 		min-width: 750px;
+		max-width: 800px;
+
 	}
 	/* END MAJOR BODY ELEMENTS */
 
@@ -290,7 +308,8 @@ screen and (max-width: 875px) {
 	}
 
 	div.body {
-		min-width: 920px;
+		min-width: 860px;
+		max-width: 920px;
 	}
 
 	div.sphinxsidebar {
@@ -346,40 +365,6 @@ div.bodywrapper > div.body > section div.two-col table,
 div.bodywrapper > div.body > section div.two-col div {
 	margin: 0;
 }
-
-/*
-.three-col {
-	@media #{$is-portrait} {
-		column-count: 1;
-		column-width: 100%;
-		column-rule-style: none;
-	}
-	@media #{$is-desktop}, #{$is-landscape} {
-		clear: both;
-		column-width: 30%;
-		column-count: 3;
-		column-rule-style: solid;
-		column-rule-width: 1px;
-		column-rule-color: #DDDDDD;
-	}
-}
-
-.four-col {
-	@media #{$is-portrait} {
-		column-count: 2;
-		column-width: 50%;
-		column-rule-style: none;
-	}
-	@media #{$is-desktop}, #{$is-landscape} {
-		clear: both;
-		column-width: 24%;
-		column-count: 4;
-		column-rule-style: solid;
-		column-rule-width: 1px;
-		column-rule-color: #DDDDDD;
-	}
-}
-*/
 
 .span-cols {
 	column-span: all;
@@ -556,6 +541,10 @@ div.body > section > section > p {
 	margin: 0;
 }
 
+div.body > section > section p > strong {
+	color: #444459;
+}
+
 div.body > section > section > dl + p {
 	margin-top: 0.5em;
 }
@@ -580,7 +569,8 @@ div.document h1 {
 }
 
 div.document h1,
-div.document h2 {
+div.document h2,
+div.document h3 {
 	clear: both;
 }
 
@@ -589,7 +579,7 @@ div.document h3,
 div.document h4,
 div.document h5,
 div.document h6 {
-	color: #522;
+	color: #682222;
 	font-family: Verdana, Helvetica, sans-serif;
 	font-weight: 700;
 	letter-spacing: -0.025em;
@@ -603,7 +593,7 @@ div.document h4 a.toc-backref, div.document h4 a.toc-backref:visited,
 div.document h5 a.toc-backref, div.document h5 a.toc-backref:visited,
 div.document h6 a.toc-backref, div.document h6 a.toc-backref:visited
 {
-	color: #522;
+	color: #682222;
 }
 
 div.document h2 {
@@ -668,6 +658,10 @@ div.sphinxsidebar h1.logo a {
 }
 
 @media only screen and (max-width: 875px) {
+	div.sphinxsidebar h1.logo a {
+		font-size: 1.5em;
+	}
+
 	div.sphinxsidebar div.sphinxsidebarwrapper * {
 		color: #ddd;
 		font-size: 1.1rem;
@@ -788,7 +782,7 @@ div.bodywrapper > div.body > section div.contents p.topic-title {
 	font-size: 1.6em;
 
 	margin: 1.0em auto 0.25em 0;
-	color: #533;
+	color: #683333;
 	padding: 0 4px 0 0px;
 	border-bottom: 2px solid #411;
 	max-width: max-content;
@@ -839,6 +833,17 @@ section > blockquote > div > p > strong:first-of-type {
 	margin-right: 4px;
 }
 
+
+/*------------------------------------------------------------------------
+ * Lists
+ *------------------------------------------------------------------------*/
+div.body ul.simple li {
+	margin-bottom: 0.5em;
+}
+
+/*------------------------------------------------------------------------
+ * Admonitions:
+ *------------------------------------------------------------------------*/
 div.admonition {
 	max-width: 800px;
 }
@@ -880,6 +885,39 @@ dl.c div.admonition {
 	max-width: 720px;
 }
 
+div.admonition-info {
+    max-width: max-content;
+    padding: 0.5em 1.0em 0.5em 1.0em;
+    background-color: #f7f7f7;
+}
+
+div.admonition-info > p.admonition-title {
+    display: block;
+    font-size: 1.3em;
+    margin: 0 auto 0.5em 0;
+    font-family: Verdana, Helvetica, sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    line-height: 100%;
+    color: #669;
+}
+
+div.admonition-info > p.admonition-title::before {
+    display: inline-block;
+    content: "\24d8\00A0";
+    font-family: Verdana, Helvetica, sans-serif;
+    font-size: 1.3em;
+    color: #669;
+    position: relative;
+    top: 0.055em;
+}
+
+div.admonition-info > p.admonition-title ~ p {
+    margin-left: 0.25em;
+    font-size: 1.03em;
+    font-style: italic;
+}
+
 @media screen and (max-width: 375px),
 screen and (max-width: 400px),
 screen and (max-width: 870px),
@@ -891,7 +929,7 @@ screen and (max-width: 875px) {
 
 /* Space out the project name a bit: */
 h1.logo > a {
-	color: #522;
+	color: #682222;
 	display: block;
 	font-size: 1.6rem;
 	margin-top: 0.5rem;
@@ -905,7 +943,7 @@ div.sphinxsidebarwrapper p.logo {
 */
 
 div.sphinxsidebarwrapper p.logo img.logo {
-	border: 2px solid #522;
+	border: 2px solid #682222;
 	max-width: 160px;
 }
 
@@ -965,6 +1003,10 @@ div.code-block-caption > span.caption-text {
 	color: #744;
 }
 
+dl.c > dd div.code-block-caption > span.caption-text {
+	font-size: 1.2em;
+}
+
 div.highlight {
 	max-width: min-content;
 	border: 1.0px solid #00000025;
@@ -997,8 +1039,6 @@ dl.c,
 dl.py {
 	margin-top: 0.5rem;
 	padding-bottom: 1.0rem;
-	/* border-top: 1.0px solid #0000001E; */
-	/* border-bottom: 1.0px solid #0000001E; */
 }
 
 dl.c + dl.c,
@@ -1008,7 +1048,8 @@ dl.py + dl.py {
 	margin-top: 1.0rem;
 	margin-bottom: 1.0em;
 	padding-top: 1.0rem;
-	border-top: 1.0px solid #0000001E;
+	/* border-top: 1.0px solid #0000001E; */
+	border-top: 2.0px solid #00000027
 }
 
 section > dl:last-of-type {
@@ -1145,19 +1186,35 @@ dd > dl.field-list {
 	max-width: 720px;
 }
 
-section > dl.field-list {
+div.bodywrapper > div.body > section dl.field-list {
 	display: block;
 	margin-top: 1.0rem;
 	border-left: 2px solid #714d04;
-	font-size: 0.95em;
-	line-height: 100%;
+	font-size: 0.98em;
 	padding: 0.125em 0 0.125em 0.5em;
+}
+
+div.bodywrapper > div.body > section dl.field-list p {
+	line-height: 100%;
+}
+
+div.bodywrapper > div.body > section dl.field-list dd ul {
+	margin-top: 0.25em;
+}
+
+div.bodywrapper > div.body > section dl.field-list dd li {
+	margin-bottom: 6px;
+	line-height: 100%;
 }
 
 section dl.field-list > dt {
 	margin: 0 0 0 0;
 	padding: 0;
 	word-break: normal;
+}
+
+section dl.field-list > dt.field-even {
+	margin-top: 1.0em;
 }
 
 section dl.field-list span.pre {

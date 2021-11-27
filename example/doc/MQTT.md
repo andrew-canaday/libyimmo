@@ -1,5 +1,7 @@
 # Example: MQTT Server
 
+**WARNING**: This is stale + MQTT is not WIP/high-priority, at the moment!
+
 
 ## Step 1: Create the protocol/server objects.
 

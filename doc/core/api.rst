@@ -3,9 +3,14 @@ Core API
 
 API documentation for libyimmo.
 
+.. admonition:: Info
+
+   To get a general sense for the principles of operation, see
+   :ref:`Core Overview`.
+
 .. toctree::
    :maxdepth: 2
-   :caption: Topics
+   :caption: API Reference
 
    index
    yimmo_h

@@ -27,17 +27,17 @@
     && defined(HAVE_FUNC_ATTRIBUTE_WEAK) \
     && (HAVE_FUNC_ATTRIBUTE_WEAK == 1)
 
-void* ymo_alloc(size_t n) __attribute__((weak))
+void* ymo_malloc(size_t n) __attribute__((YMO_FUNC_MALLOC_P weak))
 {
     return malloc(n);
 }
 
-void* ymo_alloc0(size_t n) __attribute__((weak))
+void* ymo_calloc(size_t c, size_t n) __attribute__((YMO_FUNC_MALLOC_P weak))
 {
-    return calloc(1,n);
+    return calloc(c,n);
 }
 
-void ymo_free(void* p) __attribute__((weak))
+void ymo_free(void* p) __attribute__((YMO_FUNC_MALLOC_P weak))
 {
     free(p);
 }

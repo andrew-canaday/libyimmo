@@ -1,16 +1,14 @@
 # Example: HTTP Server
 
+A simple HTTP server with a single endpoint in two easy steps:
+
 1. [Define an HTTP Callback](#1-define-an-http-callback)
 2. [Create and Start the Server](#2-create-and-start-the-server)
 
+*Fin!*
+
+Let's have a peek:
 <br />
-
-Default port to listen on for http connections. 
-
-
-```C
-#define HTTP_PORT 8081
-```
 
 ## 1. Define an HTTP callback
 User-space HTTP callback invoked by ymo_http when a new request is received
@@ -22,7 +20,7 @@ from an HTTP session.
 Return `YMO_OKAY` on success; a value from errno.h on error.
 
 > **NOTE:** Yimmo sends all _payload_ data (i.e. message _bodies_) using
-> Apache-style "bucket brigades" (`ymo_bucket_t`).
+> Apache-esque "bucket brigades" (`ymo_bucket_t`).
 
 Set the content type to "text/html" and set the body using EXAMPLE_TEXT.
 

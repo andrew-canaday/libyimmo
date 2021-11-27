@@ -45,7 +45,7 @@ void ymo_ws_session_free(ymo_ws_session_t* session)
         }
 
         if( session->msg ) {
-            YMO_FREE(YMO_WS_MSG_LEN_MAX, session->msg);
+            YMO_FREE(session->msg);
         }
         YMO_DELETE(ymo_ws_session_t, session);
     }

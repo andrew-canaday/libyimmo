@@ -91,13 +91,13 @@ char ymo_tolower(char c);
  *
  */
 static inline char ymo_tolower(char c) \
-    YMO_FUNC_ATTR_UNUSED YMO_FUNC_ATTR_FLATTEN;
+    YMO_FUNC_UNUSED YMO_FUNC_FLATTEN;
 
 /** Fast, single-char, toupper function.
  *
  */
 static inline char ymo_toupper(char c) \
-    YMO_FUNC_ATTR_UNUSED YMO_FUNC_ATTR_FLATTEN;
+    YMO_FUNC_UNUSED YMO_FUNC_FLATTEN;
 
 static inline char ymo_tolower(char c)
 {

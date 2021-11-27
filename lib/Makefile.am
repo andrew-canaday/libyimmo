@@ -50,7 +50,6 @@ libyimmo_la_SOURCES=\
 	ymo_proto.c \
 	ymo_blalloc.c \
 	ymo_queue.c \
-	ymo_trace_alloc.c \
 	yimmo.c
 
 # EOF

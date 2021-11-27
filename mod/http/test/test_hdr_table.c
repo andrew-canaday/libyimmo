@@ -405,16 +405,16 @@ static int test_collisions()
     ymo_http_hdr_id_t* hdr_ids = calloc(no_hdrs, sizeof(ymo_http_hdr_id_t));
 
     /* Stick the ID's in a table: */
-    for( size_t i=0; i<no_hdrs; i++ )
+    for( size_t i = 0; i < no_hdrs; i++ )
     {
         hdr_ids[i] = ymo_http_hdr_hash_283_5(LOTS_OF_HEADERS[i], NULL);
 
         /* Confirm that this ID hasn't already appeared or else
          * just print out info that it has: */
-        for( size_t j=0; j<i; j++ )
+        for( size_t j = 0; j < i; j++ )
         {
             if( hdr_ids[j] == hdr_ids[i]
-                    && strcasecmp(LOTS_OF_HEADERS[i], LOTS_OF_HEADERS[j])) {
+                && strcasecmp(LOTS_OF_HEADERS[i], LOTS_OF_HEADERS[j])) {
                 ymo_log_debug("Collision: \"%s\" => %i <= \"%s\"\n",
                         LOTS_OF_HEADERS[i], (int)hdr_ids[i], LOTS_OF_HEADERS[j]
                         );

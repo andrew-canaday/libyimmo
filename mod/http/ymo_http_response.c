@@ -457,7 +457,7 @@ serialize_nomem:
             "Out of memory serializing headers (%p)",
             (void*)conn);
     if( response_buf ) {
-        YMO_FREE(YMO_HTTP_SEND_BUF_SIZE, response_buf);
+        YMO_FREE(response_buf);
     }
     errno = ENOMEM;
     return NULL;

@@ -27,18 +27,20 @@ Next Up
 
 - |_| Generic list/pool/queue types (ala kernel)
 - |_| Most ``_creates`` need an ``_init`` (see `needs init`_)
-- |_| Exchanges: why allocate request/response separately? It's the source of
-      a lot of cache misses.
+- |_| Exchanges: why allocate request/response separately? It's the source of a lot of cache misses.
 - |_| WSGI code cleanup
-- |_| **Add** ``strcmp`` **to header hash table**
-- |_| We work with lots of strings of known length — may some utilities here
-      would save a lot of strncmp, etc.
+- |_| HTTP header compare override
+- |_| Optional HTTP header ``strcmp`` backstop
+- |_| HTTP header collision util
+- |_| We work with lots of strings of known length — may some utilities here would save a lot of strncmp, etc.
 - |_| Repurpose trie for HTTP routing?
 - |_| Instrumentation?
 - |_| Provide faster file handling (sendfile or caching)
 - |_| ``EV_EMBED``, ``ev_realloc``, and faux-slab allocator example
 - |_| Clean up logging
 - |_| Make logging more configurable or use a 3rd party lib (zlog, etc)
+- |_| Cleanup allocators/weak/weakref, etc
+- |_| WSGI static build + LTO?
 - |/| Fix `ymo_base64_encode` memory leak!
 - |/| Clean up configure.sh build time/number of checks!
 - |/| UPDATE LICENSE INFO
@@ -55,12 +57,12 @@ TESTS!!!!
 
 - |_| Core unit tests
 - |_| HTTP unit tests
+    - |_| Parser: init, loader, tests
 - |_| WS unit tests
 - |x| (MQTT unit tests)
-
-.. note::
-   - Protocol, e.g. HTTP request/response validation against a running server.
-   - Facilities for testing custom protocols.
+- |_| live/integration tests — e.g. HTTP request/response validation against a running server.
+- |_| Facilities for testing custom protocols.
+- |_| Mocking?
 
 DOCS
 ....
@@ -70,6 +72,9 @@ DOCS
 - |_| Use sphinx plantuml plugin instead of bash.
 - |_| Consider using sphinx emoji instead of replacements file.
 - |_| Stop abusing CSS/poor alabaster and make a proper theme.
+- |_| Core overview
+- |_| HTTP Overview
+- |_| WS Overview
 
 Configuration
 .............

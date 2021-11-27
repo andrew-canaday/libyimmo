@@ -78,7 +78,7 @@ typedef struct ymo_blalloc {
  * :param n: size, in bytes, of the pool to create.
  * :returns: pointer to :c:type:`ymo_blalloc_t` on success; ``NULL``, otherwise.
  */
-ymo_blalloc_t* ymo_blalloc_create(size_t n) YMO_FUNC_ATTR_MALLOC;
+ymo_blalloc_t* ymo_blalloc_create(size_t n) YMO_FUNC_MALLOC;
 
 /** Allocate a type from the block
  * e.g. my_type_t* my_var = YMO_BLALLOC(block, my_type_t)

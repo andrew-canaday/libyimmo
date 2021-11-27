@@ -88,7 +88,7 @@ static inline void close_and_free_connection(
     return;
 }
 
-static YMO_FUNC_ATTR_UNUSED void ymo_sigpipe(int x)
+static YMO_FUNC_UNUSED void ymo_sigpipe(int x)
 {
     return;
 }
@@ -234,7 +234,7 @@ ymo_status_t ymo_server_start(ymo_server_t* server, struct ev_loop* loop)
     double def_timeout = YMO_SERVER_IDLE_TIMEOUT;
     double idle_timeout;
     if( ymo_env_as_double("YIMMO_SERVER_IDLE_TIMEOUT",
-                &idle_timeout, &def_timeout) ) {
+            &idle_timeout, &def_timeout) ) {
         ymo_status_t r_val = errno;
         ymo_log_error("Invalid YIMMO_SERVER_IDLE_TIMEOUT: %s",
                 getenv("YIMMO_SERVER_IDLE_TIMEOUT"));

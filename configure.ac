@@ -19,11 +19,12 @@
 ##
 ##==============================================================================
 
+FLAMBORP="asdf"
 
 ##-----------------------------
 ##           Init:
 ##-----------------------------
-AS_BOX([Init])
+YMO_BOX([Init])
 AC_INIT(
     [libyimmo], [0.0.0],
     [andrew.canaday@gmail.com],[libyimmo],
@@ -33,171 +34,96 @@ AC_CONFIG_MACRO_DIR([m4])
 AC_USE_SYSTEM_EXTENSIONS
 
 
+# HACK HACK HACK: color output for "checking..."
+YMO_TERM_CHECK()
+YMO_MSG_RESULT() AC_MSG_RESULT([$1])
+m4_pushdef([AC_MSG_RESULT], [{
+        AS_IF([test "x$ymo_configure_has_color" == "x1" ],[
+            AS_CASE(["x$1"],
+                [xyes*], [ymo_color_l="\\033@<:@00;32;m"],
+                [xno*], [ymo_color_l="\\033@<:@01;31;m"],
+                [ymo_color_l="\\033@<:@01;m"]
+                )
+	    ymo_color_r="\\033@<:@00;m"
+            ])
+        printf "${ymo_color_l}" >&AS_MESSAGE_FD
+        YMO_MSG_RESULT $1
+        printf "${ymo_color_r}" >&AS_MESSAGE_FD
+    }dnl
+])
+
 ##-----------------------------
 ##         Metadata:
 ##-----------------------------
-AS_BOX([Metadata])
+YMO_BOX([Metadata])
+
+## Package Info:
 AC_DEFINE([PACKAGE_LICENSE],["GPLv3"],[Package License])
 AC_SUBST([PACKAGE_VENDOR],["Andrew Canaday"])
 AC_COPYRIGHT([© copyright 2014 Andrew Canaday])
-AC_DEFINE([PACKAGE_COPYRIGHT],
+YMO_DEFINE_AND_SUB([PACKAGE_COPYRIGHT],
     ["© copyright 2014 Andrew Canaday"],
     [Copyright Info])
-AC_SUBST([PACKAGE_COPYRIGHT],["© copyright 2014 Andrew Canaday"])
 AC_SUBST([PACKAGE_DESCRIPTION],
     ["Lightweight socket server framework"])
 AC_SUBST([PACKAGE_SUMMARY],["Lightweight socket server framework"])
-AC_SUBST([YMO_LIB_VERSION],[0:0:0])
 
+## ABI Version:
+YMO_DEFINE_AND_SUB([YMO_ABI_CURRENT],[0],[Yimmo libtool ABI current])
+YMO_DEFINE_AND_SUB([YMO_ABI_AGE],[0],[Yimmo libtool ABI age])
+YMO_DEFINE_AND_SUB([YMO_ABI_REVISION],[0],[Yimmo libtool ABI revision])
+YMO_DEFINE_STR_AND_SUB(
+	[YMO_LIB_VERSION],
+	"$YMO_ABI_CURRENT:$YMO_ABI_AGE:$YMO_ABI_REVISION",
+	[Yimmo libtool ABI version]
+	)
+
+## Package Version:
 ## HACK: get the version components (note: we get awk early here)
 AC_PROG_AWK
-AC_SUBST([PACKAGE_MAJOR],[`echo $PACKAGE_VERSION | awk -F. '{print $1}'`])
-AC_SUBST([PACKAGE_MINOR],[`echo $PACKAGE_VERSION | awk -F. '{print $2}'`])
-AC_SUBST([PACKAGE_PATCH],[`echo $PACKAGE_VERSION | awk -F. '{print $3}'`])
+
+YMO_DEFINE_AND_SUB(
+	[PACKAGE_MAJOR],
+	[`echo $PACKAGE_VERSION | awk -F. '{print $1}'`],
+	[Yimmo package major version])
+YMO_DEFINE_AND_SUB(
+	[PACKAGE_MINOR],[`echo $PACKAGE_VERSION | awk -F. '{print $2}'`],
+	[Yimmo package minor version])
+YMO_DEFINE_AND_SUB(
+	[PACKAGE_PATCH],[`echo $PACKAGE_VERSION | awk -F. '{print $3}'`],
+	[Yimmo package patch level])
 
 ## This is the top-level directory into which API headers are installed:
 AC_SUBST([YIMMO_INCLUDE],[yimmo-$PACKAGE_MAJOR.$PACKAGE_MINOR])
 AC_SUBST([YIMMO_INCLUDEDIR],[$includedir/$YIMMO_INCLUDE])
 
+## There are a lot of these, so they're moved into the m4 directory:
+YMO_CHECK_DEPENDENCIES
+YMO_CHECK_FEATURES
 
-##-----------------------------
-##         Programs:
-##-----------------------------
-AS_BOX([Checking for required programs])
-AM_INIT_AUTOMAKE([-Wall foreign])
-AC_PROG_CC
-m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
-LT_INIT
-PKG_PROG_PKG_CONFIG([0.24])
-AC_PROG_LN_S
-# TODO: make these subject to --enable/--disable-docs
-AC_PROG_SED
-AC_PATH_PROG([POMD4C],[pomd4c])
-AM_CONDITIONAL([HAVE_POMD4C], [test "x$POMD4C" != "x"])
-AC_PATH_PROG([C2SPHINX],[c2sphinx])
-AM_CONDITIONAL([HAVE_C2SPHINX], [test "x$C2SPHINX" != "x"])
-AC_PATH_PROG([PLANTUML],[plantuml])
-AM_CONDITIONAL([HAVE_PLANTUML], [test "x$PLANTUML" != "x"])
+##---------------------------------------------
+##        Configuration Options:
+##---------------------------------------------
+YMO_BOX([Checking user configuration settings])
 
 
 ##-----------------------------
-##         Libraries:
+##    Override Options:
 ##-----------------------------
-AS_BOX([Checking for required libraries])
-AX_PTHREAD
-AX_LIB_SOCKET_NSL
-YMO_LIB_EV
-AX_CHECK_UUID_UTIL_LINUX([],
-    [AC_MSG_ERROR([util-linux libuuid required to build libyimmo])])
-PKG_CHECK_MODULES([BSAT], [libbsat])
-PKG_CHECK_MODULES([PYTHON], [python-3.9-embed], [AC_MSG_NOTICE([Found python 3.9])], [
-		   PKG_CHECK_MODULES([PYTHON], [python-3.8-embed], [AC_MSG_NOTICE([Found python 3.8])], [
-				      PKG_CHECK_MODULES([PYTHON], [python3], [AC_MSG_NOTICE([Found python 3])])
-				      ])
-		   ])
-
-
-AX_CHECK_OPENSSL([],[AC_MSG_ERROR([openssl required to build libyimmo])])
-
+YMO_OPTION([ALLOC_ALLOW_WEAKREF],[1],
+	   [Allow ymo_alloc functions to be overridden using weakref])
+YMO_OPTION([ALLOC_ALLOW_WEAK],[1],
+	   [Allow ymo_alloc functions to be overridden using weak])
+YMO_OPTION([ALLOC_ALLOW_ALIAS],[1],
+	   [Allow ymo_alloc functions to be overridden using alias])
+YMO_OPTION([HDR_HASH_ALLOW_WEAK],[0],
+	   [Allow ymo_http_hdr_hash functions to be overridden using weak])
 
 ##-----------------------------
-##           Headers:
+##    Server Options:
 ##-----------------------------
-AS_BOX([Checking for required C header files])
-AC_HEADER_ASSERT
-AC_CHECK_HEADERS([stdarg.h stdbool.h stddef.h])
-AC_CHECK_HEADERS([sys/socket.h sys/time.h])
-AC_CHECK_HEADERS([netinet/in.h])
-
-
-##-----------------------------
-##           Types:
-##-----------------------------
-#
-# TODO:
-# - in_port_t
-# - socklen_t
-# - uuid_t
-##-----------------------------
-AS_BOX([Checking for required types])
-AC_TYPE_OFF_T
-AC_TYPE_UINT8_T
-AC_TYPE_UINT16_T
-AC_TYPE_UINT32_T
-AC_TYPE_UINTMAX_T
-AC_TYPE_UINTPTR_T
-AC_TYPE_SIZE_T
-AC_TYPE_SSIZE_T
-AC_CHECK_TYPES([ptrdiff_t])
-AC_CHECK_SIZEOF([size_t])
-
-
-##-----------------------------
-##    Arch/Compiler Traits:
-##-----------------------------
-AS_BOX([Checking compiler features])
-AC_C_BIGENDIAN
-AC_C_RESTRICT
-#AC_C_VOLATILE
-AC_C_INLINE
-AC_C_STRINGIZE
-AC_C_FLEXIBLE_ARRAY_MEMBER
-AC_C_VARARRAYS
-AC_C_TYPEOF
-
-
-##-----------------------------
-##    Compiler Attributes:
-##-----------------------------
-AS_BOX([Checking for available compile C attributes])
-#AX_GCC_FUNC_ATTRIBUTE([access])
-#AX_GCC_FUNC_ATTRIBUTE([alloc_align])
-AX_GCC_FUNC_ATTRIBUTE([alias])
-AX_GCC_FUNC_ATTRIBUTE([alloc_size])
-AX_GCC_FUNC_ATTRIBUTE([always_inline])
-AX_GCC_FUNC_ATTRIBUTE([cold])
-AX_GCC_FUNC_ATTRIBUTE([const])
-AX_GCC_FUNC_ATTRIBUTE([deprecated])
-AX_GCC_FUNC_ATTRIBUTE([flatten])
-AX_GCC_FUNC_ATTRIBUTE([format])
-AX_GCC_FUNC_ATTRIBUTE([gnu_inline])
-AX_GCC_FUNC_ATTRIBUTE([hot])
-AX_GCC_FUNC_ATTRIBUTE([malloc])
-AX_GCC_FUNC_ATTRIBUTE([nonnull])
-#AX_GCC_FUNC_ATTRIBUTE([noplt])
-#AX_GCC_FUNC_ATTRIBUTE([pure])
-#AX_GCC_FUNC_ATTRIBUTE([returns_nonnull])
-#AX_GCC_FUNC_ATTRIBUTE([simd])
-AX_GCC_FUNC_ATTRIBUTE([unused])
-AX_GCC_FUNC_ATTRIBUTE([used])
-AX_GCC_FUNC_ATTRIBUTE([warn_unused_result])
-AX_GCC_FUNC_ATTRIBUTE([weak])
-AX_GCC_FUNC_ATTRIBUTE([weakref])
-AX_GCC_FUNC_ATTRIBUTE([fallthrough])
-
-
-##-----------------------------
-##       Function Checks:
-##-----------------------------
-AS_BOX([Checking for required functions])
-AC_FUNC_MALLOC
-AC_CHECK_FUNCS([gettimeofday])
-AC_CHECK_FUNCS([memset])
-AC_CHECK_FUNCS([socket])
-AC_CHECK_FUNCS([strcasecmp])
-AC_CHECK_FUNCS([strdup])
-AC_CHECK_FUNCS([strerror])
-AC_CHECK_FUNCS([strstr])
-AC_CHECK_FUNCS([strtol])
-YMO_CHECK_SOCKET_API
-
-
-##-----------------------------
-##    Configuration Options:
-##-----------------------------
-AS_BOX([Checking user configuration settings])
-YMO_OPTION_DEPRECATED([SERVER_IDLE_TIMEOUT],[5],
-    [Client idle disconnect period in seconds])
+YMO_OPTION([SERVER_IDLE_TIMEOUT],[5],
+    [Default client idle disconnect period in seconds])
 YMO_OPTION_DEPRECATED([SERVER_RECV_BUF_SIZE],[8192],
     [Server receive buffer size for calls to recv])
 
@@ -221,7 +147,7 @@ YMO_OPTION_DEPRECATED([MQTT_RECV_BUF_SIZE],[4096],
 
 
 ##-----------------------------
-##    Advanced Options:
+##      I/O Options:
 ##-----------------------------
 ## Server settings:
 YMO_OPTION([BUCKET_MAX_IOVEC],[32],
@@ -235,7 +161,7 @@ m4_ifdef([PKG_INSTALLDIR],[PKG_INSTALLDIR],[
 ##-----------------------------
 ##          Features:
 ##-----------------------------
-AS_BOX([Checking feature configuration])
+YMO_BOX([Checking feature configuration])
 ##--- Examples: ---
 ## Add flag to explicitly build example code, by default. If absent, example
 ## programs are compiled as an automake "EXTRA" target:
@@ -268,7 +194,7 @@ AC_ARG_ENABLE([maintainer-debug],
 
 ## If set, extend CFLAGS with ALL KINDS OF VERBOSE INFORMATION.
 AS_IF([test "x$enable_maintainer_debug" = "xyes"], [
-    AC_MSG_NOTICE([COMPILING WITH MAINTAINER DEBUG CFLAGS])
+    YMO_NOTICE([COMPILING WITH MAINTAINER DEBUG CFLAGS])
     CFLAGS="${CFLAGS} \
         -Og -g \
         -std=c11 -pedantic \
@@ -317,7 +243,7 @@ AC_ARG_ENABLE([verbose-assert],
 
 ## If set, extend CFLAGS with verbose assertions
 AS_IF([test "x$enable_verbose_assert" = "xyes"], [
-    AC_MSG_NOTICE([COMPILING WITH VERBOSE ASSERTIONS])
+    YMO_NOTICE([COMPILING WITH VERBOSE ASSERTIONS])
     CFLAGS="${CFLAGS} -DYMO_ASSERT_VERBOSE=1"
     ])
 
@@ -325,7 +251,7 @@ AS_IF([test "x$enable_verbose_assert" = "xyes"], [
 ##-----------------------------
 ##          Output:
 ##-----------------------------
-AS_BOX([Generating output files])
+YMO_BOX([Generating output files])
 AC_CONFIG_HEADERS([ymo_config.h])
 
 AC_CONFIG_LINKS([example/index.html:example/index.html])
@@ -384,6 +310,6 @@ AC_CONFIG_FILES([
 AC_REQUIRE_AUX_FILE([tap-driver.sh])
 
 AC_OUTPUT
-AS_BOX([libyimmo configuration complete])
+YMO_BOX([libyimmo configuration complete])
 
 ## end configure.ac

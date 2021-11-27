@@ -36,17 +36,21 @@
 /** HTTP API
  * ==========
  *
- * Yimmo HTTP public API.
+ * This is the yimmo HTTP public API reference.
  *
- * .. toctree::
- *   :hidden:
- *   :maxdepth: 3
+ * .. admonition:: Info
  *
- *   index
+ *     To get a general sense for how the module is
+ *     used, see :ref:`HTTP Overview`.
  *
  * .. contents:: Contents
  *   :local:
  *
+ * .. toctree::
+ *    :maxdepth: 2
+ *    :hidden:
+ *
+ *    index
  */
 
 /* Protocol flags: */
@@ -82,47 +86,135 @@ typedef uint16_t ymo_http_hdr_id_t;
 typedef uint32_t ymo_http_hdr_id_t;
 #endif /* YMO_HDR_16_BIT */
 
-/**  */
+/**
+ * HTTP header table type.
+ *
+ * .. note::
+ *
+ *    *Re: Set-Cookie:*
+ *
+ *    All HTTP response headers have to conform to the rules
+ *    outlined in RFC 7230 (`section 3.2.2 — Field Order <RFC-7230-3.2.2>`_)
+ *    *with the exception of the* ``Set-Cookie`` *header* which has its own
+ *    grammar (outlined in RFC 6265, `section 4.1.1 — Set-Cookie Syntax <RFC-6265-4.1.1>`_).
+ *
+ *    At this time, the library uses a crude trick to accommodate this: it
+ *    checks to see if the header being set is ``Set-Cookie`` and, if so, it
+ *    adds another node to the header table, rather than concatenating the
+ *    values.
+ *
+ *    This works out okay for *setting* cookies, but it also means
+ *    that once a cookie has been inserted into a header table as part of
+ *    *a single exchange*, it cannot be unset using either insert or add
+ *    operations.
+ *
+ *    This **doesn't mean you can't unset cookies at all** — it *is possible*
+ *    to unset a cookie by merely not setting it again on subsequent requests.
+ *    You just can't set a cookie inside a request handler and then *unset* it
+ *    in the *same response*.
+ *
+ *    **TL;DR**: The ``Set-Cookie`` header is essentially append-only.
+ *
+ */
 typedef struct ymo_http_hdr_table ymo_http_hdr_table_t;
 
-/*  */
 typedef struct ymo_http_hdr_table_node ymo_http_hdr_table_node_t;
 
-/*  */
 typedef struct ymo_http_hdr_table_pool ymo_http_hdr_table_pool_t;
 
-/**  */
+/** HTTP header table node pointer — used by :c:func:`ymo_http_hdr_table_next`
+ * as a cursor for iterating over tables.  */
 typedef ymo_http_hdr_table_node_t* ymo_http_hdr_ptr_t;
+
+/* HACK: return the header hash function override method as a string...
+ *
+ * (NOTE: I wouldn't use this. It's gonna disappear soon)
+ *
+ */
+const char* ymo_http_hdr_hash_override_method(void);
 
 /** Create a new HTTP header table.
  */
 ymo_http_hdr_table_t* ymo_http_hdr_table_create(void);
 
-/** Insert a new value, ``value`` at key ``hdr``.
+/**
+ * Insert a new value, ``value`` at key ``hdr``.
  *
  * .. warning::
  *    If the header name given by ``hdr`` is already present in
  *    the header table, it will be *replaced*.
  *
+ * :param table: a pointer to the header table to modify.
+ * :param hdr: the header field name.
+ * :param value: the header field value.
+ * :returns: the computed integer ID for the inserted header.
  */
 ymo_http_hdr_id_t ymo_http_hdr_table_insert(
         ymo_http_hdr_table_t* table, const char* hdr, const char* value);
 
-/** Add the value, ``value`` at key ``hdr``.
+/**
+ * Add the value, ``value`` at key ``hdr``.
  *
  * .. note::
  *    If the header name given by ``hdr`` is not present, it is created.
  *    If it's already present, the header values are joined using ``','`` and
  *    combined into a single header table entry.
  *
+ * :param table: a pointer to the header table to modify.
+ * :param hdr: the header field name.
+ * :param value: the header field value.
+ * :returns: the computed integer ID for the added header.
  */
 ymo_http_hdr_id_t ymo_http_hdr_table_add(
         ymo_http_hdr_table_t* table, const char* hdr, const char* value);
 
-/** */
+/**
+ * Get the value of a header field by name.
+ *
+ * :param table: a pointer to the header table to query
+ * :param hdr: the name of the header field whose value we're fetching
+ * :returns: a pointer to the *internal header field value* on success;
+ *     ``NULL`` on failure.
+ *
+ */
 const char* ymo_http_hdr_table_get(ymo_http_hdr_table_t* table, const char* hdr);
 
-/** */
+/**
+ * Iterate over all of the headers in a header table.
+ *
+ * :param table: a pointer to the header table to query
+ * :param cur: a cursor used to traverse the header table.
+ *     (This is set to ``NULL`` on the first invocation).
+ * :param hdr: the header field *name* is stored here
+ * :param hdr_len: the length of the header field *name* is stored here
+ * :param value: the header field *value* is stored here
+ * :returns: the next cursor or ``NULL`` once the end of the table is reached.
+ *
+ * .. code-block:: c
+ *    :caption: Example: Print all of the entries in a header table
+ *
+ *    // These will be populated during iteration:
+ *    const char* hdr_name;
+ *    const char* hdr_value;
+ *    size_t name_len;
+ *
+ *    // On the first invocation, we just
+ *    // pass NULL for the cursor:
+ *    ymo_http_hdr_ptr_t iter = ymo_http_hdr_table_next(
+ *            table, NULL, &hdr_name, &name_len, &hdr_value);
+ *
+ *    // As long as the returned cursor is not
+ *    // NULL, we've got data:
+ *    while( iter )
+ *    {
+ *        printf("%.*s=%s\n", (int)name_len, hdr_name, hdr_value);
+ *
+ *        // Get the next entry in the table:
+ *        iter = ymo_http_hdr_table_next(
+ *                table, iter, &hdr_name, &name_len, &hdr_value);
+ *    }
+ *
+ */
 ymo_http_hdr_ptr_t ymo_http_hdr_table_next(
         ymo_http_hdr_table_t* table,
         ymo_http_hdr_ptr_t cur,
@@ -187,28 +279,6 @@ struct ymo_http_hdr_table {
 /** Type used to store HTTP traits as binary flags.
  * HTTP flags are 4 bytes, laid out like so:
  *
- * .. admonition:: Key
- *    :class: key-right
- *
- *    **NOTE**: Blank fields are reserved!
- *
- *    Exhange:
- *
- *    - ``V11``  HTTP Version 1.1 (1.0 assumed, otherwise)
- *    - ``KEEP`` Session is keepalive (regardless of protocol version)
- *    - ``TECH`` Session supports transfer-encoding: chunked
- *
- *    Request:
- *
- *    - ``BTEC`` Body Transfer-Encoding Chunked
- *
- *    Response:
- *
- *    - ``RDR``  Response data ready
- *    - ``RDS``  Response data started
- *    - ``RDC``  Response data complete
- *    - ``STEC`` Send transfer-encoding chunked
- *
  * .. code-block::
  *
  *    +---------------------------------------+
@@ -229,6 +299,23 @@ struct ymo_http_hdr_table {
  *    | E                 | R S C E Q         |
  *    | C                 |       C           |
  *    +-------------------+-------------------+
+ *
+ * Exhange:
+ *
+ * - ``V11``  HTTP Version 1.1 (1.0 assumed, otherwise)
+ * - ``KEEP`` Session is keepalive (regardless of protocol version)
+ * - ``TECH`` Session supports transfer-encoding: chunked
+ *
+ * Request:
+ *
+ * - ``BTEC`` Body Transfer-Encoding Chunked
+ *
+ * Response:
+ *
+ * - ``RDR``  Response data ready
+ * - ``RDS``  Response data started
+ * - ``RDC``  Response data complete
+ * - ``STEC`` Send transfer-encoding chunked
  *
  */
 typedef uint32_t ymo_http_flags_t;
@@ -433,9 +520,6 @@ typedef ymo_http_cb_t ymo_http_header_cb_t;
  * :param len: size of body data in bytes
  * :param user: user data if set; else ``NULL``
  *
- * .. note::
- *    The user's gonna need some indicator of state — i.e.
- *    whether or not there is more data for this exchange.
  */
 typedef ymo_status_t (* ymo_http_body_cb_t)(
         ymo_http_session_t* session,
@@ -715,6 +799,7 @@ ymo_server_t* ymo_http_simple_init(
  *
  * .. warning::
  *    There is no:
+ *
  *    - bounds checking
  *    - range checking
  *    - validation

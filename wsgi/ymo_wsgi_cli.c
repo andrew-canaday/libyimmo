@@ -25,8 +25,11 @@
 #include <stdlib.h>
 
 #include "yimmo.h"
+#include "ymo_alloc.h"
 #include "ymo_config.h"
 #include "ymo_log.h"
+
+#include "ymo_http.h"
 
 #include "ymo_wsgi_mod.h"
 #include "ymo_wsgi_cli.h"
@@ -106,6 +109,9 @@ void issue_startup_msg()
     printf("  - Log level (current): %s (%i)\n",
             ymo_log_get_level_name(level),
             level);
+    printf("  - alloc override method: %i\n", YMO_ALLOC_LT_OVERRIDE);
+    printf("  - header hash override method: %s\n",
+            ymo_http_hdr_hash_override_method());
 
 #ifdef YMO_WSGI_PRINT_EXTRA_INFO
     puts("stdatomic:");

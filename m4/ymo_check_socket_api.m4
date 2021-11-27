@@ -29,7 +29,7 @@
 # -------------------------------------------------------------------
 AC_DEFUN([YMO_CHECK_SOCKET_API],
 [
-  AS_BOX([Checking socket API: headers])
+  YMO_BOX([Checking socket API: headers])
   AC_CHECK_HEADERS([ev.h fcntl.h sys/ioctl.h])
   AC_CHECK_HEADERS([sys/epoll.h sys/event.h poll.h])
   AC_CHECK_FUNCS([epoll_ctl kqueue poll select])
@@ -44,7 +44,7 @@ AC_DEFUN([YMO_CHECK_SOCKET_API],
 
   # Optional socket flags:
   ## (This is probably way-overkill):
-  AS_BOX([Checking socket API: Error codes and flags])
+  YMO_BOX([Checking socket API: Error codes and flags])
   AC_CHECK_DECLS([
           EAGAIN,
           EWOULDBLOCK,
@@ -87,13 +87,13 @@ AC_DEFUN([YMO_CHECK_SOCKET_API],
           ])
 
   # Gather/scatter IO API:
-  AS_BOX([Checking socket API: Gather/Scatter IO])
+  YMO_BOX([Checking socket API: Gather/Scatter IO])
   AC_CHECK_DECLS([sendmsg],[],
-          [AC_MSG_ERROR([libyimmo build requires "$as_decl_name" definition])],
+          [YMO_ERROR([libyimmo build requires "$as_decl_name" definition])],
           [#include <sys/socket.h>])
 
   AS_IF([test "x$ac_cv_have_decl_sendmsg" != "xyes"],[
-      AC_MSG_ERROR([libyimmo requires the sendmsg syscall])
+      YMO_ERROR([libyimmo requires the sendmsg syscall])
   ])
 
   ## (This is probably way-overkill):
@@ -105,7 +105,7 @@ AC_DEFUN([YMO_CHECK_SOCKET_API],
       struct msghdr.msg_control,
       struct msghdr.msg_controllen,
       struct msghdr.msg_flags],[],
-      [AC_MSG_ERROR([unknown socket gather/scatter IO API])],
+      [YMO_ERROR([unknown socket gather/scatter IO API])],
       [#include <sys/socket.h>])
 ])
 

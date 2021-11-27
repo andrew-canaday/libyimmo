@@ -42,64 +42,7 @@
 #include <netinet/in.h>
 #include <uuid/uuid.h>
 #include <ev.h>
-
-#include "ymo_config.h"
-
-/*---------------------------------------------------------------*
- * Compiler Attributes wrappers:
- *---------------------------------------------------------------*/
-
-#if defined(HAVE_VAR_ATTRIBUTE_MODE) && (HAVE_VAR_ATTRIBUTE_MODE == 1)
-#define YMO_ATTR_MODE(x) __attribute__((mode(x)))
-#define YMO_ENUM8_TYPEDEF(x) typedef enum x
-#define YMO_ENUM8_AS(x) x YMO_ATTR_MODE(__byte__)
-#define YMO_ENUM16_TYPEDEF(x) enum x
-#define YMO_ENUM16_AS(x) ; typedef uint16_t x
-// #define YMO_ENUM16_TYPEDEF(x) typedef enum x
-// #define YMO_ENUM16_AS(x) x YMO_ATTR_MODE(HImode)
-#else
-#define YMO_ATTR_MODE(x)
-#define YMO_ENUM8_TYPEDEF(x) enum x
-#define YMO_ENUM8_AS(x) ; typedef uint8_t x
-#define YMO_ENUM16_TYPEDEF(x) enum x
-#define YMO_ENUM16_AS(x) ; typedef uint16_t x
-#endif /* HAVE_VAR_ATTRIBUTE_MODE */
-
-#if defined(HAVE_VAR_ATTRIBUTE_ALIGNED) && (HAVE_VAR_ATTRIBUTE_ALIGNED == 1)
-#define YMO_ATTR_ALIGNED(x) __attribute__((aligned(x)))
-#else
-#define YMO_ATTR_ALIGNED(x)
-#endif /* HAVE_VAR_ATTRIBUTE_ALIGNED */
-
-#if defined(HAVE_FUNC_ATTRIBUTE_MALLOC) && (HAVE_FUNC_ATTRIBUTE_MALLOC == 1)
-#define YMO_FUNC_ATTR_MALLOC __attribute__((malloc))
-#else
-#define YMO_FUNC_ATTR_MALLOC
-#endif /* HAVE_FUNC_ATTRIBUTE_MALLOC */
-
-#if defined(HAVE_FUNC_ATTRIBUTE_UNUSED) && (HAVE_FUNC_ATTRIBUTE_UNUSED == 1)
-#define YMO_FUNC_ATTR_UNUSED __attribute__((unused))
-#else
-#define YMO_FUNC_ATTR_UNUSED
-#endif /* HAVE_FUNC_ATTRIBUTE_UNUSED */
-
-#if defined(HAVE_FUNC_ATTRIBUTE_FLATTEN) && (HAVE_FUNC_ATTRIBUTE_FLATTEN == 1)
-#define YMO_FUNC_ATTR_FLATTEN __attribute__((flatten))
-#else
-#define YMO_FUNC_ATTR_FLATTEN
-#endif /* HAVE_FUNC_ATTRIBUTE_FLATTEN */
-
-#if defined(HAVE_FUNC_ATTRIBUTE_FALLTHROUGH) && (HAVE_FUNC_ATTRIBUTE_FALLTHROUGH == 1)
-#define YMO_STMT_ATTR_FALLTHROUGH() __attribute__((fallthrough))
-#else
-#define YMO_STMT_ATTR_FALLTHROUGH()
-#endif /* HAVE_FUNC_ATTRIBUTE_FALLTHROUGH */
-
-#if defined(HAVE_FUNC_ATTRIBUTE_WEAK) && (HAVE_FUNC_ATTRIBUTE_WEAK == 1)
-#define YMO_FUNC_ATTR_WEAK __attribute__((weak))
-#else
-#define YMO_FUNC_ATTR_WEAK
-#endif /* HAVE_FUNC_ATTRIBUTE_WEAK */
+#include "ymo_attrs.h"
 
 /**---------------------------------------------------------------
  * Types

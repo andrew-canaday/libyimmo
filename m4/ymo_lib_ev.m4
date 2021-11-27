@@ -36,7 +36,7 @@ AC_DEFUN([YMO_LIB_EV],[
     # Bail if either of ev.h or -lev is not present:
     AS_IF([test "x$ac_cv_header_ev_h" != "xyes" \
         -o "x$ac_cv_lib_ev_ev_version_major" != "xyes"],[
-        AC_MSG_ERROR([libev is required for build!])
+        YMO_ERROR([libev is required for build!])
     ])
 ])
 

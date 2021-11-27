@@ -46,10 +46,10 @@
 /** Data structure which represents a single thread worker.
  */
 struct ymo_wsgi_worker {
-    ymo_queue_t      queue_in;
-    ymo_queue_t      queue_out;
-    ymo_queue_node_t pool_in[YMO_WSGI_WORKER_QUEUE_POOL_SIZE];
-    ymo_queue_node_t pool_out[YMO_WSGI_WORKER_QUEUE_POOL_SIZE];
+    ymo_queue_t       queue_in;
+    ymo_queue_t       queue_out;
+    ymo_queue_node_t  pool_in[YMO_WSGI_WORKER_QUEUE_POOL_SIZE];
+    ymo_queue_node_t  pool_out[YMO_WSGI_WORKER_QUEUE_POOL_SIZE];
 
     /* Callbacks: */
     ev_prepare  prepare_watcher;
