@@ -5,8 +5,8 @@
 > bears the marks of being my on-again/off-again, personal C-refresher/protocol
 > exploration playground...
 >
-> To be clear: I would not even consider using this in production for *anything*
-> until after some test coverage and usability things have been addressed!
+> To be clear: I wouldn't consider using this in production
+> until after some test coverage and usability things have been addressed.
 > (I generally use [gunicorn](https://gunicorn.org/) for my production WSGI workloads and
 > [libwebsockets](https://libwebsockets.org/) for websockets. Check 'em out!)
 >
