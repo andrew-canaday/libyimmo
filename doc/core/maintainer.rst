@@ -13,7 +13,6 @@ libyimmo
    ymo_net_h
    ymo_assert_h
    ymo_tap_h
-   ymo_test_h
    ymo_trie_h
    event_flow
 

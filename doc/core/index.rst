@@ -47,6 +47,17 @@ setting HTTP headers, checking protocol flags, etc.
 Data
 ....
 
+.. rst-class:: fig-right
+
+   .. figure:: /diagrams/yimmo-data.svg
+      :alt: ymo_proto_t and ymo_conn_t have data fields populated by
+            specific protocol implementations. Usually, the protocol
+            itself occupies the ymo_proto_t data field and the
+            ymo_conn_t data field is leveraged by the protocl to
+            store protocol-specific session information.
+      :target: /_images/yimmo-data.svg
+
+
 Most of the entity types in libyimmo have a ``data`` or ``user_data`` field
 associated with them. These allow a given layer in the architecture to provide
 a place for the layer above it to persist arbitrary data. At a high-level, data

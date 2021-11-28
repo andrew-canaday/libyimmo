@@ -1,0 +1,94 @@
+@startuml
+
+title
+Yimmo Data Ownership
+end title
+
+skinparam titleFontSize 18
+skinparam titleHorizontalAlignment left
+
+skinparam padding 2
+skinparam shadowing false
+skinparam component {
+    FontSize 12
+    FontStyle bold
+    BorderColor #888099
+    BorderThickness 2
+    FontColor #444444
+    'BackgroundColor #EEEEEE
+    BackgroundColor #FFFFFF
+}
+
+skinparam node {
+    FontSize 14
+    FontStyle bold
+    BorderColor #888099
+    BorderThickness 2
+    FontColor #444444
+    BackgroundColor #EEE8E2
+}
+
+skinparam ComponentArrow {
+    FontSize 12
+    FontStyle bold
+    Thickness 2
+    'FontColor #113311
+    FontColor #000000
+    Color #BB444499
+}
+
+skinparam frame {
+    'BackgroundColor #FFF5EB
+    BackgroundColor #f9f9f9
+    BorderColor #AAAAAA
+    'FontSize 24
+    'Padding 20
+}
+
+skinparam note {
+    FontSize 14
+    'FontSize 20
+    'FontStyle italic
+    'BorderColor #888099
+    BorderColor #000000
+    BorderThickness 1
+    FontColor #222222
+    Padding 8
+    BackgroundColor #ffffff
+    'BackgroundColor #eeeeee
+}
+
+package "ymo_server_t" as ymo_server {
+    node "ymo_conn_t" as conn {
+        component data as conn_proto_data
+    }
+
+    node "ymo_proto_t" as ymo_proto {
+        component data as proto_data
+    }
+
+}
+
+package "Protocol (HTTP)" as proto_http {
+    node "ymo_proto_http_t" as http_proto {
+        component data as http_data
+    }
+
+    node "ymo_http_session_t" as http_conn {
+        component data as http_conn_data
+    }
+}
+
+package "User Code" as user_code {
+    component "Per-session data" as user_conn_data
+    component "Per-protocol data" as user_proto_data
+}
+
+proto_data <..> http_proto
+conn_proto_data <..> http_conn
+http_data <--> user_conn_data
+http_conn_data <--> user_proto_data
+
+
+
+@enduml

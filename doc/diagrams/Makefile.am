@@ -41,6 +41,7 @@ else
 endif
 
 docs-local: yimmo-core.svg \
+	yimmo-data.svg \
 	yimmo-wsgi-spsw.svg \
 	yimmo-wsgi-spmw.svg \
 	yimmo-wsgi-mpsw.svg \
