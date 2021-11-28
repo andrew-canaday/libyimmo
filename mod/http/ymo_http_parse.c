@@ -360,7 +360,7 @@ status_item_next:
         *up_ptr = recv_current;
         state = ++exchange->state;
         --remain;
-    } while(++current < buf_end && remain);
+    } while( ++current < buf_end && remain );
 
 
 http_request_parse_done:
@@ -574,7 +574,7 @@ ssize_t ymo_parse_http_headers(
         /* Since we're here, store the char we just saw. */
         *(recv_current++) = c;
         --remain;
-    } while(++current < buf_end && remain);
+    } while( ++current < buf_end && remain );
 
 http_header_parse_done:
     if( remain ) {
@@ -642,7 +642,7 @@ ssize_t ymo_parse_http_body(
                             --len;
                             break;
                     }
-                } while(len);
+                } while( len );
 body_hdr_done:
                 break;
             case HTTP_STATE_BODY:
@@ -657,7 +657,7 @@ body_hdr_done:
 
                 ymo_status_t cb_status = body_cb(
                         session,
-                        exchange,
+                        &exchange->request,
                         exchange->response,
                         current,
                         body_available,
@@ -695,13 +695,13 @@ body_hdr_done:
                                 state_names[exchange->state]);
                         break;
                     }
-                } while(--len);
+                } while( --len );
                 break;
             default:
                 goto body_parse_done;
                 break;
         }
-    } while(len);
+    } while( len );
 
 body_parse_done:
     return (current-buffer);

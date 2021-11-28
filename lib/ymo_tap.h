@@ -128,7 +128,7 @@ static size_t tap_test_num = 0;
 /** Individual unit test signature.
  *
  */
-typedef int (* ymo_tap_test_fn_t)(void);
+typedef int (*ymo_tap_test_fn_t)(void);
 
 /** Struct used to represent individual unit tests.
  */
@@ -185,7 +185,7 @@ int ymo_tap_run(ymo_tap_test_fn_t test_init, ...)
         } else {
             break;
         }
-    } while(tap_test.test_fn);
+    } while( tap_test.test_fn );
     va_end(ap);
 
     if( test_init ) {

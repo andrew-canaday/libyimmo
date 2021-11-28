@@ -19,8 +19,8 @@
  *
  *===========================================================================*/
 
-#include "ymo_log.h"
 #include "ymo_config.h"
+#include "ymo_log.h"
 #include "yimmo.h"
 #include "ymo_alloc.h"
 #include "ymo_conn.h"

@@ -165,7 +165,7 @@ typedef struct ymo_ws_session ymo_ws_session_t;
  * :returns: :c:macro:`YMO_OKAY` on success, errno.h value on failure
  *
  */
-typedef ymo_status_t (* ymo_ws_connect_cb_t)(ymo_ws_session_t* session);
+typedef ymo_status_t (*ymo_ws_connect_cb_t)(ymo_ws_session_t* session);
 
 /** Websocket receive callback type — invoked for each packet of data.
  *
@@ -176,7 +176,7 @@ typedef ymo_status_t (* ymo_ws_connect_cb_t)(ymo_ws_session_t* session);
  * :returns: :c:macro:`YMO_OKAY` on success, errno.h value on failure
  *
  */
-typedef ymo_status_t (* ymo_ws_recv_cb_t)(
+typedef ymo_status_t (*ymo_ws_recv_cb_t)(
         ymo_ws_session_t* session,
         uint8_t flags,
         const char* msg,
@@ -187,7 +187,7 @@ typedef ymo_status_t (* ymo_ws_recv_cb_t)(
  * :session: the session for the closed websocket
  *
  */
-typedef void (* ymo_ws_close_cb_t)(ymo_ws_session_t* session);
+typedef void (*ymo_ws_close_cb_t)(ymo_ws_session_t* session);
 
 
 /**---------------------------------------------------------------

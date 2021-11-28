@@ -20,6 +20,8 @@
  *===========================================================================*/
 
 #define _GNU_SOURCE
+#include "ymo_config.h"
+
 #include <stdio.h>
 #include <assert.h>
 #include <stdlib.h>
@@ -28,8 +30,6 @@
 #include <string.h>
 #include <signal.h>
 #include <sys/mman.h>
-
-#include "ymo_config.h"
 
 #include "yimmo.h"
 #include "ymo_alloc.h"
@@ -141,7 +141,7 @@ ymo_server_t* ymo_server_create(
     }
 
 #if YIMMO_WSGI
-    server->accepting = YMO_PTR_CEIL(shared);
+    server->accepting = (atomic_int*)YMO_PTR_CEIL(shared);
     atomic_init(server->accepting, 0);
 #endif /* YIMMO_WSGI */
     return server;
@@ -235,10 +235,10 @@ ymo_status_t ymo_server_start(ymo_server_t* server, struct ev_loop* loop)
     double idle_timeout;
     if( ymo_env_as_double("YIMMO_SERVER_IDLE_TIMEOUT",
             &idle_timeout, &def_timeout) ) {
-        ymo_status_t r_val = errno;
+        int r_err = errno;
         ymo_log_error("Invalid YIMMO_SERVER_IDLE_TIMEOUT: %s",
                 getenv("YIMMO_SERVER_IDLE_TIMEOUT"));
-        return errno;
+        return r_err;
     }
 
     ymo_log_info("%s:%i idle disconnect: %0.3fs",
@@ -335,15 +335,17 @@ void ymo_accept_cb(struct ev_loop* loop, struct ev_io* watcher, int revents)
 {
     ymo_server_t* server = watcher->data;
 
+    /* HACK HACK HACK: we shouldn't be adjusting server internals for
+     * an external program! (yimmo-wsgi)
+     */
 #if YIMMO_WSGI
-    atomic_int expected = 0;
+    int expected = 0;
     /* TODO: WARNING: if the process holding this mutex dies, we're blorked.
      * There should be some expiration set here...
      */
     if( !atomic_compare_exchange_strong(server->accepting, &expected, 1) ) {
         return;
     }
-    expected = 0;
 #endif /* YIMMO_WSGI */
 
     ymo_log_debug("accept callback invoked for %i", (int)getpid());
@@ -497,7 +499,7 @@ void ymo_read_cb(struct ev_loop* loop, struct ev_io* watcher, int revents)
                     "Breaking from read loop: %s", strerror(errno));
             break;
         }
-    } while(len);
+    } while( len );
 
     /* Bail on handler error: */
     if( status != YMO_OKAY && !YMO_IS_BLOCKED(status) ) {

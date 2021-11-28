@@ -106,7 +106,7 @@
             ymo_assert_test_fail(test_desc); \
         }; \
         ymo_assert_test_pass(test_desc); \
-    } while(0)
+    } while( 0 )
 
 #  else
 #    define ymo_assert_test(test_cond, test_desc) ((void)0)

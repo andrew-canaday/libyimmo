@@ -477,12 +477,12 @@ void* ymo_http_session_get_user_data(ymo_http_session_t* session);
 
 /** Session initialization callback.
  */
-typedef void* (* ymo_http_session_init_cb_t)(
+typedef void* (*ymo_http_session_init_cb_t)(
         void* server_data, ymo_http_session_t* session);
 
 /** Session cleanupialization callback.
  */
-typedef void (* ymo_http_session_cleanup_cb_t)(
+typedef void (*ymo_http_session_cleanup_cb_t)(
         void* server_data, ymo_http_session_t* session, void*);
 
 
@@ -495,7 +495,7 @@ typedef void (* ymo_http_session_cleanup_cb_t)(
  *
  * :returns: YMO_OKAY on success; errno.h value on failure.
  */
-typedef ymo_status_t (* ymo_http_cb_t)(
+typedef ymo_status_t (*ymo_http_cb_t)(
         ymo_http_session_t* session,
         ymo_http_request_t* request,
         ymo_http_response_t* response,
@@ -521,7 +521,7 @@ typedef ymo_http_cb_t ymo_http_header_cb_t;
  * :param user: user data if set; else ``NULL``
  *
  */
-typedef ymo_status_t (* ymo_http_body_cb_t)(
+typedef ymo_status_t (*ymo_http_body_cb_t)(
         ymo_http_session_t* session,
         ymo_http_request_t* request,
         ymo_http_response_t* response,
@@ -549,7 +549,7 @@ YMO_ENUM8_TYPEDEF(ymo_http_upgrade_status) {
  *
  * :returns: ymo_http_status_t indicator + set errno on failure
  */
-typedef ymo_http_upgrade_status_t (* ymo_http_upgrade_cb_t)(
+typedef ymo_http_upgrade_status_t (*ymo_http_upgrade_cb_t)(
         const char* hdr_upgrade,
         ymo_http_request_t* request,
         ymo_http_response_t* response);

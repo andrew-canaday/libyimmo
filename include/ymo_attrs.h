@@ -26,12 +26,6 @@
  *
  * Architecture and compiler features found at configure time.
  *
- * .. todo::
- *
- *    - Stop distributing config.h (ymo_config.h)
- *    - Create a tidy template file with the subset required in the dist
- *    - Make them overridable
- *
  * .. toctree::
  *   :hidden:
  *   :maxdepth: 3
@@ -48,8 +42,6 @@
 #include <netinet/in.h>
 #include <uuid/uuid.h>
 #include <ev.h>
-
-#include "ymo_config.h"
 
 /*---------------------------------------------------------------*
  * Compiler Variable Attribute Wrappers:

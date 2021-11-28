@@ -128,17 +128,17 @@ typedef struct ymo_wsgi_proc ymo_wsgi_proc_t;
  */
 typedef struct ymo_wsgi_exchange_pool ymo_wsgi_exchange_pool_t;
 
-typedef void (* ymo_prepare_cb)(
+typedef void (*ymo_prepare_cb)(
         struct ev_loop* loop, ev_prepare* w, int revents);
 
-typedef void (* ymo_check_cb)(
+typedef void (*ymo_check_cb)(
         struct ev_loop* loop, ev_check* w, int revents);
 
-typedef void (* ymo_async_cb)(
+typedef void (*ymo_async_cb)(
         struct ev_loop* loop, ev_async* w, int revents);
 
 #ifdef YMO_WSGI_USE_IDLE_WATCHER
-typedef void (* ymo_idle_cb)(
+typedef void (*ymo_idle_cb)(
         struct ev_loop* loop, ev_idle* w, int revents);
 #endif /* YMO_WSGI_USE_IDLE_WATCHER */
 

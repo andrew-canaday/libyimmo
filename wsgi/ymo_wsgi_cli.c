@@ -20,13 +20,15 @@
  *===========================================================================*/
 
 #define PY_SSIZE_T_CLEAN
+#include "ymo_config.h"
+
 #include <Python.h>
 #include <stdio.h>
 #include <stdlib.h>
 
+
 #include "yimmo.h"
 #include "ymo_alloc.h"
-#include "ymo_config.h"
 #include "ymo_log.h"
 
 #include "ymo_http.h"
@@ -80,20 +82,11 @@ typedef struct backend_info {
  *---------------------------------*/
 void issue_startup_msg()
 {
-    backend_info_t backends[] = {
-        BACKEND_INFO(EVBACKEND_SELECT),
-        BACKEND_INFO(EVBACKEND_POLL),
-        BACKEND_INFO(EVBACKEND_EPOLL),
-        BACKEND_INFO(EVBACKEND_KQUEUE),
-        BACKEND_INFO(EVBACKEND_DEVPOLL),
-        BACKEND_INFO(EVBACKEND_PORT),
-        {0, NULL},
-    };
-
     puts(GREETING_START);
-    printf("libyimmo %s\n", PACKAGE_COPYRIGHT);
-    printf("License: %s\n", PACKAGE_LICENSE);
-    printf("Lib version: %s\n", ymo_version_str());
+    printf("Lib version: %i.%i.%i\n",
+            YIMMO_VERSION_MAJOR,
+            YIMMO_VERSION_MINOR,
+            YIMMO_VERSION_PATCH);
 
     /* Log level info: */
     ymo_log_init();
@@ -114,6 +107,16 @@ void issue_startup_msg()
             ymo_http_hdr_hash_override_method());
 
 #ifdef YMO_WSGI_PRINT_EXTRA_INFO
+    backend_info_t backends[] = {
+        BACKEND_INFO(EVBACKEND_SELECT),
+        BACKEND_INFO(EVBACKEND_POLL),
+        BACKEND_INFO(EVBACKEND_EPOLL),
+        BACKEND_INFO(EVBACKEND_KQUEUE),
+        BACKEND_INFO(EVBACKEND_DEVPOLL),
+        BACKEND_INFO(EVBACKEND_PORT),
+        {0, NULL},
+    };
+
     puts("stdatomic:");
     printf(" - ATOMIC_BOOL_LOCK_FREE:     %i\n", ATOMIC_BOOL_LOCK_FREE);
     printf(" - ATOMIC_CHAR_LOCK_FREE:     %i\n", ATOMIC_CHAR_LOCK_FREE);

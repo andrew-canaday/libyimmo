@@ -76,7 +76,7 @@ static inline ssize_t encode_remain(char* out_buf, size_t len)
 
         *out_buf++ = e;
         ++buf_len;
-    } while(len);
+    } while( len );
 
     return buf_len;
 }

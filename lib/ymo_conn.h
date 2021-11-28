@@ -20,6 +20,7 @@
 
 
 
+/** .. _connection: */
 
 /** Connections
  * =============
@@ -28,6 +29,7 @@
 
 #ifndef YMO_CONNECTION_H
 #define YMO_CONNECTION_H
+
 #include "ymo_config.h"
 
 #include <pthread.h>
@@ -70,12 +72,20 @@ struct ymo_conn {
  * Functions
  *---------------------------------------------------------------*/
 
+/** We typedef the callback signature for ev_io_watcher's, purely as
+ * a matter of convenience.
+ */
+typedef void (*ymo_ev_io_cb_t)(
+        struct ev_loop* loop,
+        struct ev_io* watcher,
+        int revents);
+
 
 /** Create a new conn object.
  */
 ymo_conn_t* ymo_conn_create(
         ymo_server_t* server, ymo_proto_t* proto, int client_fd,
-        ymo_ev_cb_t read_cb, ymo_ev_cb_t write_cb);
+        ymo_ev_io_cb_t read_cb, ymo_ev_io_cb_t write_cb);
 
 
 /** Start idle disconnect timer for a given conn.

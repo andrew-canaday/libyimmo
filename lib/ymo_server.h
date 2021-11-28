@@ -21,8 +21,8 @@
 
 /** .. _server: */
 
-/** The Server
- * ============
+/** Server
+ * ========
  *
  * The :c:struct:`ymo_server` is a relatively plain, TCP socket server. It
  * is responsible for binding and listening on the server socket, handling

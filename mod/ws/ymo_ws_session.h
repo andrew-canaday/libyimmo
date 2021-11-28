@@ -24,10 +24,10 @@
 
 #ifndef YMO_WS_SESSION_H
 #define YMO_WS_SESSION_H
+#include "ymo_config.h"
 #include <stdio.h>
 #include <arpa/inet.h>
 
-#include "ymo_config.h"
 #include "yimmo.h"
 #include "ymo_ws.h"
 #include "ymo_proto_ws.h"

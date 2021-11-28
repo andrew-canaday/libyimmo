@@ -157,7 +157,7 @@ ssize_t ymo_proto_mqtt_read(
             /* Errno has been set by the last parse function: */
             return -1;
         }
-    } while(len);
+    } while( len );
 
     if( session->msg_in.parse_state == MQTT_PARSE_COMPLETE ) {
 mqtt_parse_complete:

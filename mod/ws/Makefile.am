@@ -31,6 +31,7 @@ lib_LTLIBRARIES=\
 	libyimmo_ws.la
 
 libyimmo_ws_la_CFLAGS=\
+ 	-I@top_builddir@/include \
  	-I@top_srcdir@/include \
  	-I@top_srcdir@/lib \
 	-I@top_srcdir@/mod \

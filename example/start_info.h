@@ -48,9 +48,10 @@ const char* GREETING_END =
 static void issue_startup_msg(void)
 {
     puts(GREETING_START);
-    printf("libyimmo %s\n", PACKAGE_COPYRIGHT);
-    printf("License: %s\n", PACKAGE_LICENSE);
-    printf("Lib version: %s\n", ymo_version_str());
+    printf("Lib version: %i.%i.%i\n",
+            YIMMO_VERSION_MAJOR,
+            YIMMO_VERSION_MINOR,
+            YIMMO_VERSION_PATCH);
 
     /* Log level info: */
     puts("Logging:");

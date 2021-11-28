@@ -29,6 +29,7 @@ POMD4C               ?= pomd4c
 
 
 AM_CFLAGS=\
+ 	-I@top_builddir@/include \
  	-I@top_srcdir@/include \
  	-I@top_srcdir@/mod \
  	-I@top_srcdir@/mod/http/include \

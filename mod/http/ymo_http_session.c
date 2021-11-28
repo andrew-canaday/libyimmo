@@ -62,7 +62,7 @@ ymo_http_session_free(ymo_http_session_t* http_session)
         do
         {
             status = ymo_http_session_complete_response(http_session);
-        } while(status == YMO_OKAY);
+        } while( status == YMO_OKAY );
         ymo_bucket_free_all(http_session->send_buffer);
         YMO_DELETE(ymo_http_session_t, http_session);
     }

@@ -26,7 +26,6 @@
 int test_just_log_stuff(void)
 {
     ymo_log_level_t level = ymo_log_get_level();
-    printf("\tLib version: %s\n", ymo_version_str());
     printf("\tMax log level: %s (%i)\n",
             ymo_log_get_level_name(YMO_LOG_LEVEL_MAX), YMO_LOG_LEVEL_MAX);
     printf("\tCurrent log level: %s (%i)\n",

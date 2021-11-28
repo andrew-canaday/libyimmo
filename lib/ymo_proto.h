@@ -65,7 +65,7 @@
  *
  * be separated into two distinct callbacks.
  */
-typedef ymo_status_t (* ymo_proto_init_cb_t)(
+typedef ymo_status_t (*ymo_proto_init_cb_t)(
         ymo_proto_t* proto, ymo_server_t* server);
 
 /** Protocol-level cleanup/dealloc callback type. [REQUIRED]
@@ -78,7 +78,7 @@ typedef ymo_status_t (* ymo_proto_init_cb_t)(
  *
  * be separated into two distinct callbacks.
  */
-typedef void (* ymo_proto_cleanup_cb_t)(
+typedef void (*ymo_proto_cleanup_cb_t)(
         ymo_proto_t* proto, ymo_server_t* server);
 
 /** Protocol-level connection init callback. [OPTIONAL]
@@ -90,7 +90,7 @@ typedef void (* ymo_proto_cleanup_cb_t)(
  *
  * Returns per-connection protocol data (or NULL)
  */
-typedef void* (* ymo_proto_conn_init_cb_t)(
+typedef void* (*ymo_proto_conn_init_cb_t)(
         void* proto_data, ymo_conn_t* conn);
 
 /** Protocol-level connection ready callback. [OPTIONAL]
@@ -101,7 +101,7 @@ typedef void* (* ymo_proto_conn_init_cb_t)(
  * :conn: the newly created connection object
  * :returns: per-connection protocol data (or NULL)
  */
-typedef ymo_status_t (* ymo_proto_conn_ready_cb_t)(
+typedef ymo_status_t (*ymo_proto_conn_ready_cb_t)(
         void* proto_data, ymo_conn_t* conn, void* conn_data);
 
 /** Protocol-level connection cleanup callback.
@@ -112,13 +112,13 @@ typedef ymo_status_t (* ymo_proto_conn_ready_cb_t)(
  * :conn: the connection object that's being destroyed
  * :conn_data: the per-connection data associated with this connection
  */
-typedef void (* ymo_proto_conn_cleanup_cb_t)(
+typedef void (*ymo_proto_conn_cleanup_cb_t)(
         void* proto_data,
         ymo_conn_t* conn,
         void* conn_data);
 
 /** Protocol-level read callback. */
-typedef ssize_t (* ymo_proto_read_cb_t)(
+typedef ssize_t (*ymo_proto_read_cb_t)(
         void* proto_data,
         ymo_conn_t* conn,
         void* conn_data,
@@ -126,7 +126,7 @@ typedef ssize_t (* ymo_proto_read_cb_t)(
         size_t len);
 
 /** Protocol-level write callback. */
-typedef ymo_status_t (* ymo_proto_write_cb_t)(
+typedef ymo_status_t (*ymo_proto_write_cb_t)(
         void* proto_data,
         ymo_conn_t* conn,
         void* conn_data,

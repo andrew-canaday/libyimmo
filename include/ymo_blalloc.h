@@ -28,7 +28,6 @@
 
 #ifndef YMO_BLOCK_ALLOC_H
 #define YMO_BLOCK_ALLOC_H
-#include "ymo_config.h"
 #include <stddef.h>
 #include <stdalign.h>
 
@@ -55,6 +54,14 @@
 /**---------------------------------------------------------------
  * Types
  *---------------------------------------------------------------*/
+
+/* HACK: if FLEXIBLE_ARRAY_MEMBER isn't defined, assume C99 and set it
+ *       to nothing. If need be, the user can define it as 1 for older
+ *       compilers:
+ */
+#ifndef FLEXIBLE_ARRAY_MEMBER
+#define FLEXIBLE_ARRAY_MEMBER
+#endif /* FLEXIBLE_ARRAY_MEMBER */
 
 typedef unsigned char blit_t;
 

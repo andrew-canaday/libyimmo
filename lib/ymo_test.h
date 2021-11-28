@@ -39,7 +39,7 @@
  *---------------------------------------------------------------*/
 
 /** Standard test function signature. */
-typedef int (* ymo_test_fn_t)(void);
+typedef int (*ymo_test_fn_t)(void);
 
 /** Structure used to hold information for individual tests. */
 typedef struct ymo_test {

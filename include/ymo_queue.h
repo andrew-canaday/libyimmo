@@ -34,7 +34,7 @@
  *===-- Types: --===*
  *==================*/
 
-typedef int (* ymo_queue_cmp_fn)(void* l, void* r);
+typedef int (*ymo_queue_cmp_fn)(void* l, void* r);
 
 /** .. c:type: ymo_queue_t
  *

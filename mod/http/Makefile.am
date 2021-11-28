@@ -31,6 +31,7 @@ lib_LTLIBRARIES=\
 	libyimmo_http.la
 
 libyimmo_http_la_CFLAGS=\
+ 	-I@top_builddir@/include \
  	-I@top_srcdir@/include \
  	-I@top_srcdir@/lib \
 	-I@top_srcdir@/mod \

@@ -36,11 +36,7 @@ SUBDIRS=\
 	benchmarks \
 	doc
 
-pkgconfig_DATA=@PACKAGE_NAME@-@PACKAGE_MAJOR@.@PACKAGE_MINOR@.pc
-
-yimmodir=@YIMMO_INCLUDEDIR@
-yimmo_HEADERS=\
-	ymo_config.h
+pkgconfig_DATA=@PACKAGE_NAME@-@YIMMO_VERSION_MAJOR@.@YIMMO_VERSION_MINOR@.pc
 
 # TODO: use 'install' to install things...
 
@@ -49,11 +45,11 @@ yimmo_HEADERS=\
 # v1.3 will result in libyimmo-1.pc -> libyimmo-1.2.pc).
 install-data-hook:
 	cd $(DESTDIR)@includedir@ && \
-		$(LN_S) -f @YIMMO_INCLUDE@ yimmo-${PACKAGE_MAJOR}
+		$(LN_S) -f @YIMMO_INCLUDE@ yimmo-${YIMMO_VERSION_MAJOR}
 	cd $(DESTDIR)@pkgconfigdir@ && \
 		$(LN_S) -f \
-			@PACKAGE_NAME@-@PACKAGE_MAJOR@.@PACKAGE_MINOR@.pc \
-			@PACKAGE_NAME@-@PACKAGE_MAJOR@.pc
+			@PACKAGE_NAME@-@YIMMO_VERSION_MAJOR@.@YIMMO_VERSION_MINOR@.pc \
+			@PACKAGE_NAME@-@YIMMO_VERSION_MAJOR@.pc
 
 fmt:
 	$(top_srcdir)/util/fmt-code.sh

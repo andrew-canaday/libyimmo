@@ -918,6 +918,16 @@ div.admonition-info > p.admonition-title ~ p {
     font-style: italic;
 }
 
+/* But, make info admonitions smaller inside of C docs: */
+dl.c div.admonition-info > p.admonition-title,
+dl.c div.admonition-info > p.admonition-title::before {
+	font-size: 1.03rem;
+}
+
+dl.c div.admonition-info > p.admonition-title ~ p {
+	font-size: 1.0rem;
+}
+
 @media screen and (max-width: 375px),
 screen and (max-width: 400px),
 screen and (max-width: 870px),

@@ -58,7 +58,7 @@ char* ymo_conn_id_str(const ymo_conn_t* conn)
 
 ymo_conn_t* ymo_conn_create(
         ymo_server_t* server, ymo_proto_t* proto, int client_fd,
-        ymo_ev_cb_t read_cb, ymo_ev_cb_t write_cb)
+        ymo_ev_io_cb_t read_cb, ymo_ev_io_cb_t write_cb)
 {
     ymo_conn_t* conn = NULL;
     conn = YMO_NEW(ymo_conn_t);

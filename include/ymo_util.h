@@ -23,7 +23,6 @@
 #ifndef YMO_UTIL_H
 #define YMO_UTIL_H
 
-#include "ymo_config.h"
 #include <stdlib.h>
 #include <stdint.h>
 #include "yimmo.h"

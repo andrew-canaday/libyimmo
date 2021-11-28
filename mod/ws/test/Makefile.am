@@ -26,6 +26,7 @@
 AM_TESTSUITE_SUMMARY_HEADER = ' for libyimmo_ws $(PACKAGE_VERSION)'
 
 AM_CFLAGS=\
+ 	-I@top_builddir@/include \
  	-I@top_srcdir@/include \
  	-I@top_srcdir@/lib \
  	-I@top_srcdir@/mod \

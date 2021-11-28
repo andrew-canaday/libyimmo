@@ -39,7 +39,7 @@ yimmo_HEADERS=\
 # v1.3 will result in yimmo-1 -> yimmo-1.2).
 install-data-hook:
 	cd $(DESTDIR)@includedir@ && \
-		$(LN_S) -f @YIMMO_INCLUDE@ yimmo-${PACKAGE_MAJOR}
+		$(LN_S) -f @YIMMO_INCLUDE@ yimmo-${YIMMO_VERSION_MAJOR}
 
 # EOF
 

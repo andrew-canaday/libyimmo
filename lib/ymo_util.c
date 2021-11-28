@@ -20,8 +20,8 @@
  *===========================================================================*/
 
 
-#include <stdint.h>
 #include "ymo_config.h"
+#include <stdint.h>
 #include "yimmo.h"
 #include "ymo_util.h"
 #include "ymo_alloc.h"

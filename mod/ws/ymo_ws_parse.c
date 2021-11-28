@@ -176,7 +176,7 @@ ymo_ws_parse_masking_key(ymo_ws_session_t* session, char* buffer, size_t len)
             goto masking_parse_done;
         }
 
-    } while(current < end);
+    } while( current < end );
 
 masking_parse_done:
     return current - buffer;

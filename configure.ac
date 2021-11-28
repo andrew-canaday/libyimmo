@@ -25,8 +25,9 @@ FLAMBORP="asdf"
 ##           Init:
 ##-----------------------------
 YMO_BOX([Init])
+# NOTE: This is the PACKAGE version (SemVer), NOT the ABI version (libtool):
 AC_INIT(
-    [libyimmo], [0.0.0],
+    [libyimmo], [0.0.1],
     [andrew.canaday@gmail.com],[libyimmo],
     [https://github.com/andrew-canaday/libyimmo])
 AC_CONFIG_AUX_DIR([./build-aux])
@@ -57,44 +58,43 @@ m4_pushdef([AC_MSG_RESULT], [{
 ##-----------------------------
 YMO_BOX([Metadata])
 
-## Package Info:
-AC_DEFINE([PACKAGE_LICENSE],["GPLv3"],[Package License])
+## Package Info for build files:
+AC_SUBST([PACKAGE_LICENSE],["GPLv3"],[Package License])
 AC_SUBST([PACKAGE_VENDOR],["Andrew Canaday"])
 AC_COPYRIGHT([© copyright 2014 Andrew Canaday])
-YMO_DEFINE_AND_SUB([PACKAGE_COPYRIGHT],
-    ["© copyright 2014 Andrew Canaday"],
-    [Copyright Info])
-AC_SUBST([PACKAGE_DESCRIPTION],
-    ["Lightweight socket server framework"])
+AC_SUBST([PACKAGE_COPYRIGHT],["© copyright 2014 Andrew Canaday"],[Copyright Info])
+AC_SUBST([PACKAGE_DESCRIPTION],["Lightweight socket server framework"])
 AC_SUBST([PACKAGE_SUMMARY],["Lightweight socket server framework"])
 
-## ABI Version:
-YMO_DEFINE_AND_SUB([YMO_ABI_CURRENT],[0],[Yimmo libtool ABI current])
-YMO_DEFINE_AND_SUB([YMO_ABI_AGE],[0],[Yimmo libtool ABI age])
-YMO_DEFINE_AND_SUB([YMO_ABI_REVISION],[0],[Yimmo libtool ABI revision])
-YMO_DEFINE_STR_AND_SUB(
-	[YMO_LIB_VERSION],
-	"$YMO_ABI_CURRENT:$YMO_ABI_AGE:$YMO_ABI_REVISION",
-	[Yimmo libtool ABI version]
-	)
+# NOTE: ABI versioning is C.R.A. (libtool) not M.m.p (semver)!!
+# C.R.A. = Current, Revision, Age:
+# - Current: the interface version
+# - Age: how many versions prior to "current" current is backwards compat with
+# - Revision: how many times current has been released, publicly
+#
+# Semver translation:
+# - when it would be a "patch level" release: bump revision only
+# - when it would be a "minor level" release: bump current, revision, AND age
+# - when it would be a "major level" release: bump current; age = revision = 0
+#
+# For more info, see:
+# - https://www.gnu.org/software/libtool/manual/html_node/Updating-version-info.html
+# - https://autotools.io/libtool/version.html
+AC_SUBST([YMO_ABI_CURRENT],[0],[Yimmo libtool ABI current])
+AC_SUBST([YMO_ABI_AGE],[0],[Yimmo libtool ABI age])
+AC_SUBST([YMO_ABI_REVISION],[1],[Yimmo libtool ABI revision])
+AC_SUBST([YMO_LIB_VERSION],["$YMO_ABI_CURRENT:$YMO_ABI_REVISION:$YMO_ABI_AGE"])
 
 ## Package Version:
 ## HACK: get the version components (note: we get awk early here)
 AC_PROG_AWK
-
-YMO_DEFINE_AND_SUB(
-	[PACKAGE_MAJOR],
-	[`echo $PACKAGE_VERSION | awk -F. '{print $1}'`],
-	[Yimmo package major version])
-YMO_DEFINE_AND_SUB(
-	[PACKAGE_MINOR],[`echo $PACKAGE_VERSION | awk -F. '{print $2}'`],
-	[Yimmo package minor version])
-YMO_DEFINE_AND_SUB(
-	[PACKAGE_PATCH],[`echo $PACKAGE_VERSION | awk -F. '{print $3}'`],
-	[Yimmo package patch level])
+AC_SUBST([YIMMO_VERSION_MAJOR],[`echo $PACKAGE_VERSION | awk -F. '{print $1}'`])
+AC_SUBST([YIMMO_VERSION_MINOR],[`echo $PACKAGE_VERSION | awk -F. '{print $2}'`])
+AC_SUBST([YIMMO_VERSION_PATCH],[`echo $PACKAGE_VERSION | awk -F. '{print $3}'`])
+AC_SUBST([YIMMO_VERSION],[`echo $VERSION | awk -F. '{printf("0x%02x%02x%02x00", $1, $2, $3)}'`])
 
 ## This is the top-level directory into which API headers are installed:
-AC_SUBST([YIMMO_INCLUDE],[yimmo-$PACKAGE_MAJOR.$PACKAGE_MINOR])
+AC_SUBST([YIMMO_INCLUDE],[yimmo-$YIMMO_VERSION_MAJOR.$YIMMO_VERSION_MINOR])
 AC_SUBST([YIMMO_INCLUDEDIR],[$includedir/$YIMMO_INCLUDE])
 
 ## There are a lot of these, so they're moved into the m4 directory:
@@ -259,11 +259,12 @@ AC_CONFIG_LINKS([example/index.html:example/index.html])
 ## yimmo package output files:
 AC_CONFIG_FILES([
     Makefile
-    libyimmo-$PACKAGE_MAJOR.$PACKAGE_MINOR.pc:libyimmo.pc.in
+    libyimmo-$YIMMO_VERSION_MAJOR.$YIMMO_VERSION_MINOR.pc:libyimmo.pc.in
     ])
 
 ## libyimmo core output files:
 AC_CONFIG_FILES([
+    include/yimmo.h
     lib/Makefile
     include/Makefile
     lib/test/Makefile

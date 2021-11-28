@@ -45,15 +45,75 @@
 #include "ymo_attrs.h"
 
 /**---------------------------------------------------------------
+ * Version
+ *---------------------------------------------------------------*/
+
+/**
+ *
+ * Libyimmo uses `Semantic Versioning <https://semver.org/>`_ for package
+ * releases versions, and
+ * `libtool versioning <https://www.gnu.org/software/libtool/manual/html_node/Updating-version-info.html>`_
+ * for the library's ABI version.
+ *
+ * The following macros can be used to determine version info at compile-time:
+ */
+
+/** Libyimmo package major version */
+#define YIMMO_VERSION_MAJOR   @YIMMO_VERSION_MAJOR@
+
+/** Libyimmo package minor version */
+#define YIMMO_VERSION_MINOR   @YIMMO_VERSION_MINOR@
+
+/** Libyimmo patch level */
+#define YIMMO_VERSION_PATCH   @YIMMO_VERSION_PATCH@
+
+/**
+ * Libyimmo *package* version (Semantic Versioning).
+ *
+ * The version is encoded as a 32-bit unsigned integer. In most-to-least
+ * significant byte order the bytes are ``major``, ``minor``, and ``patch``.
+ *
+ * (The least significant byte is reserved for future use)
+ *
+ * .. code-block:: c
+ *
+ *    assert( ((YIMMO_VERSION >> 24) & 0xff) == YIMMO_VERSION_MAJOR );
+ *    assert( ((YIMMO_VERSION >> 16) & 0xff) == YIMMO_VERSION_MINOR );
+ *    assert( ((YIMMO_VERSION >>  8) & 0xff) == YIMMO_VERSION_PATCH );
+ */
+#define YIMMO_VERSION         @YIMMO_VERSION@
+
+/* TODO: why would anyone want the linker ABI version at compile-time? */
+
+/** Libtool ABI "current" */
+#define YMO_ABI_CURRENT       @YMO_ABI_CURRENT@
+
+/** Libtool ABI "age". */
+#define YMO_ABI_AGE           @YMO_ABI_AGE@
+
+/** Libtool ABI "revision". */
+#define YMO_ABI_REVISION      @YMO_ABI_REVISION@
+
+/**---------------------------------------------------------------
  * Types
  *---------------------------------------------------------------*/
 
-/** Status code type used by the libyimmo API (generally follows errno.h). */
+/**
+ * Status code type used by the libyimmo API (generally follows errno.h).
+ *
+ * .. note::
+ *
+ *    This is *just a typedef* for ``int``. It exists to make it easier for
+ *    library maintainers to identify status values in the code. It's not
+ *    necessary that you use ``ymo_status_t`` in your own code (though,
+ *    you are also welcome to!).
+ *
+ */
 typedef int ymo_status_t;
 
 /** Status code indicating everything went okay.
  *
- * At the moment, we use errno.h code definitions for other types of
+ * **Spoiler**: this is defined to be ``0`` and we use errno.h code values for
  * error conditions.
  */
 #define YMO_OKAY 0
@@ -61,28 +121,30 @@ typedef int ymo_status_t;
 /** Opaque struct used to represent a single server.
  *
  * A yimmo "server" consists of a listener for a *single port*.
+ *
+ * .. admonition:: Info
+ *
+ *    For more detailed information, see the :ref:`server` docs.
  */
 typedef struct ymo_server ymo_server_t;
 
-/** Opaque struct used to represent a connection. */
+/** Opaque struct used to represent a connection.
+ *
+ * .. admonition:: Info
+ *
+ *    For more detailed information, see the :ref:`connection` docs.
+ */
 typedef struct ymo_conn ymo_conn_t;
 
-/** Opaque struct type used to represent a protocol. */
+/** Opaque struct type used to represent a protocol.
+ *
+ * .. admonition:: Info
+ *
+ *    For more detailed information, see the :ref:`protocols` docs.
+ */
 typedef struct ymo_proto ymo_proto_t;
 
-/** Callback typedef for libev callbacks (for convenience).
- *
- * :param loop: ev_loop executing the callback
- * :param watcher: libev watcher type associated with the callback
- * :param revents: event mask used to indicate reason for the callback
- */
-typedef void (* ymo_ev_cb_t)(
-        struct ev_loop* loop,
-        struct ev_io* watcher,
-        int revents);
-
 /** User-level connection init callback.
- *
  *
  * This function provides user-code with an opportunity to associate
  * application data with a newly initiated connection. The data associated
@@ -96,14 +158,13 @@ typedef void (* ymo_ev_cb_t)(
  *
  * Returns user data to associate with the new connection
  */
-typedef void* (* ymo_user_conn_init_cb_t)(
+typedef void* (*ymo_user_conn_init_cb_t)(
         ymo_server_t* server,
         ymo_conn_t* conn);
 
 /** User-level connection cleanup callback.
  *
- *
- * This function provides user-code with an opportunity to perform somea
+ * This function provides user-code with an opportunity to perform some
  * cleanup on application data associated with the connection, just prior
  * to final teardown.
  *
@@ -113,7 +174,7 @@ typedef void* (* ymo_user_conn_init_cb_t)(
  * :param conn: new connection object
  * :param user: data associated with connection
  */
-typedef void (* ymo_user_conn_cleanup_cb_t)(
+typedef void (*ymo_user_conn_cleanup_cb_t)(
         ymo_server_t* server,
         ymo_conn_t* conn,
         void* user);
@@ -125,7 +186,8 @@ YMO_ENUM16_TYPEDEF(ymo_server_config_flags) {
     YMO_SERVER_REUSE_PORT = 0x02, /* allow multiple processes to bind to the listen port */
 } YMO_ENUM16_AS(ymo_server_config_flags_t);
 
-/** Struct used to pass configuration information in at server create.
+/** Struct used to pass configuration information to
+ * :c:func:`ymo_server_create`.
  */
 typedef struct ymo_server_config {
     struct ev_loop*             loop;           /* I/O loop */
@@ -140,30 +202,7 @@ typedef struct ymo_server_config {
 /** Apache-esque "bucket" type used to handle streams of data. */
 typedef struct ymo_bucket ymo_bucket_t;
 
-typedef void (* ymo_bucket_free_fn)(ymo_bucket_t* bucket);
-
-
-/**---------------------------------------------------------------
- * Library Functions
- *---------------------------------------------------------------*/
-
-/** Get the current version as a string.
- *
- * Returns library version string
- */
-const char* ymo_version_str(void);
-
-/** Return the major version as an unsigned int. */
-unsigned int ymo_version_major(void);
-
-/** Return the minor version as an unsigned int. */
-unsigned int ymo_version_minor(void);
-
-/** Return the patch version as an unsigned int. */
-unsigned int ymo_version_patch(void);
-
-/** Return the extra version information. */
-const char* ymo_version_extra(void);
+typedef void (*ymo_bucket_free_fn)(ymo_bucket_t* bucket);
 
 
 /**---------------------------------------------------------------

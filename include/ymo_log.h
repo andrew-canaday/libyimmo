@@ -202,7 +202,7 @@ ymo_log_level_t ymo_log_set_level_by_name(const char* level_name);
         uuid_unparse(id, id_str); \
         ymo_log(YMO_LOG_DEBUG, "%s:%i (%s): "fmt, \
         __func__, __LINE__, id_str, __VA_ARGS__); \
-    } while(0)
+    } while( 0 )
 
 /** Compile-time DEBUG log function/convenience macro */
 #define ymo_log_debug(fmt, ...) \
@@ -222,7 +222,7 @@ ymo_log_level_t ymo_log_set_level_by_name(const char* level_name);
         uuid_unparse(id, id_str); \
         ymo_log(YMO_LOG_TRACE, "%s:%i (%s): "fmt, \
         __func__, __LINE__, id_str, __VA_ARGS__); \
-    } while(0)
+    } while( 0 )
 
 /** Compile-time TRACE log function/convenience macro */
 #define ymo_log_trace(fmt, ...) \

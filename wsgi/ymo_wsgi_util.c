@@ -20,12 +20,14 @@
  *===========================================================================*/
 
 #define PY_SSIZE_T_CLEAN
+#include "ymo_config.h"
+
 #include <Python.h>
 #include <stdio.h>
 #include <stdlib.h>
 
+
 #include "yimmo.h"
-#include "ymo_config.h"
 #include "ymo_log.h"
 
 #include "ymo_wsgi_mod.h"

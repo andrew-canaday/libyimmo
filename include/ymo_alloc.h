@@ -42,7 +42,6 @@
 #include <stdlib.h>
 
 #include "yimmo.h"
-#include "ymo_config.h"
 
 
 /** Allocator Macros

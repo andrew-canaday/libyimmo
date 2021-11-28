@@ -552,7 +552,7 @@ ssize_t ymo_proto_http_read(
             return -1;
         }
 
-    } while(len);
+    } while( len );
 
     if( exchange->state != HTTP_STATE_EXPECT ) {
         /* If the exchange is complete, invoke the http exchange handler: */

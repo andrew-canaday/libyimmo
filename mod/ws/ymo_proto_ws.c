@@ -316,7 +316,7 @@ ssize_t ymo_proto_ws_read(
             /* Errno has been set by the last parse function: */
             return -1;
         }
-    } while(len);
+    } while( len );
 
     /* NOTE: Check to see if parsing is complete. If there is no read data
      * after the end of a complete message, the WS_PARSE_COMPLETE case above

@@ -26,7 +26,7 @@ docs-local:
 		-e "EXT=rst" \
 		-e "DOCDIR=@builddir@" \
 		-p @top_srcdir@/util/c2sphinx-post.sh \
-		@top_srcdir@/include/yimmo.h \
+		@top_builddir@/include/yimmo.h \
 		@top_srcdir@/include/ymo_env.h \
 		@top_srcdir@/include/ymo_alloc.h \
 		@top_srcdir@/include/ymo_blalloc.h \

@@ -350,7 +350,7 @@ ssize_t ymo_mqtt_parsed_fixed_len(
         session->msg_in.msg_len +=
             (r_len & LEN_VALUE) * session->msg_in.len_mult;
         session->msg_in.len_mult *= 0x80;
-    } while(len && (r_len & LEN_CONTINUATION) );
+    } while( len && (r_len & LEN_CONTINUATION) );
 
     if( !(r_len & LEN_CONTINUATION) ) {
         int n;

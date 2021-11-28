@@ -28,6 +28,7 @@
 
 #ifndef YMO_BUCKET_H
 #define YMO_BUCKET_H
+
 #include "ymo_config.h"
 #include <stddef.h>
 #include "yimmo.h"
@@ -60,7 +61,7 @@ YMO_ENUM8_TYPEDEF(ymo_bucket_code) {
 /* TODO: this should probably take the bucket data, as well...
  * TODO: this isn't used...
  */
-typedef ymo_status_t (* ymo_bucket_cb_t)(void* data);
+typedef ymo_status_t (*ymo_bucket_cb_t)(void* data);
 
 typedef struct ymo_bucket_cb_info {
     ymo_bucket_cb_t  ctrl_cb;

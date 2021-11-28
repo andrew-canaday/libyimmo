@@ -76,9 +76,9 @@ ymo_status_t ymo_wsgi_worker_init(
 {
     ymo_status_t status = YMO_OKAY;
     ymo_queue_init(&worker->queue_in);
-    ymo_queue_pool_init(&worker->queue_in, &worker->pool_in, YMO_WSGI_WORKER_QUEUE_POOL_SIZE);
+    ymo_queue_pool_init(&worker->queue_in, worker->pool_in, YMO_WSGI_WORKER_QUEUE_POOL_SIZE);
     ymo_queue_init(&worker->queue_out);
-    ymo_queue_pool_init(&worker->queue_out, &worker->pool_out, YMO_WSGI_WORKER_QUEUE_POOL_SIZE);
+    ymo_queue_pool_init(&worker->queue_out, worker->pool_out, YMO_WSGI_WORKER_QUEUE_POOL_SIZE);
 
     int init_fail = pthread_mutex_init(&(worker->lock_in), NULL);
     if( init_fail ) {
