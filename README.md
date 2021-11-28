@@ -29,6 +29,12 @@
 > it and hack around!_
 >
 > (Just mind the cobwebs).
+>
+> <h4>:construction: Addendum: Versioning</h4>
+>
+> Since this software is still in an initial pre-release/alpha stage, the
+> libtool ABI version is pinned at `0:0:0`. After the first release proper
+> the package API version and libtool ABI version will increment normally.
 
 # Introduction
 Yimmo (<i><b>Y</b>up, <b>I</b> <b>M</b>ade <b>M</b>y <b>O</b>wn</i>) is a

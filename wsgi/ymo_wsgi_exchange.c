@@ -29,6 +29,7 @@
 #include <pthread.h>
 
 #include "ymo_log.h"
+#include "ymo_alloc.h"
 #include "ymo_wsgi_exchange.h"
 #include "ymo_wsgi_session.h"
 

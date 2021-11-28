@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "ymo_alloc.h"
 #include "ymo_blalloc.h"
 
 ymo_blalloc_t* ymo_blalloc_create(size_t n)

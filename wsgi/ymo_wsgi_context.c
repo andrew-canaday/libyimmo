@@ -41,15 +41,6 @@
 /* TODO: HACK HACK HACK: per-header NAME buffer size limit. */
 #define HDR_NAME_BUFFER_SIZE 256
 
-#include "ymo_alloc.h"
-#if YMO_ALLOC_LT_OVERRIDE
-void* ymo_alloc(size_t n)
-{
-    fprintf(stderr, "Allocating %zu bytes!\n", n);
-    return malloc(n);
-}
-#endif /* YMO_ALLOC_LT_OVERRIDE */
-
 /** # ymo_wsgi_context.c
  * Contains the WSGI PEP3333 interface seen by python
  *

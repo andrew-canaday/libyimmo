@@ -45,7 +45,6 @@ docs-local:
 		@top_srcdir@/lib/ymo_server.h \
 		@top_srcdir@/lib/ymo_assert.h \
 		@top_srcdir@/lib/ymo_tap.h \
-		@top_srcdir@/lib/ymo_test.h \
 		@top_srcdir@/lib/ymo_net.h
 	cp -v \
 		@srcdir@/*.rst \
