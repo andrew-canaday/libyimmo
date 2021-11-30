@@ -35,6 +35,34 @@
  *
  */
 
+
+/**---------------------------------------------------------------
+ * Types
+ *---------------------------------------------------------------*/
+
+/**
+ * .. note::
+ *    These were in ymo_proto_http.c, but moved here
+ *    to make testing a little easier...
+ */
+
+typedef struct ymo_http_upgrade_chain {
+    ymo_http_upgrade_cb_t          cb;
+    ymo_proto_t*                   proto;
+    struct ymo_http_upgrade_chain* next;
+} ymo_http_upgrade_chain_t;
+
+typedef struct ymo_http_proto_data {
+    ymo_http_session_init_cb_t     session_init;
+    ymo_http_header_cb_t           header_cb;
+    ymo_http_body_cb_t             body_cb;
+    ymo_http_cb_t                  http_cb;
+    ymo_http_session_cleanup_cb_t  session_cleanup;
+    ymo_http_upgrade_chain_t*      upgrade_handler;
+    void*                          data;
+} ymo_http_proto_data_t;
+
+
 /**---------------------------------------------------------------
  * Functions
  *---------------------------------------------------------------*/

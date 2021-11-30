@@ -373,6 +373,13 @@ ymo_server_t* ymo_server_create(
  */
 ymo_status_t ymo_server_init(ymo_server_t* server);
 
+/** Initialize a server using a pre-configured socket.
+ * :param server: the server to start
+ * :param fd: the socket the server should listen on
+ * :returns: YMO_OKAY on success; appropriate errno on failure
+ */
+ymo_status_t ymo_server_init_socket(ymo_server_t* server, int fd);
+
 /** Create and start the ev_io watchers for the listen fd we invoke accept() on.
  *
  * :param server: the server to start

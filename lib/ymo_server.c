@@ -204,24 +204,30 @@ ymo_status_t ymo_server_init(ymo_server_t* server)
             server->proto->name, server->config.port);
 
     /* Listen: */
-    if( listen(listen_fd, server->config.listen_backlog) < 0 ) {
-        ymo_log_fatal("Failed to listen to %i: %s", listen_fd, strerror(errno));
-        status = errno;
+    if( (status = ymo_server_init_socket(server, listen_fd)) ) {
         goto server_init_close_and_bail;
     }
-    ymo_log_info("%s:%i listen OK...",
-            server->proto->name, server->config.port);
-
-    /* Celebrate: */
-    server->state = YMO_SERVER_INITIALIZED;
-    server->listen_fd = listen_fd;
-    return YMO_OKAY;
+    return status;
 
 server_init_close_and_bail:
     close(listen_fd);
     return status;
 }
 
+ymo_status_t ymo_server_init_socket(ymo_server_t* server, int fd)
+{
+    if( listen(fd, server->config.listen_backlog) < 0 ) {
+        ymo_log_fatal("Failed to listen to %i: %s", fd, strerror(errno));
+        return errno;
+    }
+    ymo_log_info("%s:%i listen OK...",
+            server->proto->name, server->config.port);
+
+    /* Celebrate: */
+    server->state = YMO_SERVER_INITIALIZED;
+    server->listen_fd = fd;
+    return YMO_OKAY;
+}
 
 ymo_status_t ymo_server_start(ymo_server_t* server, struct ev_loop* loop)
 {

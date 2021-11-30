@@ -38,17 +38,19 @@ AM_CFLAGS=\
 	@BSAT_CFLAGS@
 
 LDADD=\
-	$(top_builddir)/lib/libyimmo.la \
-	$(top_builddir)/mod/http/libyimmo_http.la
+	$(top_builddir)/mod/http/libyimmo_http.la \
+	$(top_builddir)/lib/libyimmo.la
 
 AM_DEFAULT_SOURCE_EXT=.c
 check_PROGRAMS=\
 	test_hdr_table \
-	test_http_response
+	test_http_response \
+	test_http_parser
 
 TESTS=\
 	test_hdr_table \
-	test_http_response
+	test_http_response \
+	test_http_parser
 
 # EOF
 

@@ -58,7 +58,7 @@ static int add_headers()
 /*-------------------------------------------------------------*
  * Main:
  *-------------------------------------------------------------*/
-YMO_TAP_RUN(NULL,
+YMO_TAP_RUN(YMO_TAP_NO_INIT(),
         YMO_TAP_TEST_FN(create_response),
         YMO_TAP_TEST_FN(add_headers),
         YMO_TAP_TEST_END()

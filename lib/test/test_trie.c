@@ -143,13 +143,18 @@ static int check_partial2(void)
  *-------------------------------------------------------------*/
 static int trie_setup(void)
 {
-    hdr = req_headers[0];
-    trie = ymo_trie_create();
-    ymo_assert(trie != NULL);
+    static int setup_done = 0;
+
+    if( !setup_done ) {
+        setup_done = 1;
+        hdr = req_headers[0];
+        trie = ymo_trie_create();
+        ymo_assert(trie != NULL);
+    }
     return 0;
 }
 
-YMO_TAP_RUN(trie_setup,
+YMO_TAP_RUN(trie_setup, NULL, NULL,
         YMO_TAP_TEST_FN(add_headers),
         YMO_TAP_TEST_FN(create_oitrie),
         YMO_TAP_TEST_FN(check_headers),

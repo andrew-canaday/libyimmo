@@ -24,7 +24,7 @@ to the layer above.
 
 So, for instance, the *protocol* doesn't have to worry about checking ``EAGAIN``
 on ``send()``, fiddling with ``ioctl``, handling ``SIGPIPE``, etc. The *server*
-doesn't have to concern itself with useir sessions, transactions, encoding, etc.
+doesn't have to concern itself with user sessions, transactions, encoding, etc.
 The *user* code doesn't have to worry about validating input, transfer encoding,
 protocol versions, etc.
 

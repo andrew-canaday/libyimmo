@@ -25,22 +25,14 @@ Items in this document:
 Next Up
 -------
 
+- |_| Add GPL exceptions for OpenSSL + Python (IMO, python API is pretty clearly a "System Interface" anyway, but we'll make it explicit).
 - |_| Generic list/pool/queue types (ala kernel)
-- |_| Most ``_creates`` need an ``_init`` (see `needs init`_)
-- |_| Exchanges: why allocate request/response separately? It's the source of a lot of cache misses.
-- |_| WSGI code cleanup
 - |_| HTTP header compare override
-- |_| Optional HTTP header ``strcmp`` backstop
-- |_| HTTP header collision util
-- |_| We work with lots of strings of known length — may some utilities here would save a lot of strncmp, etc.
-- |_| Repurpose trie for HTTP routing?
-- |_| Instrumentation?
 - |_| Provide faster file handling (sendfile or caching)
+- |_| WSGI code cleanup / PEP3333 compliance check
+- |_| WSGI configuration is inflexible (app must be instantiated)
 - |_| ``EV_EMBED``, ``ev_realloc``, and faux-slab allocator example
-- |_| Clean up logging
-- |_| Make logging more configurable or use a 3rd party lib (zlog, etc)
-- |_| Cleanup allocators/weak/weakref, etc
-- |_| WSGI static build + LTO?
+- |/| Cleanup allocators/weak/weakref, etc
 - |/| Fix `ymo_base64_encode` memory leak!
 - |/| Clean up configure.sh build time/number of checks!
 - |/| UPDATE LICENSE INFO
@@ -52,29 +44,42 @@ Next Up
 - |/| Shift connection header table to hash?
 - |x| Commit to glib/apr neither
 
+Tidying
+.......
+- |_| Exchanges: why allocate request/response separately? It's the source of a lot of cache misses.
+- |_| We work with lots of strings of known length — make some string utilities and take advantage of that.
+- |_| Most ``_creates`` need an ``_init`` (see `needs init`_) to facilitate static allocation / the next item in this list.
+- |_| Don't ``void*`` + ``malloc`` when an intrusive data structure would do.
+
 TESTS!!!!
 .........
 
-- |_| Core unit tests
-- |_| HTTP unit tests
+- |_| Facilities for testing custom protocols (*WIP!*)
+- |_| HTTP unit tests (*WIP!*)
     - |_| Parser: init, loader, tests
+- |_| Core unit tests
 - |_| WS unit tests
 - |x| (MQTT unit tests)
 - |_| live/integration tests — e.g. HTTP request/response validation against a running server.
-- |_| Facilities for testing custom protocols.
-- |_| Mocking?
 
 DOCS
 ....
 
-- |_| Callbacks and return codes
 - |_| Tidy ``c2sphinx`` + make public.
 - |_| Use sphinx plantuml plugin instead of bash.
 - |_| Consider using sphinx emoji instead of replacements file.
 - |_| Stop abusing CSS/poor alabaster and make a proper theme.
-- |_| Core overview
 - |_| HTTP Overview
 - |_| WS Overview
+- |/| Callbacks and return codes
+- |/| Core overview
+
+
+Accidental Not-Invented-Here-Syndrome Fixes
+............................................
+
+- |_| Switch from ``ymo_assert`` to ``Unity``?
+- |_| Make logging more configurable or use a 3rd party lib (zlog, etc)
 
 Configuration
 .............
@@ -93,10 +98,15 @@ Usability/Stability
 ...................
 
 - |/| WS body buffering (optional)
-- |_| HTTP expect handler, ala upgrade handler.
+- |_| HTTP expect handler *callback* (automatic handling in place), ala upgrade handler.
 - |_| **clean up includes and include paths!**
-- |_| Toss a ``strcmp`` or two into http header table!
 
+
+Utility
+.......
+- |_| HTTP header collision util
+- |_| Instrumentation
+- |_| Repurpose trie for HTTP routing
 
 .. _needs init:
 
@@ -181,6 +191,10 @@ General
    better to check to see if the socket API is SYS V, BSD, or POSIX and then
    assume accordingly?
 
+Misc
+....
+
+- |_| WSGI static build + LTO?
 
 Interface
 ---------
@@ -195,6 +209,7 @@ Interface
    - |/| Add protocol destructor
    - |/| Make protocols run-time constructible by clients
 - |/| Pluggable handler callbacks for upgrade requests
+- |_| Domain/type-specific allocator overrides
 
 Core Architecture
 -----------------

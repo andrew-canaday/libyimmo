@@ -37,6 +37,8 @@
 #include <string.h>
 #include <stdarg.h>
 
+#include "ymo_log.h"
+
 #ifndef YMO_SOURCE
 #  ifdef __FILE_NAME__
 #    define YMO_SOURCE __FILE_NAME__
@@ -94,15 +96,49 @@
  * The override (included in ymo_tap.h!) looks like this:
  */
 
-#define ymo_assert_test_fail(msg) ymo_tap_assert_fail(msg)
+#define ymo_assert_test_fail_fmt(fmt, ...) ymo_tap_assert_fail(fmt, __VA_ARGS__)
+#define ymo_assert_test_fail(msg) ymo_tap_assert_fail("%s", msg)
 
-#define ymo_tap_assert_fail(msg) \
-    fprintf(YMO_TAP_STREAM_OUT, \
-        "not ok %zu - assertion failed!\n   " \
-        "assertion: %s\n   " \
-        "location:  %s:%s:%i\n", \
-        tap_test_num, msg, \
-        YMO_SOURCE, __func__, __LINE__); \
+#define YMO_TAP_OUTPUT_BUFFER_SIZE 2048
+
+const char* ymo_tap_indent(const char* fmt, ...)
+{
+    static char indent[YMO_TAP_OUTPUT_BUFFER_SIZE];
+    char        buffer[YMO_TAP_OUTPUT_BUFFER_SIZE];
+
+    va_list ap;
+    va_start(ap, fmt);
+    vsprintf(buffer, fmt, ap);
+    va_end(ap);
+
+    char* src = buffer;
+    char* dst = indent;
+    do {
+        if( *src != '\r' ) {
+            *dst++ = *src;
+        }
+
+        if( *src == '\n' ) {
+            *dst++ = ' ';
+            *dst++ = ' ';
+            *dst++ = ' ';
+            *dst++ = ' ';
+        }
+    } while( *src++ );
+
+    return (const char*)indent;
+}
+
+#define ymo_tap_assert_fail(fmt, ...) \
+    do { \
+        const char* msg = ymo_tap_indent(fmt, __VA_ARGS__); \
+        fprintf(YMO_TAP_STREAM_OUT, \
+            "not ok %zu - assertion failed!\n" \
+            "  assertion: %s\n" \
+            "  location:  %s:%s:%i\n", \
+            tap_test_num, msg, \
+            YMO_SOURCE, __func__, __LINE__); \
+    } while(0); \
     return YMO_TAP_STATUS_FAIL
 
 
@@ -139,6 +175,15 @@ struct ymo_tap_test {
     ymo_tap_test_fn_t  test_fn;
 };
 
+/** Test setup/teardown callback signature.
+ *
+ */
+typedef int (*ymo_tap_setup_fn_t)(void);
+
+/** Pass as the first argument to :c:macro:`YMO_TAP_TEST` if no setup/teardown
+ * callbacks are required.
+ */
+#define YMO_TAP_NO_INIT() NULL, NULL, NULL
 
 /** Macro used to pass a :c:type:`ymo_test_fn_t` as an argument to
  * :c:func:`ymo_tap_run` or :c:macro:`YMO_TAP_RUN`.
@@ -155,17 +200,24 @@ struct ymo_tap_test {
     ((ymo_tap_test_t) { .name = NULL, .test_fn = NULL })
 
 
-/** :param ymo_tap_test_fn_t: a function to be run once at
- *     initialization time (i.e. once per test *program*,
- *     not once per *function*).
+/** :param ymo_tap_test_fn_t: an initialization function to run before
+ *     each test (may be ``NULL``)
  * :param ...: a `NULL` terminated list of :c:type:`ymo_tap_test_t`.
  * :returns: zero on success; non-zero on failure
  *
  */
-int ymo_tap_run(ymo_tap_test_fn_t test_init, ...);
+int ymo_tap_run(
+        ymo_tap_setup_fn_t setup_suite,
+        ymo_tap_setup_fn_t setup_test,
+        ymo_tap_setup_fn_t cleanup,
+        ...);
 
 
-int ymo_tap_run(ymo_tap_test_fn_t test_init, ...)
+int ymo_tap_run(
+        ymo_tap_setup_fn_t setup_suite,
+        ymo_tap_setup_fn_t setup_test,
+        ymo_tap_setup_fn_t cleanup,
+        ...)
 {
     va_list ap;
     va_list ap2;
@@ -174,7 +226,7 @@ int ymo_tap_run(ymo_tap_test_fn_t test_init, ...)
 
     ymo_tap_test_t tap_test;
 
-    va_start(ap, test_init);
+    va_start(ap, cleanup);
     va_copy(ap2, ap);
 
     /* Count the tests: */
@@ -188,23 +240,30 @@ int ymo_tap_run(ymo_tap_test_fn_t test_init, ...)
     } while( tap_test.test_fn );
     va_end(ap);
 
-    if( test_init ) {
-        int init_status = test_init();
-        if( init_status ) {
-            return init_status;
-        }
-    }
-
     /* Run them: */
     int suite_status = 0;
     fprintf(YMO_TAP_STREAM_OUT, "1..%zu\n", no_tests);
+
+    if( setup_suite ) {
+        ymo_assert(setup_suite() == 0);
+    }
+
     for( tap_test_num = 1; tap_test_num <= no_tests; tap_test_num++ ) {
+        if( setup_test) {
+            ymo_assert(setup_test() == 0);
+        }
+
         tap_test = va_arg(ap2, ymo_tap_test_t);
         if( tap_test.test_fn() ) {
             suite_status = -1;
         }
     }
     va_end(ap2);
+
+    if( cleanup ) {
+        ymo_assert(cleanup() == 0);
+    }
+
     return suite_status;
 }
 
@@ -216,6 +275,7 @@ int ymo_tap_run(ymo_tap_test_fn_t test_init, ...)
  */
 #define YMO_TAP_RUN(...) \
     int main(int argc, char** argv) { \
+        ymo_log_init(); \
         return ymo_tap_run(__VA_ARGS__); \
     }
 

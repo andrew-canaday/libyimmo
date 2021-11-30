@@ -428,7 +428,7 @@ static int test_collisions()
     YMO_TAP_PASS(__func__);
 }
 
-YMO_TAP_RUN(NULL,
+YMO_TAP_RUN(YMO_TAP_NO_INIT(),
         YMO_TAP_TEST_FN(test_add_and_get),
         YMO_TAP_TEST_FN(test_insert_and_get),
         YMO_TAP_TEST_FN(test_multiple),

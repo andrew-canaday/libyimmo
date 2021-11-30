@@ -58,8 +58,13 @@ size_t s_len = 0;
 
 int setup(void)
 {
-    lower_expect = naive_tolower(strdup(s_orig));
-    upper_expect = naive_toupper(strdup(s_orig));
+    static int setup_done = 0;
+
+    if( !setup_done ) {
+        setup_done = 1;
+        lower_expect = naive_tolower(strdup(s_orig));
+        upper_expect = naive_toupper(strdup(s_orig));
+    }
     return 0;
 }
 
@@ -122,7 +127,7 @@ int test_base64_encoded(void)
     YMO_TAP_PASS(__func__);
 }
 
-YMO_TAP_RUN(setup,
+YMO_TAP_RUN(setup, NULL, NULL,
         YMO_TAP_TEST_FN(test_to_lower),
         YMO_TAP_TEST_FN(test_trim_front),
         YMO_TAP_TEST_FN(test_base64_encoded),

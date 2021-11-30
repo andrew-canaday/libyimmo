@@ -24,12 +24,13 @@
 
 #ifndef YMO_ASSERT_H
 #define YMO_ASSERT_H
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #ifndef YMO_ASSERT_VERBOSE
-#define YMO_ASSERT_VERBOSE 1
+#define YMO_ASSERT_VERBOSE 0
 #endif /* YMO_ASSERT_VERBOSE */
 
 #ifndef YMO_ASSERT_STREAM_OUT
@@ -55,6 +56,7 @@
  *             Convenience Macros
  *--------------------------------------------------*/
 
+/*--- ymo_assert_test_abort: ---*/
 #ifndef ymo_assert_test_abort
 
 /** Function used to abort test execution
@@ -64,40 +66,89 @@
 #endif /* ymo_assert_test_fail */
 
 
+/*--- ymo_assert_test_fail_fmt: ---*/
+#ifndef ymo_assert_test_fail_fmt
+
+/** Function used to report assertion failure and abort
+ */
+#define ymo_assert_test_fail_fmt(fmt, ...) \
+    fprintf(YMO_ASSERT_STREAM_OUT, \
+        " - \033[00;31mFAIL: "fmt" (%s:%s:%i)\033[00;m\n", \
+        __VA_ARGS__, YMO_SOURCE, __func__, __LINE__); \
+    ymo_assert_test_abort();
+
+#endif /* ymo_assert_test_fail_fmt */
+
+
+/*--- ymo_assert_test_fail: ---*/
 #ifndef ymo_assert_test_fail
 
 /** Function used to report assertion failure and abort
  */
 #define ymo_assert_test_fail(test_desc) \
-    fprintf(YMO_ASSERT_STREAM_OUT, \
-        " - \033[00;31mFAIL: %s (%s:%s:%i)\033[00;m\n", \
-        test_desc, YMO_SOURCE, __func__, __LINE__); \
+    ymo_assert_test_fail_fmt("%s", test_desc); \
     ymo_assert_test_abort();
 
 #endif /* ymo_assert_test_fail */
 
 
-#ifndef ymo_assert_test_pass
+/*--- ymo_assert_test_pass_fmt: ---*/
+#ifndef ymo_assert_test_pass_fmt
 
-#  if defined(YMO_ASSERT_VERBOSE) && YMO_ASSERT_VERBOSE
+#if defined(YMO_ASSERT_VERBOSE) && YMO_ASSERT_VERBOSE
 
 /** Function used to report assertion success, if verbose is defined
  */
-#define ymo_assert_test_pass(test_desc) \
+#define ymo_assert_test_pass_fmt(fmt, ...) \
     fprintf(YMO_ASSERT_STREAM_OUT, \
-        " - \033[00;32mPASS: %s (%s:%s:%i)\033[00;m\n", \
-        test_desc, YMO_SOURCE, __func__, __LINE__);
+        " - \033[00;32mPASS: "fmt" (%s:%s:%i)\033[00;m\n", \
+        __VA_ARGS__, YMO_SOURCE, __func__, __LINE__);
 
-#  else
-#    define ymo_assert_test_pass(test_desc) ((void)0)
+#else
+#define ymo_assert_test_pass_fmt(fmt, ...) ((void)0)
+#endif /* YMO_ASSERT_VERBOSE */
+#endif /* ymo_asser_test_pass_fmt */
+
+
+/*--- ymo_assert_test_pass: ---*/
+#ifndef ymo_assert_test_pass
+
+#if defined(YMO_ASSERT_VERBOSE) && YMO_ASSERT_VERBOSE
+
+/** Function used to report assertion success, if verbose is defined
+ */
+#define ymo_assert_test_pass(test_desc) ymo_assert_test_pass_fmt("%s", test_desc)
+#else
+#define ymo_assert_test_pass(test_desc) ((void)0)
 #endif /* YMO_ASSERT_VERBOSE */
 
 #endif /* ymo_assert_test_pass */
 
 
-#ifndef ymo_assert_test
-#  ifndef NDEBUG
+/*--- ymo_assert_test_fmt: ---*/
+#ifndef ymo_assert_test_fmt
+#ifndef NDEBUG
 
+/** Convenience macro used to execute tests and report failure
+ */
+#define ymo_assert_test_fmt(test_cond, fmt, ...) \
+    do { \
+        if( !(test_cond) ) { \
+            ymo_assert_test_fail_fmt(fmt, __VA_ARGS__); \
+        }; \
+        ymo_assert_test_pass_fmt(fmt, __VA_ARGS__); \
+    } while( 0 )
+
+#else
+#define ymo_assert_test_fmt(test_cond, fmt, ...) ((void)0)
+#endif /* NDEBUG */
+#endif /* ymo_assert_test_fmt */
+
+#ifndef ymo_assert_test
+#ifndef NDEBUG
+
+
+/*--- ymo_assert_test: ---*/
 /** Convenience macro used to execute tests and report failure
  */
 #define ymo_assert_test(test_cond, test_desc) \
@@ -108,9 +159,9 @@
         ymo_assert_test_pass(test_desc); \
     } while( 0 )
 
-#  else
-#    define ymo_assert_test(test_cond, test_desc) ((void)0)
-#  endif /* NDEBUG */
+#else
+#define ymo_assert_test(test_cond, test_desc) ((void)0)
+#endif /* NDEBUG */
 #endif /* ymo_assert_test */
 
 
@@ -134,18 +185,26 @@
  * - pass if two non-null strings are lexicographically equal
  * - pass if both strings are the NULL pointer
  */
-#define ymo_assert_str_eq(x, y) ymo_assert_test( \
-        (x && y && !strcmp((const char*)x,(const char*)y)) \
-        || ((x == NULL) && (y == NULL)), #x " == " #y)
+#define ymo_assert_str_eq(x, y) ymo_assert_test_fmt( \
+            (x && y \
+                && !strcmp((const char*)x,(const char*)y)) \
+                || ((x == NULL) && (y == NULL)), \
+            "%s:\n%s: >>%s<<\n%s: >>%s<<\n", \
+            #x " == " #y, \
+            #x, (const char*)x, \
+            #y, (const char*)y\
+        )
 
 /** String inequality
  *
  * - pass if two non-null strings are not lexicographically equal
  * - pass if one string is NULL and the other isn't
  */
-#define ymo_assert_str_ne(x, y) ymo_assert_test( \
+#define ymo_assert_str_ne(x, y) ymo_assert_test_fmt( \
         (x && y && strcmp((const char*)x,(const char*)y)) \
-        || ((x == NULL || y == NULL) && (x != y)), #x " != " #y)
+        || ((x == NULL || y == NULL) && (x != y)), \
+        "%s:\n%s: >>%s<<\n%s: >>%s<<\n", \
+        #x " != " #y, #x, (const char*)x, #y, (const char*)y)
 
 /** Substring matching: pass if x is a substring of y */
 #define ymo_assert_str_contains(x, y) ymo_assert_test( \

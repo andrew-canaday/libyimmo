@@ -78,7 +78,7 @@ ymo_status_t ymo_send_buckets(int fd, ymo_bucket_t** head_p)
 
     /* Bail on send error: */
     if( bytes_sent < 0 ) {
-        ymo_log_debug("Failed to send to fd: %i", fd);
+        ymo_log_debug("Failed to send to fd: %i (%s)", fd, strerror(errno));
         return errno;
     }
 

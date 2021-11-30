@@ -40,6 +40,7 @@
 #endif /* HAVE_SYS_IOCTL_H */
 
 #include "yimmo.h"
+#include "ymo_log.h"
 #include "ymo_bucket.h"
 
 /*---------------------------------------------------------------*
