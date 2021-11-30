@@ -13,8 +13,8 @@
 > There's a bit of cleanup work in flight, and _things are likely to change a
 > bit as the refactor proceeds!_
 >
-> :information_source: **I'm not accepting PR's, at the moment**, due to 1-3
-> and some procedural things to resolve re: code contributions.
+> :information_source: **I'm not accepting PR's, at the moment**, due to the
+> above and some procedural things to resolve re: code contributions.
 >
 > _Please feel free to have a peek! It's **GPL'd**, so you are free to fork
 > it and hack around!_
