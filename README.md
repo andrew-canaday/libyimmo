@@ -5,22 +5,13 @@
 > bears the marks of being my on-again/off-again, personal C-refresher/protocol
 > exploration playground...
 >
-> To be clear: I wouldn't consider using this in production
-> until after some test coverage and usability things have been addressed.
+> To be clear: I wouldn't use this in production until after some test coverage
+> and usability things have been addressed.
 > (I generally use [gunicorn](https://gunicorn.org/) for my production WSGI workloads and
 > [libwebsockets](https://libwebsockets.org/) for websockets. Check 'em out!)
 >
 > There's a bit of cleanup work in flight, and _things are likely to change a
 > bit as the refactor proceeds!_
->
-> I've got a pretty extensive TODO list, but the following neatly summarizes
-> the current state of things:
->
->  1. The unpruned vestiges of more than a handful of experiments are still
->     nestled in the code.
->  2. Hacks and ugly kludges abound.
->  3. There are missing/out of date docs and many a translation unit needs
->     shuffling.
 >
 > :information_source: **I'm not accepting PR's, at the moment**, due to 1-3
 > and some procedural things to resolve re: code contributions.
@@ -40,6 +31,20 @@ pattern which uses [libev](http://software.schmorp.de/pkg/libev.html) for I/O re
 > - [HTTP](./example/doc/HTTP.md) — minimal libyimmo_http web server
 > - [WebSockets](./example/doc/WS.md) — minimal libyimmo_ws socket server
 > - [WSGI](http://blog.yimmo.org/yimmo/wsgi/index.html)
+
+## License
+
+This project is licensed under version 3 of the GNU GPL (see [LICENSE](./LICENSE)).
+
+> :information_source: **NOTE**:
+>
+> _Some_ auxiliary files may be licensed under more
+> permissive licenses (e.g. the [example](./example) sources are licensed under the
+> MIT/expat license).
+>
+> Except where otherwise explicitly stated, the files contained herein are
+> subject to the terms defined by the GNU General Public License v3, as
+> published by the Free Software Foundation.
 
 ## Documentation
 
