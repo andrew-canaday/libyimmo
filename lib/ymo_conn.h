@@ -64,8 +64,10 @@ struct ymo_conn {
     int                  ev_flags;     /* Used to store EV_READ/EV_WRITE flags */
     struct ev_io         w_read;       /* Per-connection read watcher */
     struct ev_io         w_write;      /* Per-connection write watcher */
+#if defined(YMO_CONN_LOCK) && (YMO_CONN_LOCK == 1)
     pthread_mutexattr_t  lattr;        /* Per-connection mutex attributes */
     pthread_mutex_t      lock;         /* Per-connection mutex */
+#endif /* YMO_CONN_LOCK */
 };
 
 /*---------------------------------------------------------------*

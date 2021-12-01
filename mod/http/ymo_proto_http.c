@@ -32,7 +32,6 @@
 #include "ymo_server.h"
 #include "ymo_conn.h"
 #include "ymo_alloc.h"
-#include "ymo_std_http.h"
 #include "ymo_proto_http.h"
 #include "ymo_http_session.h"
 #include "ymo_http_parse.h"
@@ -303,7 +302,7 @@ static ymo_status_t ymo_http_handler(
 
     /* Is this an upgrade exchange? */
     ymo_http_upgrade_status_t upgrade_status = YMO_HTTP_UPGRADE_IGNORE;
-    if( exchange->flags & YMO_HTTP_FLAG_UPGRADE ) {
+    if( exchange->request.flags & YMO_HTTP_FLAG_UPGRADE ) {
         const char* hdr_upgrade = NULL;
         hdr_upgrade = ymo_http_hdr_table_get_id(
                 &exchange->request.headers, HDR_ID_UPGRADE);
@@ -555,16 +554,15 @@ http_parse_complete:
                         exchange->request.query,
                         exchange->request.fragment,
                         exchange->request.content_length);
-                ymo_server_t* server = ymo_conn_server(conn);
                 ymo_status_t status = ymo_http_handler(
-                        server, conn, http_proto_data,
+                        conn->server, conn, http_proto_data,
                         http_session, exchange);
                 if( status != YMO_OKAY && !YMO_IS_BLOCKED(status) ) {
                     errno = status;
                     return -1;
                 }
 
-                if( ymo_server_get_state(server) == YMO_SERVER_STOP_GRACEFUL ) {
+                if( ymo_server_get_state(conn->server) == YMO_SERVER_STOP_GRACEFUL ) {
                     /* if the server's shutting down and we just handled a exchange,
                      * stop reading from this connection:
                      */
@@ -599,8 +597,8 @@ send_100_continue:
             }
 
             /* Untoggle expect so we don't come back here: */
-            exchange->flags &= ~(YMO_HTTP_FLAG_EXPECT);
-            if( exchange->flags & YMO_HTTP_REQUEST_CHUNKED ) {
+            exchange->request.flags &= ~(YMO_HTTP_FLAG_EXPECT);
+            if( exchange->request.flags & YMO_HTTP_REQUEST_CHUNKED ) {
                 exchange->state = HTTP_STATE_BODY_CHUNK_HEADER;
             } else {
                 exchange->state = HTTP_STATE_BODY;

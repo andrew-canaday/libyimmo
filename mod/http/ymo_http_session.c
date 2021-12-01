@@ -28,7 +28,6 @@
 #include "yimmo.h"
 #include "ymo_log.h"
 #include "ymo_alloc.h"
-#include "ymo_std_http.h"
 #include "ymo_http_session.h"
 #include "ymo_http_exchange.h"
 #include "ymo_http_response.h"

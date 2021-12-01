@@ -47,7 +47,6 @@ libyimmo_http_la_LDFLAGS=\
 	@BSAT_LIBS@
 
 libyimmo_http_la_SOURCES=\
-	ymo_std_http.c \
 	ymo_proto_http.c \
 	ymo_http_session.c \
 	ymo_http_parse.c \

@@ -29,13 +29,17 @@ TEST_LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) \
                   @top_srcdir@/build-aux/tap-driver.sh
 
 AM_CFLAGS=\
- 	-I@top_builddir@/include \
- 	-I@top_srcdir@/include \
- 	-I@top_srcdir@/lib \
- 	-I@top_srcdir@/mod \
+	-I@top_builddir@/include \
+	-I@top_srcdir@/include \
+	-I@top_srcdir@/lib \
+	-I@top_srcdir@/mod \
 	-I@top_srcdir@/mod/http \
- 	-I@top_srcdir@/mod/http/include \
+	-I@top_srcdir@/mod/http/include \
 	@BSAT_CFLAGS@
+
+AM_LDFLAGS=\
+	@BSAT_LIBS@ \
+	@LIBS@
 
 LDADD=\
 	$(top_builddir)/mod/http/libyimmo_http.la \

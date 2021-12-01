@@ -28,6 +28,10 @@
 #include "ymo_http_hdr_table.h"
 #include "ymo_http.h"
 #include "ymo_std_http.h"
+
+/* HACK HACK: so sorry about this. It's temporary. */
+#include "ymo_std_http.c"
+
 #include "ymo_benchmark.h"
 
 #define NO_ITERATIONS 10000000

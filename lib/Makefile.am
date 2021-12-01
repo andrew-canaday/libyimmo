@@ -29,9 +29,9 @@ lib_LTLIBRARIES=\
 	libyimmo.la
 
 libyimmo_la_CFLAGS=\
- 	-I@top_builddir@/include \
- 	-I@top_srcdir@/include \
- 	-I@top_srcdir@/lib \
+	-I@top_builddir@/include \
+	-I@top_srcdir@/include \
+	-I@top_srcdir@/lib \
 	@BSAT_CFLAGS@
 
 libyimmo_la_LDFLAGS=\

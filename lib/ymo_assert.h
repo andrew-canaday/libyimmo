@@ -99,7 +99,7 @@
  */
 #define ymo_assert_test_pass_fmt(fmt, ...) \
     if( YMO_ASSERT_VERBOSE ) { \
-    fprintf(YMO_ASSERT_STREAM_OUT, \
+        fprintf(YMO_ASSERT_STREAM_OUT, \
         " - \033[00;32mPASS: "fmt " (%s:%s:%i)\033[00;m\n", \
         __VA_ARGS__, YMO_SOURCE, __func__, __LINE__); \
     }

@@ -59,9 +59,6 @@
 
 #include "yimmo.h"
 #include "ymo_proto.h"
-#include "ymo_trie.h"
-
-#include "ymo_proto.h"
 
 /**---------------------------------------------------------------
  *  Types

@@ -90,14 +90,14 @@ static int add_headers(void)
         r_val = ymo_trie_add_string(trie, hdr);
         ymo_assert(r_val == YMO_OKAY);
     }
-    YMO_TAP_PASS("TODO: update message");
+    YMO_TAP_PASS(__func__);
 }
 
 static int create_oitrie(void)
 {
     oitrie = ymo_oitrie_create(trie);
     ymo_assert(oitrie != NULL);
-    YMO_TAP_PASS("TODO: update message");
+    YMO_TAP_PASS(__func__);
 }
 
 static int check_headers(void)
@@ -108,7 +108,7 @@ static int check_headers(void)
         r_val = ymo_oitrie_get_id(&hdr_id, oitrie, hdr);
         ymo_assert(r_val == YMO_OKAY);
     }
-    YMO_TAP_PASS("TODO: update message");
+    YMO_TAP_PASS(__func__);
 }
 
 static int check_missing(void)
@@ -117,7 +117,7 @@ static int check_missing(void)
     hdr = "Not-A-Real-Header";
     r_val = ymo_oitrie_get_id(&hdr_id, oitrie, hdr);
     ymo_assert(r_val == EINVAL);
-    YMO_TAP_PASS("TODO: update message");
+    YMO_TAP_PASS(__func__);
 }
 
 static int check_partial1(void)
@@ -126,7 +126,7 @@ static int check_partial1(void)
     hdr = "Accept-Charse";
     r_val = ymo_oitrie_get_id(&hdr_id, oitrie, hdr);
     ymo_assert(r_val == EINVAL);
-    YMO_TAP_PASS("TODO: update message");
+    YMO_TAP_PASS(__func__);
 }
 
 static int check_partial2(void)
@@ -135,7 +135,7 @@ static int check_partial2(void)
     hdr = "Accept-Charset-";
     r_val = ymo_oitrie_get_id(&hdr_id, oitrie, hdr);
     ymo_assert(r_val == EINVAL);
-    YMO_TAP_PASS("TODO: update message");
+    YMO_TAP_PASS(__func__);
 }
 
 /*-------------------------------------------------------------*

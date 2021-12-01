@@ -48,35 +48,56 @@
  *---------------------------------------------------------------*/
 
 #if defined(HAVE_VAR_ATTRIBUTE_MODE) && (HAVE_VAR_ATTRIBUTE_MODE == 1)
-#define YMO_ATTR_MODE(x) __attribute__((mode(x)))
-#define YMO_ENUM8_TYPEDEF(x) typedef enum x
-#define YMO_ENUM8_AS(x) x YMO_ATTR_MODE(__byte__)
-#define YMO_ENUM16_TYPEDEF(x) enum x
-#define YMO_ENUM16_AS(x) ; typedef uint16_t x
-// #define YMO_ENUM16_TYPEDEF(x) typedef enum x
-// #define YMO_ENUM16_AS(x) x YMO_ATTR_MODE(HImode)
+#  define YMO_ATTR_MODE(x)    __attribute__((mode(x)))
 #else
-#define YMO_ATTR_MODE(x)
-#define YMO_ENUM8_TYPEDEF(x) enum x
-#define YMO_ENUM8_AS(x) ; typedef uint8_t x
-#define YMO_ENUM16_TYPEDEF(x) enum x
-#define YMO_ENUM16_AS(x) ; typedef uint16_t x
+#  define YMO_ATTR_MODE(x)
 #endif /* HAVE_VAR_ATTRIBUTE_MODE */
 
 #if defined(HAVE_VAR_ATTRIBUTE_ALIGNED) && (HAVE_VAR_ATTRIBUTE_ALIGNED == 1)
-#define YMO_ATTR_ALIGNED(x) __attribute__((aligned(x)))
+#  define YMO_ATTR_ALIGNED(x) __attribute__((aligned(x)))
 #else
-#define YMO_ATTR_ALIGNED(x)
+#  define YMO_ATTR_ALIGNED(x)
 #endif /* HAVE_VAR_ATTRIBUTE_ALIGNED */
+
+
+/*---------------------------------------------------------------*
+ * Packed Enum Definitions:
+ * (To disable #define YMO_ENUM_NO_PACK 1)
+ *---------------------------------------------------------------*/
+
+#if defined(YMO_ENUM_NO_PACK) && (YMO_ENUM_NO_PACK == 1)
+#  define YMO_ENUM8_TYPEDEF(x)  typedef enum x
+#  define YMO_ENUM8_AS(x)       x
+#  define YMO_ENUM16_TYPEDEF(x) typedef enum x
+#  define YMO_ENUM16_AS(x)      x
+#else
+#  if defined(HAVE_VAR_ATTRIBUTE_MODE) && (HAVE_VAR_ATTRIBUTE_MODE == 1)
+#    define YMO_ENUM8_TYPEDEF(x)  typedef enum x
+#    define YMO_ENUM8_AS(x)       x YMO_ATTR_MODE(__byte__)
+#    define YMO_ENUM16_TYPEDEF(x) enum x
+#    define YMO_ENUM16_AS(x)      ; typedef uint16_t x
+/* TODO: why did I do this? Also, why did I undo it? */
+#    if 0
+#      define YMO_ENUM16_TYPEDEF(x) typedef enum x
+#      define YMO_ENUM16_AS(x) x YMO_ATTR_MODE(HImode)
+#    endif
+#  else
+#    define YMO_ENUM8_TYPEDEF(x)  enum x
+#    define YMO_ENUM8_AS(x)       ; typedef uint8_t x
+#    define YMO_ENUM16_TYPEDEF(x) enum x
+#    define YMO_ENUM16_AS(x)      ; typedef uint16_t x
+#  endif /* HAVE_VAR_ATTRIBUTE_MODE */
+#endif /* YMO_ENUM_NO_PACK */
+
 
 /*---------------------------------------------------------------*
  * Compiler Function Attribute Wrappers:
  *---------------------------------------------------------------*/
 
 #if defined(HAVE_FUNC_ATTRIBUTE_MALLOC) && (HAVE_FUNC_ATTRIBUTE_MALLOC == 1)
-#  define YMO_FUNC_MALLOC __attribute__((malloc))
-#  define YMO_FUNC_MALLOC_A malloc
-#  define YMO_FUNC_MALLOC_P malloc,
+#  define YMO_FUNC_MALLOC    __attribute__((malloc))
+#  define YMO_FUNC_MALLOC_A  malloc
+#  define YMO_FUNC_MALLOC_P  malloc,
 #else
 #  define YMO_FUNC_MALLOC
 #  define YMO_FUNC_MALLOC_A
@@ -84,9 +105,9 @@
 #endif /* HAVE_FUNC_ATTRIBUTE_MALLOC */
 
 #if defined(HAVE_FUNC_ATTRIBUTE_UNUSED) && (HAVE_FUNC_ATTRIBUTE_UNUSED == 1)
-#  define YMO_FUNC_UNUSED __attribute__((unused))
-#  define YMO_FUNC_UNUSED_A unused
-#  define YMO_FUNC_UNUSED_P unused,
+#  define YMO_FUNC_UNUSED    __attribute__((unused))
+#  define YMO_FUNC_UNUSED_A  unused
+#  define YMO_FUNC_UNUSED_P  unused,
 #else
 #  define YMO_FUNC_UNUSED
 #  define YMO_FUNC_UNUSED_A
@@ -94,9 +115,9 @@
 #endif /* HAVE_FUNC_ATTRIBUTE_UNUSED */
 
 #if defined(HAVE_FUNC_ATTRIBUTE_FLATTEN) && (HAVE_FUNC_ATTRIBUTE_FLATTEN == 1)
-#  define YMO_FUNC_FLATTEN __attribute__((flatten))
-#  define YMO_FUNC_FLATTEN_A flatten
-#  define YMO_FUNC_FLATTEN_P flatten,
+#  define YMO_FUNC_FLATTEN    __attribute__((flatten))
+#  define YMO_FUNC_FLATTEN_A  flatten
+#  define YMO_FUNC_FLATTEN_P  flatten,
 #else
 #  define YMO_FUNC_FLATTEN
 #  define YMO_FUNC_FLATTEN_A
@@ -110,9 +131,9 @@
 #endif /* HAVE_FUNC_ATTRIBUTE_FALLTHROUGH */
 
 #if defined(HAVE_FUNC_ATTRIBUTE_WEAK) && (HAVE_FUNC_ATTRIBUTE_WEAK == 1)
-#  define YMO_FUNC_WEAK __attribute__((weak))
-#  define YMO_FUNC_WEAK_A weak
-#  define YMO_FUNC_WEAK_P weak,
+#  define YMO_FUNC_WEAK    __attribute__((weak))
+#  define YMO_FUNC_WEAK_A  weak
+#  define YMO_FUNC_WEAK_P  weak,
 #else
 #  define YMO_FUNC_WEAK
 #  define YMO_FUNC_WEAK_A
@@ -120,9 +141,9 @@
 #endif /* HAVE_FUNC_ATTRIBUTE_WEAK */
 
 #if defined(HAVE_FUNC_ATTRIBUTE_WEAKREF) && (HAVE_FUNC_ATTRIBUTE_WEAKREF == 1)
-#  define YMO_FUNC_WEAKREF(x) __attribute__((weakref(#x)))
-#  define YMO_FUNC_WEAKREF_A(x) weakref(#x)
-#  define YMO_FUNC_WEAKREF_P(x) weakref(#x),
+#  define YMO_FUNC_WEAKREF(x)    __attribute__((weakref(#x)))
+#  define YMO_FUNC_WEAKREF_A(x)  weakref(#x)
+#  define YMO_FUNC_WEAKREF_P(x)  weakref(#x),
 #else
 #  define YMO_FUNC_WEAKREF
 #  define YMO_FUNC_WEAKREF_A
@@ -130,9 +151,9 @@
 #endif /* HAVE_FUNC_ATTRIBUTE_WEAKREF */
 
 #if defined(HAVE_FUNC_ATTRIBUTE_ALIAS) && (HAVE_FUNC_ATTRIBUTE_ALIAS == 1)
-#  define YMO_FUNC_ALIAS(x) __attribute__((alias(#x)))
-#  define YMO_FUNC_ALIAS_A(x) alias(#x)
-#  define YMO_FUNC_ALIAS_P(x) alias(#x),
+#  define YMO_FUNC_ALIAS(x)    __attribute__((alias(#x)))
+#  define YMO_FUNC_ALIAS_A(x)  alias(#x)
+#  define YMO_FUNC_ALIAS_P(x)  alias(#x),
 #else
 #  define YMO_FUNC_ALIAS
 #  define YMO_FUNC_ALIAS_A

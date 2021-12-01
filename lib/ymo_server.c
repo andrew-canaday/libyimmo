@@ -30,6 +30,7 @@
 #include <string.h>
 #include <signal.h>
 #include <sys/mman.h>
+#include <stdatomic.h>
 
 #include "yimmo.h"
 #include "ymo_alloc.h"

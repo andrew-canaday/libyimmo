@@ -121,7 +121,7 @@ static ymo_status_t check_request(
 
         switch( http_ver ) {
             case HACK_HTTP_11:
-                exchange->flags \
+                exchange->request.flags \
                     |= (YMO_HTTP_FLAG_VERSION_1_1
                         | YMO_HTTP_FLAG_SUPPORTS_CHUNKED
                         | YMO_HTTP_FLAG_REQUEST_KEEPALIVE);
@@ -163,13 +163,13 @@ static ymo_status_t ymo_http_session_init_response(
     }
 
     exchange->response = response;
-    response->flags = exchange->flags;
-    if( exchange->flags & YMO_HTTP_FLAG_REQUEST_KEEPALIVE ) {
-        if( !(exchange->flags & YMO_HTTP_FLAG_VERSION_1_1) ) {
+    response->flags = exchange->request.flags;
+    if( exchange->request.flags & YMO_HTTP_FLAG_REQUEST_KEEPALIVE ) {
+        if( !(exchange->request.flags & YMO_HTTP_FLAG_VERSION_1_1) ) {
             ymo_http_hdr_table_insert(&response->headers, "Connection", "Keep-alive");
         }
     } else {
-        if( exchange->flags & YMO_HTTP_FLAG_VERSION_1_1 ) {
+        if( exchange->request.flags & YMO_HTTP_FLAG_VERSION_1_1 ) {
             ymo_http_hdr_table_insert(&response->headers, "Connection", "close");
         }
     }
@@ -204,7 +204,7 @@ static ymo_status_t check_headers(
         /* Adjust the state if the client was audacious enough to send
          * Expect: 100-continue:
          */
-        if( exchange->flags & YMO_HTTP_FLAG_EXPECT ) {
+        if( exchange->request.flags & YMO_HTTP_FLAG_EXPECT ) {
             next_state = HTTP_STATE_EXPECT;
         }
 
@@ -218,7 +218,7 @@ static ymo_status_t check_headers(
                 exchange->request.content_length);
         return EFBIG;
 #endif /* 0 */
-    } else if( exchange->flags & YMO_HTTP_REQUEST_CHUNKED ) {
+    } else if( exchange->request.flags & YMO_HTTP_REQUEST_CHUNKED ) {
         exchange->chunk_current = exchange->chunk_hdr;
         next_state = HTTP_STATE_BODY_CHUNK_HEADER;
     }
@@ -228,7 +228,7 @@ static ymo_status_t check_headers(
      *
      * TODO: move this to user code now that we have header_cb?
      */
-    if( exchange->flags & YMO_HTTP_FLAG_EXPECT ) {
+    if( exchange->request.flags & YMO_HTTP_FLAG_EXPECT ) {
         next_state = HTTP_STATE_EXPECT;
     }
 
@@ -510,7 +510,7 @@ ssize_t ymo_parse_http_headers(
                     switch( exchange->h_id ) {
                         case HDR_ID_CONNECTION:
                             /* 1.1: default to keep-alive unless "close": */
-                            if( exchange->flags & YMO_HTTP_FLAG_VERSION_1_1 ) {
+                            if( exchange->request.flags & YMO_HTTP_FLAG_VERSION_1_1 ) {
                                 /* TODO: we know the lengths of these. Use
                                  * a ymo_strncmp function which checks length
                                  * first?
@@ -519,13 +519,13 @@ ssize_t ymo_parse_http_headers(
                                  * be super close, so... what's the benefit?
                                  */
                                 if( !strcasecmp(exchange->hdr_value, "close") ) {
-                                    exchange->flags &= \
+                                    exchange->request.flags &= \
                                         YMO_HTTP_FLAG_REQUEST_CLOSE;
                                 }
                             } else {
                                 /* 1.0: default to close unless "keep-alive": */
                                 if( !strcasecmp(exchange->hdr_value, "keep-alive") ) {
-                                    exchange->flags |= \
+                                    exchange->request.flags |= \
                                         YMO_HTTP_FLAG_REQUEST_KEEPALIVE;
                                 }
                             }
@@ -547,14 +547,14 @@ ssize_t ymo_parse_http_headers(
                         break;
                         case HDR_ID_EXPECT:
                             if( !strcasecmp(exchange->hdr_value, "100-continue") ) {
-                                exchange->flags |= YMO_HTTP_FLAG_EXPECT;
+                                exchange->request.flags |= YMO_HTTP_FLAG_EXPECT;
                             }
                             break;
                         case HDR_ID_UPGRADE:
-                            exchange->flags |= YMO_HTTP_FLAG_UPGRADE;
+                            exchange->request.flags |= YMO_HTTP_FLAG_UPGRADE;
                         case HDR_ID_TRANSFER_ENCODING:
                             if( !strcasecmp(exchange->hdr_value, "chunked")) {
-                                exchange->flags |= YMO_HTTP_REQUEST_CHUNKED;
+                                exchange->request.flags |= YMO_HTTP_REQUEST_CHUNKED;
                             }
                             break;
                         default:
@@ -669,7 +669,7 @@ body_hdr_done:
                     current += body_available;
 
                     if( !exchange->body_remain ) {
-                        if( exchange->flags & YMO_HTTP_REQUEST_CHUNKED ) {
+                        if( exchange->request.flags & YMO_HTTP_REQUEST_CHUNKED ) {
                             exchange->state = HTTP_STATE_BODY_CHUNK_TRAILER;
                             exchange->next_state = HTTP_STATE_BODY_CHUNK_HEADER;
                         } else {

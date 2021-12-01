@@ -375,6 +375,7 @@ struct ymo_http_request {
     char*                 body;             /* Optionally buffered body data */
     size_t                body_received;    /* Body data received */
     size_t                content_length;   /* Content-length, per client */
+    ymo_http_flags_t      flags;            /* Request flags */
 };
 
 /** Responses

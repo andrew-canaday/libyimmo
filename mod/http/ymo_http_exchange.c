@@ -81,7 +81,7 @@ void ymo_http_exchange_reset(ymo_http_exchange_t* exchange)
     exchange->request.content_length = 0;
     exchange->request.body_received = 0;
     exchange->recv_current = exchange->recv_buf;
-    exchange->flags = 0;
+    exchange->request.flags = 0;
     exchange->state = HTTP_STATE_CONNECTED;
     exchange->next_state = 0;
     exchange->remain = YMO_HTTP_RECV_BUF_SIZE;
@@ -90,7 +90,7 @@ void ymo_http_exchange_reset(ymo_http_exchange_t* exchange)
 
 ymo_http_flags_t ymo_http_request_flags(const ymo_http_exchange_t* exchange)
 {
-    return exchange->flags;
+    return exchange->request.flags;
 }
 
 void ymo_http_exchange_free(ymo_http_exchange_t* exchange)

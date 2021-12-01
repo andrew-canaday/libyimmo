@@ -65,10 +65,6 @@ YMO_ENUM8_TYPEDEF(crlf_state) {
     HTTP_EXPECT_LF,
 } YMO_ENUM8_AS(crlf_state_t);
 
-/** Indicates the offset for a given HTTP header value within recv_buf.
- */
-typedef uint16_t ymo_http_hdr_offset_t;
-
 /** Struct used to store HTTP exchange data.
  *
  * .. TODO::
@@ -94,7 +90,6 @@ struct ymo_http_exchange {
         };
     };
 
-    ymo_http_flags_t  flags;
     http_state_t      state;
     http_state_t      next_state;
     char*             recv_current;

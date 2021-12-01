@@ -117,7 +117,6 @@ char ymo_toupper(char c)
 #endif /* YMO_TOLOWER_NO_INLINE */
 
 
-/* TODO: SIMD optimizations here? */
 void ymo_ntolower(char* dst, const char* src, size_t len)
 {
     /* Number of iterations we can perform at maximum stride: */
@@ -204,7 +203,6 @@ void ymo_ntolower(char* dst, const char* src, size_t len)
 }
 
 
-/* TODO: SIMD optimizations here? */
 void ymo_ntoupper(char* dst, const char* src, size_t len)
 {
     /* Number of iterations we can perform at maximum stride: */

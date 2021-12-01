@@ -179,12 +179,11 @@ typedef void (*ymo_user_conn_cleanup_cb_t)(
         ymo_conn_t* conn,
         void* user);
 
-/** Enumeration type used to pass server configuration flags.
- */
-YMO_ENUM16_TYPEDEF(ymo_server_config_flags) {
+/** Enumeration type used to pass server configuration flags. */
+typedef enum ymo_server_config_flags {
     YMO_SERVER_REUSE_ADDR = 0x01, /* allow service to bind while socket in the WAIT state */
     YMO_SERVER_REUSE_PORT = 0x02, /* allow multiple processes to bind to the listen port */
-} YMO_ENUM16_AS(ymo_server_config_flags_t);
+} ymo_server_config_flags_t;
 
 /** Struct used to pass configuration information to
  * :c:func:`ymo_server_create`.

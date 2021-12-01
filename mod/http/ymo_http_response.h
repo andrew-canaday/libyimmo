@@ -65,7 +65,7 @@ struct ymo_http_response {
     ymo_bucket_t*             body_tail;
     ymo_proto_t*              proto_new;
     ymo_http_status_t         status;
-    ymo_http_flags_t          flags;  /* TODO: move into exchange? */
+    ymo_http_flags_t          flags;
 
 };
 
