@@ -73,7 +73,7 @@
  */
 #define ymo_assert_test_fail_fmt(fmt, ...) \
     fprintf(YMO_ASSERT_STREAM_OUT, \
-        " - \033[00;31mFAIL: "fmt" (%s:%s:%i)\033[00;m\n", \
+        " - \033[00;31mFAIL: "fmt " (%s:%s:%i)\033[00;m\n", \
         __VA_ARGS__, YMO_SOURCE, __func__, __LINE__); \
     ymo_assert_test_abort();
 
@@ -95,32 +95,24 @@
 /*--- ymo_assert_test_pass_fmt: ---*/
 #ifndef ymo_assert_test_pass_fmt
 
-#if defined(YMO_ASSERT_VERBOSE) && YMO_ASSERT_VERBOSE
-
 /** Function used to report assertion success, if verbose is defined
  */
 #define ymo_assert_test_pass_fmt(fmt, ...) \
+    if( YMO_ASSERT_VERBOSE ) { \
     fprintf(YMO_ASSERT_STREAM_OUT, \
-        " - \033[00;32mPASS: "fmt" (%s:%s:%i)\033[00;m\n", \
-        __VA_ARGS__, YMO_SOURCE, __func__, __LINE__);
+        " - \033[00;32mPASS: "fmt " (%s:%s:%i)\033[00;m\n", \
+        __VA_ARGS__, YMO_SOURCE, __func__, __LINE__); \
+    }
 
-#else
-#define ymo_assert_test_pass_fmt(fmt, ...) ((void)0)
-#endif /* YMO_ASSERT_VERBOSE */
 #endif /* ymo_asser_test_pass_fmt */
 
 
 /*--- ymo_assert_test_pass: ---*/
 #ifndef ymo_assert_test_pass
 
-#if defined(YMO_ASSERT_VERBOSE) && YMO_ASSERT_VERBOSE
-
 /** Function used to report assertion success, if verbose is defined
  */
 #define ymo_assert_test_pass(test_desc) ymo_assert_test_pass_fmt("%s", test_desc)
-#else
-#define ymo_assert_test_pass(test_desc) ((void)0)
-#endif /* YMO_ASSERT_VERBOSE */
 
 #endif /* ymo_assert_test_pass */
 
@@ -186,13 +178,13 @@
  * - pass if both strings are the NULL pointer
  */
 #define ymo_assert_str_eq(x, y) ymo_assert_test_fmt( \
-            (x && y \
-                && !strcmp((const char*)x,(const char*)y)) \
-                || ((x == NULL) && (y == NULL)), \
-            "%s:\n%s: >>%s<<\n%s: >>%s<<\n", \
-            #x " == " #y, \
-            #x, (const char*)x, \
-            #y, (const char*)y\
+        (x && y \
+         && !strcmp((const char*)x,(const char*)y)) \
+        || ((x == NULL) && (y == NULL)), \
+        "%s:\n%s: >>%s<<\n%s: >>%s<<\n", \
+        #x " == " #y, \
+        #x, (const char*)x, \
+        #y, (const char*)y \
         )
 
 /** String inequality

@@ -17,7 +17,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  *===========================================================================*/
-#define YMO_ASSERT_VERBOSE 0
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -25,12 +24,14 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 
+#include "ymo_config.h"
+#include "ymo_attrs.h"
 #include "ymo_tap.h"
 #include "yimmo.h"
 #include "ymo_proto.h"
 
 #include "ymo_test_proto.h"
-#include "http_test.h"
+#include "ymo_http_test.h"
 
 #include "ymo_http.h"
 #include "ymo_proto_http.h"
@@ -44,9 +45,9 @@ static int request_basic_1_0(void)
     ssize_t r_val = make_request(r_data);
 
     /* Confirm: */
-    ymo_assert(r_val == (ssize_t)strlen(r_data));               /* completely parsed */
-    ymo_assert(r_info.called == 1);             /* callback invoked */
-    ymo_assert_str_eq(r_info.uri, "/test-1-0"); /* uri correct */
+    ymo_assert(r_val == (ssize_t)strlen(r_data)); /* completely parsed */
+    ymo_assert(r_info.called == 1);               /* callback invoked */
+    ymo_assert_str_eq(r_info.uri, "/test-1-0");   /* uri correct */
     ymo_assert_str_eq(r_info.response_data, RESPONSE_OK);
     YMO_TAP_PASS(__func__);
 }
@@ -58,10 +59,35 @@ static int request_basic_1_1(void)
     ssize_t r_val = make_request(r_data);
 
     /* Confirm: */
-    ymo_assert(r_val == (ssize_t)strlen(r_data));               /* completely parsed */
-    ymo_assert(r_info.called == 1);             /* callback invoked */
+    ymo_assert(r_val == (ssize_t)strlen(r_data)); /* completely parsed */
+    ymo_assert(r_info.called == 1);               /* callback invoked */
     ymo_assert_str_eq(r_info.uri, "/test-1-1");
     ymo_assert_str_eq(r_info.response_data, RESPONSE_OK);
+    YMO_TAP_PASS(__func__);
+}
+
+
+static int expect_100_continue(void)
+{
+    const char* r_data =
+        "POST /body HTTP/1.1\r\n" \
+        "Host: 127.0.0.1:8081\r\n" \
+        "User-Agent: curl/7.64.1\r\n" \
+        "Accept: */*\r\n" \
+        "Expect: 100-continue\r\n" \
+        "Content-Length: 4\r\n" \
+        "Content-Type: application/x-www-form-urlencoded\r\n" \
+        "\r\n" \
+        "data";
+
+    const char* expected =
+        "HTTP/1.1 100 Continue\r\n" \
+        "Content-Length: 0\r\n\r\n";
+
+    make_request(r_data);
+
+    /* Confirm: */
+    ymo_assert_str_eq(r_info.response_data, expected);
     YMO_TAP_PASS(__func__);
 }
 
@@ -72,8 +98,8 @@ static int einval_on_bad_version(void)
     ssize_t r_val = make_request(r_data);
 
     /* Confirm: */
-    ymo_assert(r_val == -1);                /* parse error returned */
-    ymo_assert(errno == EINVAL);            /* payload was invalid */
+    ymo_assert(r_val == -1);         /* parse error returned */
+    ymo_assert(errno == EINVAL);     /* payload was invalid */
     ymo_assert(r_info.called == 0);  /* callback not invoked */
     YMO_TAP_PASS(__func__);
 }
@@ -85,8 +111,8 @@ static int eagain_on_incomplete_request(void)
     ssize_t r_val = make_request(r_data);
 
     /* Confirm: */
-    ymo_assert(r_val == (ssize_t)strlen(r_data));    /* completely parsed */
-    ymo_assert(r_info.called == 0);  /* callback not invoked */
+    ymo_assert(r_val == (ssize_t)strlen(r_data)); /* completely parsed */
+    ymo_assert(r_info.called == 0);               /* callback not invoked */
     YMO_TAP_PASS(__func__);
 }
 
@@ -123,6 +149,7 @@ static int cleanup(void)
 YMO_TAP_RUN(&setup_suite, &setup_test, &cleanup,
         YMO_TAP_TEST_FN(request_basic_1_0),
         YMO_TAP_TEST_FN(request_basic_1_1),
+        YMO_TAP_TEST_FN(expect_100_continue),
         YMO_TAP_TEST_FN(einval_on_bad_version),
         YMO_TAP_TEST_FN(eagain_on_incomplete_request),
         YMO_TAP_TEST_END()

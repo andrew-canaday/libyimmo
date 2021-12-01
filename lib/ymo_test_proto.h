@@ -38,10 +38,10 @@
 
 /** Server struct wrapper for unit testing. */
 struct ymo_test_server {
-    ymo_server_config_t config;
-    ymo_server_t*       server;
-    ymo_proto_t*        proto;
-    void*               proto_data;
+    ymo_server_config_t  config;
+    ymo_server_t*        server;
+    ymo_proto_t*         proto;
+    void*                proto_data;
 };
 
 /** Connection struct wrapper for unit testing. */
@@ -49,10 +49,10 @@ struct ymo_test_conn {
     struct ymo_test_server* server;
     ymo_conn_t*             conn;
     union {
-        int fd_pair[2];
+        int  fd_pair[2];
         struct {
-            int fd_send;
-            int fd_read;
+            int  fd_send;
+            int  fd_read;
         };
     };
 };
@@ -67,6 +67,12 @@ typedef struct ymo_test_conn ymo_test_conn_t;
 /**---------------------------------------------------------------
  * Functions
  *---------------------------------------------------------------*/
+
+void noop_bsat_handler(bsat_toq_t* toq, bsat_timeout_t* item)
+{
+    return;
+}
+
 
 /**
  * Utility to create a simple server for unit tests:
@@ -93,6 +99,12 @@ static ymo_test_server_t* test_server_create(ymo_proto_t* proto)
         return NULL;
     }
 
+    bsat_toq_init(
+            loop,
+            &(test_server->server->idle_toq),
+            &noop_bsat_handler,
+            5.0);
+    test_server->server->idle_toq.data = test_server->server;
     test_server->proto = proto;
     test_server->proto_data = proto->data;
     return test_server;
@@ -120,7 +132,7 @@ static ymo_test_conn_t* test_conn_create(ymo_test_server_t* test_server)
 
     test_conn->conn = ymo_conn_create(
             test_server->server, test_server->proto,
-            test_conn->fd_send, NULL, NULL);
+            test_conn->fd_send, ymo_read_cb, ymo_write_cb);
     if( !test_conn->conn ) {
         YMO_FREE(test_conn);
         return NULL;

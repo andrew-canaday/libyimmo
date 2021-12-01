@@ -21,7 +21,6 @@
 /* HACK HACK: for strdup */
 #define _POSIX_C_SOURCE 200809L
 
-#define YMO_ASSERT_VERBOSE 1
 #include "ymo_assert.h"
 #include "ymo_ws.h"
 

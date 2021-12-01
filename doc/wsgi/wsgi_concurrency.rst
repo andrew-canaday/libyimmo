@@ -17,7 +17,7 @@ allow ``yimmo-wsgi`` to use at the same time.
 .. figure:: /diagrams/yimmo-wsgi-spsw.svg
    :alt: Yimmo WSGI Single-Process, Single Thread Worker
    :align: center
-   :target: /_images/yimmo-wsgi-spsw.svg
+   :target: ../_images/yimmo-wsgi-spsw.svg
 
    Yimmo-WSGI configured with a single process worker and one thread worker.
 
@@ -25,7 +25,7 @@ allow ``yimmo-wsgi`` to use at the same time.
 .. figure:: /diagrams/yimmo-wsgi-mpsw.svg
    :alt: Yimmo WSGI Multiple Process Workers, Single Thread Worker
    :align: center
-   :target: /_images/yimmo-wsgi-mpsw.svg
+   :target: ../_images/yimmo-wsgi-mpsw.svg
 
    Yimmo-WSGI configured with two process workers and one thread worker.
 
@@ -50,14 +50,14 @@ you will definitely get your highest throughput by pinning threads to ``1``.
 .. figure:: /diagrams/yimmo-wsgi-spmw.svg
    :alt: Yimmo WSGI Single-Process, Multiple Thread Workers
    :align: center
-   :target: /_images/yimmo-wsgi-spmw.svg
+   :target: ../_images/yimmo-wsgi-spmw.svg
 
    Yimmo-WSGI configured with a single process worker and multiple thread workers.
 
 .. figure:: /diagrams/yimmo-wsgi-mpmw.svg
    :alt: Yimmo WSGI Multiple Process Workers, Multiple Thread Workers
    :align: center
-   :target: /_images/yimmo-wsgi-mpmw.svg
+   :target: ../_images/yimmo-wsgi-mpmw.svg
 
    Yimmo-WSGI configured with two process workers and two thread workers per process.
 

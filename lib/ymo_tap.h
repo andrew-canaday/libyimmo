@@ -104,7 +104,7 @@
 const char* ymo_tap_indent(const char* fmt, ...)
 {
     static char indent[YMO_TAP_OUTPUT_BUFFER_SIZE];
-    char        buffer[YMO_TAP_OUTPUT_BUFFER_SIZE];
+    char buffer[YMO_TAP_OUTPUT_BUFFER_SIZE];
 
     va_list ap;
     va_start(ap, fmt);
@@ -133,12 +133,12 @@ const char* ymo_tap_indent(const char* fmt, ...)
     do { \
         const char* msg = ymo_tap_indent(fmt, __VA_ARGS__); \
         fprintf(YMO_TAP_STREAM_OUT, \
-            "not ok %zu - assertion failed!\n" \
-            "  assertion: %s\n" \
-            "  location:  %s:%s:%i\n", \
-            tap_test_num, msg, \
-            YMO_SOURCE, __func__, __LINE__); \
-    } while(0); \
+        "not ok %zu - assertion failed!\n" \
+        "  assertion: %s\n" \
+        "  location:  %s:%s:%i\n", \
+        tap_test_num, msg, \
+        YMO_SOURCE, __func__, __LINE__); \
+    } while( 0 ); \
     return YMO_TAP_STATUS_FAIL
 
 
@@ -249,7 +249,7 @@ int ymo_tap_run(
     }
 
     for( tap_test_num = 1; tap_test_num <= no_tests; tap_test_num++ ) {
-        if( setup_test) {
+        if( setup_test ) {
             ymo_assert(setup_test() == 0);
         }
 

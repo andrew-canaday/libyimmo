@@ -55,7 +55,7 @@ Data
             itself occupies the ymo_proto_t data field and the
             ymo_conn_t data field is leveraged by the protocl to
             store protocol-specific session information.
-      :target: /_images/yimmo-data.svg
+      :target: ../_images/yimmo-data.svg
 
 
 Most of the entity types in libyimmo have a ``data`` or ``user_data`` field

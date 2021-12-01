@@ -232,13 +232,45 @@ Unit Tests
 
 
 .. code-block:: c
-   :caption: Example Unit Test
+   :caption: Example Basic Unit Test
 
    /* Step 1: include ymo_tap.h */
    #include "ymo_tap.h"
 
-   /* Step 2: (OPTIONAL!) Define a setup function: */
-   static int my_setup(void)
+   /* Step 2: Define one or more tests: */
+   static int test_demo_assertions(void)
+   {
+       /* Failed assertions will fail the test (this one passes): */
+       ymo_assert(10 > 1);
+
+       /* Logging in tests doesn't interfere with TAP output.
+        * It's configured at test start and set to the
+        * default log level, if YIMMO_LOG_LEVEL is undefined.
+        */
+       ymo_log_debug("%s", "Sometimes you need to debug tests!");
+
+       /* Indicate success with YMO_TAP_PASS: */
+       YMO_TAP_PASS("Demo assertions worked out!");
+   }
+
+   /* Step 3: Run 'em!
+    *
+    * YMO_TAP_RUN will create a main function for us and invoke the tests:
+    */
+   YMO_TAP_RUN(YMO_TAP_NO_INIT(),
+       YMO_TAP_TEST_FN(test_demo_assertions),
+       YMO_TAP_TEST_END()
+       )
+
+
+.. code-block:: c
+   :caption: Example Unit Test with Hooks
+
+   /* Step 1: include ymo_tap.h */
+   #include "ymo_tap.h"
+
+   /* Step 2: (OPTIONAL!) hook functions: */
+   static int my_suite_setup(void)
    {
       fprintf(stderr, "%s\n(P.S. %s)\n",
           "This is an optional test initialization function.",
@@ -246,21 +278,30 @@ Unit Tests
       return 0;
    }
 
+   static int my_test_setup(void)
+   {
+      fprintf(stderr, "%s\n", "This runs before every test!");
+      return 0;
+   }
+
+   static int my_cleanup(void)
+   {
+      fprintf(stderr, "%s\n", "This runs after the tests have run!");
+      return 0;
+   }
+
    /* Step 3: Define one or more tests: */
    static int test_demo_assertions(void)
    {
-       /* Failed assertions will fail the test (these all pass): */
-       ymo_assert(10 > 1);
-
-       /* Indicate success with YMO_TAP_PASS: */
-       YMO_TAP_PASS("Demo assertions worked out!");
+       ymo_assert_str_ne("This", "That");
+       YMO_TAP_PASS(__func__); /* Usually, I just use __func__ */
    }
 
    /* Step 4: Run 'em!
     *
     * YMO_TAP_RUN will create a main function for us and invoke the tests:
     */
-   YMO_TAP_RUN(NULL,
+   YMO_TAP_RUN(&my_suite_setup, &my_test_setup, &my_cleanup,
        YMO_TAP_TEST_FN(test_demo_assertions),
        YMO_TAP_TEST_END()
        )

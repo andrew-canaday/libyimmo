@@ -210,8 +210,7 @@ AS_IF([test "x$enable_maintainer_debug" = "xyes"], [
         -Wno-error=strict-aliasing \
         -Wno-error=missing-field-initializers \
         -Wno-error=implicit-fallthrough \
-        -DYMO_LOG_LEVEL_MAX=6 -DYMO_LOG_LEVEL_DEFAULT=5 \
-        -DYMO_ASSERT_VERBOSE=1"
+        -DYMO_LOG_LEVEL_MAX=6 -DYMO_LOG_LEVEL_DEFAULT=5"
     ])
 AM_CONDITIONAL([MAINTAINER_DEBUG],[test "x$enable_maintainer_debug" = "xyes"])
 

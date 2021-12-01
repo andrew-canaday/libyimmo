@@ -110,7 +110,7 @@ Events
 .. image:: /diagrams/yimmo-wsgi-events.svg
    :alt: Yimmo WSGI Events
    :align: center
-   :target: /_images/yimmo-wsgi-events.svg
+   :target: ../_images/yimmo-wsgi-events.svg
 
 
 Concurrency and Synchronization

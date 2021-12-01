@@ -56,10 +56,10 @@
 ymo_test_server_t* test_server = NULL;
 
 struct {
-    int     called;
-    char    uri[128];
-    char    response_data[MAX_RESPONSE_SIZE+1];
-    ssize_t bytes_sent;
+    int      called;
+    char     uri[128];
+    char     response_data[MAX_RESPONSE_SIZE+1];
+    ssize_t  bytes_sent;
 } r_info;
 
 static ymo_status_t http_ok_cb(
@@ -115,6 +115,7 @@ static ssize_t make_request(const char* r_data)
 
     ymo_http_session_t* session = ymo_proto_http_conn_init(
             test_server->proto_data, test_conn->conn);
+    test_conn->conn->proto_data = session;
 
     /* We'll test the parser by instantiating a protocol object
      * and invoking it's read callback, as if we were the

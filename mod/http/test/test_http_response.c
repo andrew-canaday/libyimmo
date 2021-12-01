@@ -17,7 +17,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  *===========================================================================*/
-#define YMO_ASSERT_VERBOSE 1
 #include <stdio.h>
 #include "ymo_tap.h"
 #include "yimmo.h"

@@ -21,7 +21,13 @@
 /* HACK HACK: for strdup */
 #define _POSIX_C_SOURCE 200809L
 
+#ifdef YMO_ASSERT_VERBOSE
+#undef YMO_ASSERT_VERBOSE
+#endif /* YMO_ASSERT_VERBOSE */
+
+/* Force verbose for the assertion demo: */
 #define YMO_ASSERT_VERBOSE 1
+
 #include "ymo_assert.h"
 
 int main(int argc, char** argv)
