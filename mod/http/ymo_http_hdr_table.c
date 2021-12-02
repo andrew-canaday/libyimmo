@@ -297,13 +297,15 @@ add_nomem:
     return 0;
 }
 
-const char* ymo_http_hdr_table_get(ymo_http_hdr_table_t* table, const char* hdr)
+const char* ymo_http_hdr_table_get(
+        const ymo_http_hdr_table_t* table, const char* hdr)
 {
     ymo_http_hdr_id_t h_id = YMO_HDR_HASH_FN(hdr, NULL);
     return ymo_http_hdr_table_get_id(table, h_id);
 }
 
-const char* ymo_http_hdr_table_get_id(ymo_http_hdr_table_t* table, ymo_http_hdr_id_t h_id)
+const char* ymo_http_hdr_table_get_id(
+        const ymo_http_hdr_table_t* table, ymo_http_hdr_id_t h_id)
 {
     const char* data = NULL;
     ymo_http_hdr_id_t index = h_id % YMO_HDR_TABLE_BUCKET_SIZE;

@@ -177,7 +177,8 @@ ymo_http_hdr_id_t ymo_http_hdr_table_add(
  *     ``NULL`` on failure.
  *
  */
-const char* ymo_http_hdr_table_get(ymo_http_hdr_table_t* table, const char* hdr);
+const char* ymo_http_hdr_table_get(
+        const ymo_http_hdr_table_t* table, const char* hdr);
 
 /**
  * Iterate over all of the headers in a header table.
@@ -384,7 +385,7 @@ struct ymo_http_request {
 
 /** */
 const char* ymo_http_get_response_header(
-        ymo_http_response_t* exchange, const char* hdr_name);
+        const ymo_http_response_t* exchange, const char* hdr_name);
 
 /** Used to set HTTP header values for responses
  *
@@ -469,7 +470,7 @@ void ymo_http_session_set_user_data(ymo_http_session_t* session, void* data);
 
 /** Get session-level user data.
  */
-void* ymo_http_session_get_user_data(ymo_http_session_t* session);
+void* ymo_http_session_get_user_data(const ymo_http_session_t* session);
 
 
 /**---------------------------------------------------------------

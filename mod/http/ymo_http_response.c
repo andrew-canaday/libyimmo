@@ -177,7 +177,7 @@ ymo_http_response_t* ymo_http_response_create(ymo_http_session_t* session)
 }
 
 const char* ymo_http_response_get_header(
-        ymo_http_response_t* response, const char* hdr_name)
+        const ymo_http_response_t* response, const char* hdr_name)
 {
     return ymo_http_hdr_table_get(&response->headers, hdr_name);
 }

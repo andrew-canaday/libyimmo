@@ -157,7 +157,7 @@ void ymo_http_session_set_user_data(ymo_http_session_t* session, void* data)
     session->user_data = data;
 }
 
-void* ymo_http_session_get_user_data(ymo_http_session_t* session)
+void* ymo_http_session_get_user_data(const ymo_http_session_t* session)
 {
     return session->user_data;
 }

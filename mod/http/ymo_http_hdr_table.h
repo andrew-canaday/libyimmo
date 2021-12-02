@@ -109,7 +109,8 @@ ymo_http_hdr_id_t ymo_http_hdr_table_add_precompute(
         const char* value);
 
 /** */
-const char* ymo_http_hdr_table_get_id(ymo_http_hdr_table_t* table, ymo_http_hdr_id_t h_id);
+const char* ymo_http_hdr_table_get_id(
+        const ymo_http_hdr_table_t* table, ymo_http_hdr_id_t h_id);
 
 
 /*----------------------------------------------------------------------------
