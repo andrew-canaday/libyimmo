@@ -124,7 +124,7 @@ static ymo_status_t test_ws_recv_cb(
         size_t len)
 {
     if( data && len ) {
-        ymo_log_info("Recv from %p: \"%*s\"",
+        ymo_log_info("Recv from %p: \"%.*s\"",
                 (int)len, data, (void*)session);
         return ymo_ws_session_send(
                 session, flags, YMO_BUCKET_FROM_CPY(data, len));
@@ -181,6 +181,7 @@ static ymo_status_t test_http_callback(
 {
     ymo_http_response_set_header(response, "content-type", "text/plain");
     ymo_bucket_t* content = YMO_BUCKET_FROM_REF("OK", 2);
+    ymo_http_response_set_status_str(response, "200 OK");
     ymo_http_response_body_append(response, content);
     ymo_http_response_finish(response);
     return YMO_OKAY;

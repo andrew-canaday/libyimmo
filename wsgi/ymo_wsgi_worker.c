@@ -212,6 +212,11 @@ static ymo_status_t ymo_wsgi_worker_issue_request(
 
     ymo_bucket_t* body_item = NULL;
     PyObject* item;
+    /* TODO: I think this has to be removed for services that might do
+     *       HTTP-based long-polling. Better to check to see if the
+     *       object provides a "len" method and check that. Else, abide
+     *       by the spec.
+     */
     while((item = PyIter_Next(r_val))) {
         /* So, here's the deal: the WSGI spec essentially says "any kind
          * of buffering is immoral; if you have it, send it," which is
