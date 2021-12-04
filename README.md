@@ -97,9 +97,28 @@ mkdir -p ./build && cd ./build
 
 ## Gisty Benchmarks
 
-These are _informal benchmarks and lack rigor_. However, it's fun to post 'em.
+> :construction: **These are _informal benchmarks and lack rigor_.** (They're
+> mostly just for fun. :smile:).
+>
+> Notes:
+>
+> - Naturally, I posted the most flattering benchmarks. :stuck_out_tongue_winking_eye:
+> - Results from wrk, seige, and go-wrk differ by ~ 5%.
+> - I get better numbers with `gcc-10`, worse with `gcc-11` (difference < 1%)
+> - RPS on my home Ubuntu Server, Core i7, 32GB RAM are ~ 60% of those below.
+>
+> Probably, I'll get some _real_ benchmarks put together when I stand up some
+> CI. In the interim, here's the gist:
 
-### Apache Bench, 250k clients, 100k HTML Payload (WSGI)
+ - Compiler: Apple Clang 12.0.5
+ - CFLAGS: `-Ofast`
+ - Hardware (compile and test):  Mac Mini (M1, 16GB RAM).
+ - Tested using: [Apache Bench](https://httpd.apache.org/docs/2.4/programs/ab.html).
+
+### Apache Bench, 250k clients, 10k HTML Payload (WSGI)
+
+> (:wave: **Reminder**: the overwhelming odds are that _your Python WSGI server
+> is not the bottleneck in your production workloads!_)
 
 ```
 Document Path:          /10k
