@@ -104,13 +104,13 @@ mkdir -p ./build && cd ./build
 >
 > - Naturally, I posted the most flattering benchmarks. :stuck_out_tongue_winking_eye:
 > - Results from wrk, seige, and go-wrk differ by ~ 5%.
-> - I get better numbers with `gcc-10`, worse with `gcc-11` (difference < 1%)
+> - I get better numbers with `gcc-10`, worse with `clang 12.0.5` (difference < 1%)
 > - RPS on my home Ubuntu Server, Core i7, 32GB RAM are ~ 60% of those below.
 >
 > Probably, I'll get some _real_ benchmarks put together when I stand up some
 > CI. In the interim, here's the gist:
 
- - Compiler: Apple Clang 12.0.5
+ - Compiler: gcc version 11.1.0
  - CFLAGS: `-Ofast`
  - Hardware (compile and test):  Mac Mini (M1, 16GB RAM).
  - Tested using: [Apache Bench](https://httpd.apache.org/docs/2.4/programs/ab.html).
@@ -150,7 +150,8 @@ Total:          0    1   2.2      1     127
 ### Apache Bench, 2M clients, ..2 byte status payload.. (C Example Server)
 
 (This one is a little silly. The only payload hooked up to the HTTP example
-is a two-byte "OK" status endpoint...)
+is a two-byte "OK" status endpoint... The RSS stays under `3,870` for the
+duration of the test, though).
 
 ```
 Document Path:          /status
