@@ -36,8 +36,8 @@ Usage
 Configuration is done through env vars.
 The executable takes two arguments:
 
-# a module name
-# a python statement whose result is a WSGI app
+#. a module name
+#. a python statement whose result is a WSGI app
 
 ```bash
 yimmo-wsgi MODULE_NAME INIT_STATMENT
