@@ -17,7 +17,7 @@
 .. _ev_prepare_watcher: http://pod.tst.eu/http://cvs.schmorp.de/coreev/ev.pod#code_ev_prepare_code_and_code_ev_che
 .. _gevent: http://www.gevent.org/
 .. _greenlets: https://greenlet.readthedocs.io/en/latest/
-.. _libbsat: https://github.com/andrew-canaday/corebsat
+.. _libbsat: https://github.com/andrew-canaday/libbsat
 .. _libev: http://software.schmorp.de/pkg/coreev.html
 .. _libyimmo: https://github.com/andrew-canaday/libyimmo
 .. _libyimmo_http: ymo_http_h.html

@@ -73,7 +73,7 @@ compiler extensions).
 
 Libyimmo requires the following third party libraries:
  - [libev](http://software.schmorp.de/pkg/coreev.html) for event management
- - [libbsat](https://github.com/andrew-canaday/corebsat) for timeout management
+ - [libbsat](https://github.com/andrew-canaday/libbsat) for timeout management
  - a UUID library — either linux-ng or OSSP ([ax_check_uuid_api.m4](./m4/ax_check_uuid_api.m4) for details)
 
 

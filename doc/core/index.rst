@@ -44,11 +44,6 @@ Interaction
             protocol parses raw data into protocol-level entities,
             handling things like framing, encoding, etc, and
             passes those to the application.
-            Messages originating at the application go through the
-            reverse flow: the app sends a message object, the
-            protocol frames and encodes it into a wire-level
-            protocol and provides the server with a strea of raw
-            bytes to send back to the client.
       :target: ../_images/yimmo-high-level.svg
 
 
