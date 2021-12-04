@@ -166,11 +166,21 @@ static ymo_status_t ymo_http_session_init_response(
     response->flags = exchange->request.flags;
     if( exchange->request.flags & YMO_HTTP_FLAG_REQUEST_KEEPALIVE ) {
         if( !(exchange->request.flags & YMO_HTTP_FLAG_VERSION_1_1) ) {
-            ymo_http_hdr_table_insert(&response->headers, "Connection", "Keep-alive");
+#define USE_PRECOMPUTE
+#ifdef USE_PRECOMPUTE
+            ymo_http_hdr_table_insert_precompute(
+                    &response->headers, HDR_ID_CONNECTION,
+                    "Connection", sizeof("Connection")-1, "Keep-alive");
+#else
+            ymo_http_hdr_table_insert(
+                    &response->headers, "Connection", "Keep-alive");
+#endif
         }
     } else {
         if( exchange->request.flags & YMO_HTTP_FLAG_VERSION_1_1 ) {
-            ymo_http_hdr_table_insert(&response->headers, "Connection", "close");
+            ymo_http_hdr_table_insert_precompute(
+                    &response->headers, HDR_ID_CONNECTION,
+                       "Connection", sizeof("Connection")-1, "close");
         }
     }
 

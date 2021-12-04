@@ -101,6 +101,14 @@ YMO_FUNC_UNUSED static inline ymo_http_hdr_id_t ymo_http_hdr_hash_283_5(
 void ymo_http_hdr_table_init(ymo_http_hdr_table_t* table);
 
 /** */
+ymo_http_hdr_id_t ymo_http_hdr_table_insert_precompute(
+        ymo_http_hdr_table_t* table,
+        ymo_http_hdr_id_t h_id,
+        const char* hdr,
+        size_t hdr_len,
+        const char* value);
+
+/** */
 ymo_http_hdr_id_t ymo_http_hdr_table_add_precompute(
         ymo_http_hdr_table_t* table,
         ymo_http_hdr_id_t h_id,

@@ -1,7 +1,7 @@
 # libyimmo
 
 > :warning: **WARNING**: _This is my long running, spare time, for fun,
-> project._ Most of it works pretty well (it's pretty _fast!_), but it also
+> project._ Most of it works pretty well (it's [pretty _fast!_](#gisty-benchmarks)), but it also
 > bears the marks of being my on-again/off-again, personal C-refresher/protocol
 > exploration playground...
 >
@@ -92,5 +92,62 @@ Libyimmo compilation follows the standard GNU idiom:
 # PRO TIP: do your builds outside of the project root!
 mkdir -p ./build && cd ./build
 ../configure --prefix=/usr/local && make && make check && make install
+```
+
+
+## Gisty Benchmarks
+
+These are _informal benchmarks and lack rigor_. However, it's fun to post 'em.
+
+### Apache Bench, 250k clients, 100k HTML Payload (WSGI)
+
+```
+Document Path:          /10k
+Document Length:        10240 bytes
+
+Concurrency Level:      32
+Time taken for tests:   5.717 seconds
+Complete requests:      250000
+Failed requests:        0
+Keep-Alive requests:    250000
+Total transferred:      2586500000 bytes
+HTML transferred:       2560000000 bytes
+Requests per second:    43729.90 [#/sec] (mean)
+Time per request:       0.732 [ms] (mean)
+Time per request:       0.023 [ms] (mean, across all concurrent requests)
+Transfer rate:          441825.75 [Kbytes/sec] received
+
+Connection Times (ms)
+              min  mean[+/-sd] median   max
+Connect:        0    0   0.0      0       1
+Processing:     0    1   2.2      1     127
+Waiting:        0    1   2.2      1     127
+Total:          0    1   2.2      1     127
+```
+
+### C Example Server, 2M clients, ..2 byte status payload.. (C)
+
+```
+Document Path:          /status
+Document Length:        2 bytes
+
+Concurrency Level:      32
+Time taken for tests:   8.904 seconds
+Complete requests:      2000000
+Failed requests:        0
+Keep-Alive requests:    2000000
+Total transferred:      178000000 bytes
+HTML transferred:       4000000 bytes
+Requests per second:    224613.31 [#/sec] (mean)
+Time per request:       0.142 [ms] (mean)
+Time per request:       0.004 [ms] (mean, across all concurrent requests)
+Transfer rate:          19522.05 [Kbytes/sec] received
+
+Connection Times (ms)
+              min  mean[+/-sd] median   max
+Connect:        0    0   0.0      0       1
+Processing:     0    0   0.0      0       1
+Waiting:        0    0   0.0      0       1
+Total:          0    0   0.0      0       2
 ```
 

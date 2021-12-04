@@ -317,10 +317,18 @@ static int should_buffer_body(ymo_http_response_t* response)
 
         /* Set Content-Length header: */
         sprintf(response->content_len_str, "%zu", response->content_len);
-        ymo_http_hdr_table_insert(
+#define USE_PRECOMPUTE
+#ifdef USE_PRECOMPUTE
+        ymo_http_hdr_table_insert_precompute(
                 &response->headers,
+                HDR_ID_CONTENT_LENGTH,
                 "Content-Length",
+                sizeof("Content-Length")-1,
                 response->content_len_str);
+#else
+        ymo_http_hdr_table_insert(
+                &response->headers, "Content-Length", response->content_len_str);
+#endif
         ymo_log_debug("Content length for %p: %zu",
                 response, response->content_len);
         return 0;
@@ -328,8 +336,8 @@ static int should_buffer_body(ymo_http_response_t* response)
         /* If the response isn't complete, but we're allowed to chunk
          * the response, set Transfer-Encoding: chunked:
          */
-        ymo_http_response_set_header(
-                response, "Transfer-Encoding", "Chunked");
+        ymo_http_hdr_table_insert(
+                &response->headers, "Transfer-Encoding", "Chunked");
         response->flags |= YMO_HTTP_RESPONSE_CHUNKED;
         return 0;
     }
