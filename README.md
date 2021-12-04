@@ -120,6 +120,9 @@ mkdir -p ./build && cd ./build
 > (:wave: **Reminder**: the overwhelming odds are that _your Python WSGI server
 > is not the bottleneck in your production workloads!_)
 
+- `YIMMO_WSGI_NO_PROC=4`
+- `YIMMO_WSGI_NO_THREADS=1`
+
 ```
 Document Path:          /10k
 Document Length:        10240 bytes
