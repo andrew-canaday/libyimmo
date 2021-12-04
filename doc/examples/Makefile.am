@@ -28,6 +28,6 @@ docs-local:
 		-e "EXT=md" \
 		-e "DOCDIR=@builddir@" \
 		-p @top_srcdir@/util/c2sphinx-post.sh \
-		@top_srcdir@/example/http_example.c \
-		@top_srcdir@/example/ws_example.c \
-		@top_srcdir@/example/mqtt_example.c
+		@top_srcdir@/examples/http_example.c \
+		@top_srcdir@/examples/ws_example.c \
+		@top_srcdir@/examples/mqtt_example.c

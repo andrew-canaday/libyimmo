@@ -11,15 +11,17 @@
 .. _Sphinx: https://www.sphinx-doc.org/en/master/
 .. _Writing Autoconf Macros: https://www.gnu.org/software/autoconf/manual/autoconf-2.60/html_node/Writing-Autoconf-Macros.html#Writing-Autoconf-Macros
 .. _c2sphinx: https://github.com/andrew-canaday/c2sphinx
-.. _ev_async_send: http://pod.tst.eu/http://cvs.schmorp.de/libev/ev.pod#Watcher_Specific_Functions_and_Data_-12
-.. _ev_async_watcher: http://pod.tst.eu/http://cvs.schmorp.de/libev/ev.pod#code_ev_async_code_how_to_wake_up_an
-.. _ev_check_watcher: http://pod.tst.eu/http://cvs.schmorp.de/libev/ev.pod#code_ev_prepare_code_and_code_ev_che
-.. _ev_prepare_watcher: http://pod.tst.eu/http://cvs.schmorp.de/libev/ev.pod#code_ev_prepare_code_and_code_ev_che
+.. _ev_async_send: http://pod.tst.eu/http://cvs.schmorp.de/coreev/ev.pod#Watcher_Specific_Functions_and_Data_-12
+.. _ev_async_watcher: http://pod.tst.eu/http://cvs.schmorp.de/coreev/ev.pod#code_ev_async_code_how_to_wake_up_an
+.. _ev_check_watcher: http://pod.tst.eu/http://cvs.schmorp.de/coreev/ev.pod#code_ev_prepare_code_and_code_ev_che
+.. _ev_prepare_watcher: http://pod.tst.eu/http://cvs.schmorp.de/coreev/ev.pod#code_ev_prepare_code_and_code_ev_che
 .. _gevent: http://www.gevent.org/
 .. _greenlets: https://greenlet.readthedocs.io/en/latest/
-.. _libbsat: https://github.com/andrew-canaday/libbsat
-.. _libev: http://software.schmorp.de/pkg/libev.html
+.. _libbsat: https://github.com/andrew-canaday/corebsat
+.. _libev: http://software.schmorp.de/pkg/coreev.html
 .. _libyimmo: https://github.com/andrew-canaday/libyimmo
 .. _libyimmo_http: ymo_http_h.html
 .. _HTTP Example Server: /examples/http_example_c.html
 .. _Websocket Echo Server: /examples/ws_example_c.html
+.. _Pkg-Config: https://www.freedesktop.org/wiki/Software/pkg-config/
+.. _PKG_CHECK_MODULES: https://autotools.io/pkgconfig/pkg_check_modules.html

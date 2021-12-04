@@ -25,16 +25,16 @@ docs-local:
 		-s \
 		-e "EXT=rst" \
 		-p @top_srcdir@/util/c2sphinx-post.sh \
-		@top_srcdir@/mod/mqtt/include/ymo_mqtt.h \
+		@top_srcdir@/src/protocol/mqtt/include/ymo_mqtt.h \
 		> @builddir@/api.rst
 	$(C2SPHINX) \
 		-s \
 		-e "EXT=rst" \
 		-e "DOCDIR=@builddir@" \
 		-p @top_srcdir@/util/c2sphinx-post.sh \
-		@top_srcdir@/mod/mqtt/ymo_mqtt_session.h \
-		@top_srcdir@/mod/mqtt/ymo_mqtt_parse.h \
-		@top_srcdir@/mod/mqtt/ymo_proto_mqtt.h
+		@top_srcdir@/src/protocol/mqtt/ymo_mqtt_session.h \
+		@top_srcdir@/src/protocol/mqtt/ymo_mqtt_parse.h \
+		@top_srcdir@/src/protocol/mqtt/ymo_proto_mqtt.h
 	cp -v \
 		@srcdir@/*.rst \
 		@builddir@

@@ -78,8 +78,8 @@ AC_SUBST([PACKAGE_SUMMARY],["Lightweight socket server framework"])
 # - when it would be a "major level" release: bump current; age = revision = 0
 #
 # For more info, see:
-# - https://www.gnu.org/software/libtool/manual/html_node/Updating-version-info.html
-# - https://autotools.io/libtool/version.html
+# - https://www.gnu.org/software/coretool/manual/html_node/Updating-version-info.html
+# - https://autotools.io/coretool/version.html
 AC_SUBST([YMO_ABI_CURRENT],[0],[Yimmo libtool ABI current])
 AC_SUBST([YMO_ABI_AGE],[0],[Yimmo libtool ABI age])
 AC_SUBST([YMO_ABI_REVISION],[2],[Yimmo libtool ABI revision])
@@ -251,47 +251,51 @@ AS_IF([test "x$enable_verbose_assert" = "xyes"], [
 ##          Output:
 ##-----------------------------
 YMO_BOX([Generating output files])
-AC_CONFIG_HEADERS([ymo_config.h])
+AC_CONFIG_HEADERS([src/core/ymo_config.h])
 
-AC_CONFIG_LINKS([example/index.html:example/index.html])
+AC_CONFIG_LINKS([examples/index.html:examples/index.html])
 
-## yimmo package output files:
+## yimmo general output files:
 AC_CONFIG_FILES([
     Makefile
-    libyimmo-$YIMMO_VERSION_MAJOR.$YIMMO_VERSION_MINOR.pc:libyimmo.pc.in
+    src/Makefile
+    examples/Makefile
+    wsgi/Makefile
+    benchmarks/Makefile
+    src/protocol/Makefile
     ])
 
 ## libyimmo core output files:
 AC_CONFIG_FILES([
     include/yimmo.h
-    lib/Makefile
     include/Makefile
-    lib/test/Makefile
-    example/Makefile
-    wsgi/Makefile
-    benchmarks/Makefile
-    mod/Makefile
+    src/core/Makefile
+    src/core/test/Makefile
+    src/core/libyimmo-${YIMMO_VERSION_MAJOR}.${YIMMO_VERSION_MINOR}.pc:src/core/libyimmo.pc.in
     ])
 
 ## libyimmo_http output files:
 AC_CONFIG_FILES([
-    mod/http/Makefile
-    mod/http/include/Makefile
-    mod/http/test/Makefile
+    src/protocol/http/Makefile
+    src/protocol/http/include/Makefile
+    src/protocol/http/test/Makefile
+    src/protocol/http/libyimmo_http-${YIMMO_VERSION_MAJOR}.${YIMMO_VERSION_MINOR}.pc:src/protocol/http/libyimmo_http.pc.in
     ])
 
 ## libyimmo_ws output files:
 AC_CONFIG_FILES([
-    mod/ws/Makefile
-    mod/ws/include/Makefile
-    mod/ws/test/Makefile
+    src/protocol/ws/Makefile
+    src/protocol/ws/include/Makefile
+    src/protocol/ws/test/Makefile
+    src/protocol/ws/libyimmo_ws-${YIMMO_VERSION_MAJOR}.${YIMMO_VERSION_MINOR}.pc:src/protocol/ws/libyimmo_ws.pc.in
     ])
 
 ## libyimmo_mqtt output files:
 AC_CONFIG_FILES([
-    mod/mqtt/Makefile
-    mod/mqtt/include/Makefile
-    mod/mqtt/test/Makefile
+    src/protocol/mqtt/Makefile
+    src/protocol/mqtt/include/Makefile
+    src/protocol/mqtt/test/Makefile
+    src/protocol/mqtt/libyimmo_mqtt-${YIMMO_VERSION_MAJOR}.${YIMMO_VERSION_MINOR}.pc:src/protocol/mqtt/libyimmo_mqtt.pc.in
     ])
 
 ## libyimmo doc output files:
@@ -307,6 +311,8 @@ AC_CONFIG_FILES([
     doc/examples/Makefile
     doc/diagrams/Makefile
     ])
+
+# Test stuff:
 AC_REQUIRE_AUX_FILE([tap-driver.sh])
 
 AC_OUTPUT

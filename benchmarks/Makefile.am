@@ -23,18 +23,19 @@
 #
 #==============================================================================
 
+# TODO: get rid of this or tidy it...
 AM_CFLAGS=\
- 	-I@top_srcdir@/lib \
+	-I@top_srcdir@/src \
  	-I@top_builddir@/include \
  	-I@top_srcdir@/include \
- 	-I@top_srcdir@/mod/http \
- 	-I@top_srcdir@/mod/http/extra \
- 	-I@top_srcdir@/mod/http/include \
+ 	-I@top_srcdir@/src/protocol/http \
+ 	-I@top_srcdir@/src/protocol/http/extra \
+ 	-I@top_srcdir@/src/protocol/http/include \
 	-I@srcdir@
 
 LDADD=\
-    	@top_builddir@/lib/libyimmo.la \
-    	@top_builddir@/mod/http/libyimmo_http.la
+    	@top_builddir@/src/core/libyimmo.la \
+    	@top_builddir@/src/protocol/http/libyimmo_http.la
 
 AM_DEFAULT_SOURCE_EXT=.c
 if BUILD_BENCHMARKS

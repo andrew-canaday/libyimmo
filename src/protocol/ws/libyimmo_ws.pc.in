@@ -1,0 +1,13 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@/yimmo-@YIMMO_VERSION_MAJOR@.@YIMMO_VERSION_MINOR@
+
+Name: @PACKAGE_NAME@
+Author: @PACKAGE_BUGREPORT@
+Copyright: @PACKAGE_COPYRIGHT@
+Description: libyimmo WebSockets
+Url: @PACKAGE_URL@
+Version: @PACKAGE_VERSION@
+Libs: -L${libdir} -lyimmo_ws
+Cflags: -I${includedir}

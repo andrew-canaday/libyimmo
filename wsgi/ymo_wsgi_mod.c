@@ -32,6 +32,10 @@
 #include "ymo_wsgi_mod.h"
 #include "ymo_wsgi_context.h"
 
+#if defined(YMO_WSGI_WEBSOCKETS_POC) && (YMO_WSGI_WEBSOCKETS_POC == 1)
+#include "ymo_wsgi_websockets.h"
+#endif /* YMO_WSGI_WEBSOCKETS_POC */
+
 
 /*---------------------------------*
  *             Globals:
@@ -80,6 +84,15 @@ ymo_status_t ymo_wsgi_init(const char* mod_name, const char* app_name)
      *------------------------------------------------------------------*/
     ymo_log_notice("Starting embedded python interpretter");
     Py_InitializeEx(0);
+    wchar_t* py_name = Py_GetProgramName();
+    wchar_t* py_prefix = Py_GetPrefix();
+    wchar_t* py_exec_prefix = Py_GetExecPrefix();
+    wchar_t* py_path = Py_GetPath();
+
+    ymo_log_debug("Python Program Name: %ls", py_name);
+    ymo_log_debug("Python Prefix:       %ls", py_prefix);
+    ymo_log_debug("Python Exec Prefix:  %ls", py_exec_prefix);
+    ymo_log_debug("Python Path:         %ls", py_path);
 
     ymo_log_notice("Notifying python of process fork");
 #if PY_VERSION_HEX <= 0x03070000
@@ -87,7 +100,10 @@ ymo_status_t ymo_wsgi_init(const char* mod_name, const char* app_name)
 #else
     PyOS_AfterFork_Child();
 #endif /* PY_VERSION_HEX */
+
     PyObject* m = ymo_wsgi_module_init();
+    PyObject* pSysModules = PyImport_GetModuleDict();
+    YMO_INCREF_PYDICT_SETITEM_STRING(pSysModules, "yimmo", m);
 
     if( !m ) {
         fprintf(stderr, "Unable to initialize ymo_wsgi python module!\n");
@@ -103,6 +119,15 @@ ymo_status_t ymo_wsgi_init(const char* mod_name, const char* app_name)
     }
 
     pWsgiAppModule = PyImport_Import(pWsgiAppName);
+    if( !pWsgiAppModule ) {
+        fprintf(stderr, "Unable to import wsgi module: %s\n", mod_name);
+        return -1;
+    }
+
+    PyObject* pAppDict = PyModule_GetDict(pWsgiAppModule);
+    if( pAppDict ) {
+        YMO_INCREF_PYDICT_SETITEM_STRING(pAppDict, "yimmo", m);
+    }
     Py_XDECREF(pWsgiAppName);
 
     if( !pWsgiAppModule ) {
@@ -232,32 +257,61 @@ int ymo_wsgi_shutdown()
 /*---------------------------------------------------------------------------*
  *                              Module Init:
  *---------------------------------------------------------------------------*/
-static PyModuleDef module_Yimmo = {
+#if defined(YMO_WSGI_WEBSOCKETS_POC) && (YMO_WSGI_WEBSOCKETS_POC == 1)
+static PyMethodDef yimmo_Methods[] = {
+    {"init_websockets",  yimmo_init_websockets,
+        METH_VARARGS | METH_KEYWORDS, INIT_WEBSOCKETS_DOC},
+    {NULL, NULL, 0, NULL}        /* Sentinel */
+};
+#else
+static PyMethodDef yimmo_Methods[] = { {NULL, NULL, 0, NULL} };
+#endif /* YMO_WSGI_WEBSOCKETS_POC */
+
+
+static PyModuleDef yimmo_Module = {
     PyModuleDef_HEAD_INIT,
     .m_name = "yimmo",
     .m_doc = "YIMMO WSGI Server.",
     .m_size = -1,
+    yimmo_Methods
 };
-
 
 PyMODINIT_FUNC
 ymo_wsgi_module_init()
 {
     PyObject* m;
-    if( PyType_Ready(&yimmo_ContextType) < 0 )
+    if( PyType_Ready(&yimmo_ContextType) < 0 ) {
         return NULL;
+    }
 
-    m = PyModule_Create(&module_Yimmo);
-    if( m == NULL )
+#if defined(YMO_WSGI_WEBSOCKETS_POC) && (YMO_WSGI_WEBSOCKETS_POC == 1)
+    if( PyType_Ready(&yimmo_WebSocketType) < 0 ) {
         return NULL;
+    }
+#endif /* YMO_WSGI_WEBSOCKETS_POC */
+
+    m = PyModule_Create(&yimmo_Module);
+    if( m == NULL ) {
+        return NULL;
+    }
 
     Py_INCREF(&yimmo_ContextType);
     if( PyModule_AddObject(
-            m, "Request", (PyObject*)&yimmo_ContextType) < 0 ) {
+            m, "Context", (PyObject*)&yimmo_ContextType) < 0 ) {
         Py_DECREF(&yimmo_ContextType);
         Py_DECREF(m);
         return NULL;
     }
+
+#if defined(YMO_WSGI_WEBSOCKETS_POC) && (YMO_WSGI_WEBSOCKETS_POC == 1)
+    Py_INCREF(&yimmo_WebSocketType);
+    if( PyModule_AddObject(
+            m, "WebSocket", (PyObject*)&yimmo_WebSocketType) < 0 ) {
+        Py_DECREF(&yimmo_WebSocketType);
+        Py_DECREF(m);
+        return NULL;
+    }
+#endif /* YMO_WSGI_WEBSOCKETS_POC */
 
     return m;
 }

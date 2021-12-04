@@ -23,7 +23,7 @@ The yimmo project source files are organized in the following manner.
         - Contains header files for the :ref:`yimmo public API`
       * - ``lib``
         - Source and header files for libyimmo core
-      * - ``mod``
+      * - ``protocol``
         - Source and header files, by protocol.
       * - ``wsgi``
         - Source and header files for :ref:`yimmo-wsgi<maintainer_wsgi>`
@@ -44,18 +44,20 @@ The yimmo project source files are organized in the following manner.
 
       libyimmo/
       │
-      ├── include/     ───┐
-      ├── lib/            ├─────  Core source
-      │   ├── *.h/*.c     │       at top-level
-      │   └── test/    ───┘
+      ├── include/     ──── Core Public API
       │
-      ├── mod/
-      │   ├── <name>/       ───┐
-      │   │   ├── include/     ├─────  Module source
-      │   │   ├── *.h/*.c      │       under "mod"
-      │   │   └── test/     ───┘
+      ├── src/
+      │   ├── core/          ───┐
+      │   │   ├── *.h/*.c       ├─────  Core source
+      │   │   └── test/      ───┘
       │   │
-      │   └── ...
+      │   └── protocol/
+      │       ├── <name>/        ───┐
+      │       │    ├── include/     ├─────  Protocols
+      │       │    ├── *.h/*.c      │
+      │       │    └── test/     ───┘
+      │       │
+      │       └── ...
       │
       ├── wsgi/      ───── Executables get their
       │                    own top-level directory

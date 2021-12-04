@@ -28,21 +28,41 @@ doesn't have to concern itself with user sessions, transactions, encoding, etc.
 The *user* code doesn't have to worry about validating input, transfer encoding,
 protocol versions, etc.
 
+.. admonition:: info
+
+   For a diagrammatic for of the overall flow of messages and data
+   see :ref:`Core Event Flow`.
+
 Interaction
 ...........
 
-Each layer implements an interface, defined by the layer below it, and
-exposes a set of utility functions which the layer above it can invoke to
-call down.
+.. rst-class:: fig-right
+
+   .. figure:: /diagrams/yimmo-high-level.svg
+      :alt: The core handles connection management and TCP I/O and
+            provides the protocol with a stream of raw data. The
+            protocol parses raw data into protocol-level entities,
+            handling things like framing, encoding, etc, and
+            passes those to the application.
+            Messages originating at the application go through the
+            reverse flow: the app sends a message object, the
+            protocol frames and encodes it into a wire-level
+            protocol and provides the server with a strea of raw
+            bytes to send back to the client.
+      :target: ../_images/yimmo-high-level.svg
+
+
+Each layer implements a callback interface, defined by the layer below, and
+exposes a set of API functions which the layer above can invoke to pass
+information down.
+
+- Information moves bottom-to-top by way of callbacks.
+- Information moves top-to-bottom by way of API functions.
 
 **No layer should know anything about the technical details of the layer above
 it, outside of the interface it defines**. So, for example, the TCP server
 should *never need to know about or be concerned with protocol details* — e.g.
 setting HTTP headers, checking protocol flags, etc.
-
-.. admonition:: info
-
-   For a diagrammatic view, see :ref:`Core Event Flow`.
 
 Data
 ....
@@ -83,35 +103,33 @@ Example: HTTP Data
 
 **Transport-Level**:
 
-The :c:struct:`ymo_proto` provides a ``data`` for protocol implementations to
-store data that will persist for the lifetime of the server, and
-:c:struct:`ymo_conn` provides a ``user_data`` field that will persist for the
-lifetime of the connection.
-
-When the server invokes protocol callbacks, it passes the proto data field
-and, where applicable, the connection ``user_data`` field.
+- :c:struct:`ymo_proto` provides a ``data`` field for protocol implementations
+  to store data that will persist for the lifetime of the server.
+- :c:struct:`ymo_conn` provides a ``user_data`` field that will persist for the
+  lifetime of the connection.
+- When the server invokes protocol callbacks, it passes the proto data field
+  and, where applicable, the connection ``user_data`` field.
 
 **Protocol-Level**:
 
-:c:func:`ymo_proto_http_create` populates the :c:struct:`ymo_proto` ``data``
-field with its own, protocol-specific, data structure
-(``ymo_http_proto_data``) in order to store things like the users's HTTP
-header and body callbacks, upgrade handlers, etc.
+- :c:func:`ymo_proto_http_create` populates the :c:struct:`ymo_proto` ``data``
+  field with its own, protocol-specific, data structure
+  (``ymo_http_proto_data``) in order to store things like the users's HTTP
+  header and body callbacks, upgrade handlers, etc.
 
-It populates the :c:struct:`ymo_conn` ``data`` field with a
-:c:struct:`ymo_http_session`, which is used to track things like HTTP
-exchange state, client capabilities, etc.
+  - The ``ymo_http_proto_data`` struct, has its *own* ``data`` field, which is
+    populated with the value passed by the user when they invoke
+    :c:func:`ymo_proto_http_create` or :c:func:`ymo_http_simple_init`.
 
-**User-Level**:
+- It populates the :c:struct:`ymo_conn` ``data`` field with a
+  :c:struct:`ymo_http_session`, which is used to track things like HTTP
+  exchange state, client capabilities, etc.
 
-The ``ymo_http_proto_data`` struct, has its *own* ``data`` field, which is
-populated with the value passed by the user when they invoke
-:c:func:`ymo_proto_http_create` or :c:func:`ymo_http_simple_init`. Similarly,
-the :c:struct:`ymo_http_session` type has a ``user_data`` field which is
-optionally populated by user code when its
-:c:type:`ymo_http_session_init_cb_t` is invoked.
+  - the :c:struct:`ymo_http_session` type has a ``user_data`` field
+    which is optionally populated by user code when its
+    :c:type:`ymo_http_session_init_cb_t` is invoked.
 
-When the protocol invokes user callbacks, it passes the HTTP proto data field
-and, where applicable, the HTTP session ``user_data`` field.
+- When the protocol invokes user callbacks, it passes the HTTP proto data field
+  and, where applicable, the HTTP session ``user_data`` field.
 
 

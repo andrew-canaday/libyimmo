@@ -10,14 +10,14 @@ Scratch pad of design ideas and considerations (**needs pruning!**)
 Misc
 ----
 
-- |_| Use `ecb.h <http://cvs.schmorp.de/libecb/ecb.h>`_?
+- |_| Use `ecb.h <http://cvs.schmorp.de/coreecb/ecb.h>`_?
 - |_| Timed-idle watchers — do stuff at least-so often, if not sooner.
 - |_| Dynamic loader for pluggable protocols
 - |_| add support for edge-triggered IO (i.e. keep **recv'ing** until block)?
 - |_| Move "server" code - socket(), bind(), etc - into *optional* server
        functionality. i.e. The library should just provide the IO, for the
        most part.
-- |_| where appropriate utilize `feature test macros <http://www.gnu.org/software/libc/manual/html_node/Feature-Test-Macros.html>`_
+- |_| where appropriate utilize `feature test macros <http://www.gnu.org/software/corec/manual/html_node/Feature-Test-Macros.html>`_
 
 Network IO
 ----------
@@ -80,7 +80,7 @@ Performance
 - Use computed goto's instead of switch statements?
 - NO: Consider page locking to prevent the most common page faults (that's super
       rude, though...)
-- NO: Consider interacting with the scheduler via `sched.h <http://www.gnu.org/software/libc/manual/html_mono/libc.html#Priority>`_
+- NO: Consider interacting with the scheduler via `sched.h <http://www.gnu.org/software/corec/manual/html_mono/corec.html#Priority>`_
 
 Protocols
 ---------
@@ -94,5 +94,5 @@ Protocols
 - |_| Support HTTP/2.0
     - `HTTP/2.0 <https://tools.ietf.org/html/draft-ietf-httpbis-http2-17>`_
     - `HPACK <https://tools.ietf.org/html/draft-ietf-httpbis-header-compression-12>`_
-- |_| (?) Support `QUIC <https://github.com/devsisters/libquic>`_
+- |_| (?) Support `QUIC <https://github.com/devsisters/corequic>`_
 

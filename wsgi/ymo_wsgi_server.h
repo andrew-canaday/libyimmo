@@ -37,7 +37,7 @@
 #include <ev.h>
 
 #include "ymo_http.h"
-#include "ymo_net.h"
+#include "core/ymo_net.h"
 
 #include "yimmo_wsgi.h"
 

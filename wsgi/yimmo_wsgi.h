@@ -93,6 +93,14 @@
  */
 #define YIMMO_CONTEXT_C(ptr) ((yimmo_context_t*)(ptr))
 
+/** cast a C yimmo websocket to a Python object pointer.
+ */
+#define YIMMO_WEBSOCKET_PY(ptr) ((PyObject*)(ptr))
+
+/** cast a Python object pointer to a C yimmo websocket.
+ */
+#define YIMMO_WEBSOCKET_C(ptr) ((yimmo_websocket_t*)(ptr))
+
 #define YMO_WSGI_EXCHANGE_ATOMIC 1
 
 /**---------------------------------
@@ -116,6 +124,10 @@ typedef struct ymo_wsgi_exchange ymo_wsgi_exchange_t;
  * etc. For more info, see PEP3333.
  */
 typedef struct yimmo_context yimmo_context_t;
+
+
+/** A Yimmo Python WebSocket connection. */
+typedef struct yimmo_websocket yimmo_websocket_t;
 
 
 /** Encapsulates the data for a single yimmo-wsgi _process_ worker.

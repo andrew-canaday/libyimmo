@@ -50,7 +50,7 @@ static void ymo_wsgi_session_free(ymo_wsgi_session_t* session);
 /*---------------------------------*
  *           Functions:
  *---------------------------------*/
-void* ymo_wsgi_session_init(void* server_data, ymo_http_session_t* http_session)
+ymo_status_t ymo_wsgi_session_init(void* server_data, ymo_http_session_t* http_session)
 {
     static size_t session_id = 1;
     ymo_wsgi_proc_t* w_proc = server_data;
@@ -67,15 +67,14 @@ void* ymo_wsgi_session_init(void* server_data, ymo_http_session_t* http_session)
             session->pool.items[i].next = &(session->pool.items[i+1]);
         }
         session->pool.head = &(session->pool.items[0]);
+
+        ymo_http_session_set_userdata(http_session, session);
     } else {
         ymo_log_warning("Failed to create WSGI session for http: %p", (void*)http_session);
-        errno = ENOMEM;
+        return ENOMEM;
     }
 
-    if( session ) {
-        ymo_log_debug("Created WSGI session %zu", session->id);
-    }
-    return session;
+    return YMO_OKAY;
 }
 
 static void ymo_wsgi_session_free(ymo_wsgi_session_t* session)
@@ -98,6 +97,7 @@ void ymo_wsgi_session_cleanup(
     size_t no_ex = 0;
     while( session->head ) {
         no_ex++;
+        session->head->done = 1;
         ymo_wsgi_exchange_t* next = session->head->next;
         ymo_wsgi_exchange_decref(session->head);
         session->head = next;

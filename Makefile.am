@@ -29,30 +29,9 @@ ACLOCAL_AMFLAGS=-Im4
 
 SUBDIRS=\
 	include \
-	lib \
-	mod \
-	example \
+	src \
+	examples \
 	wsgi \
 	benchmarks \
 	doc
-
-pkgconfig_DATA=@PACKAGE_NAME@-@YIMMO_VERSION_MAJOR@.@YIMMO_VERSION_MINOR@.pc
-
-# TODO: use 'install' to install things...
-
-# NOTE: This will overwrite the major-version directory, even if installing
-# a lesser minor version (e.g. installing v1.2 after previously insstalling
-# v1.3 will result in libyimmo-1.pc -> libyimmo-1.2.pc).
-install-data-hook:
-	cd $(DESTDIR)@includedir@ && \
-		$(LN_S) -f @YIMMO_INCLUDE@ yimmo-${YIMMO_VERSION_MAJOR}
-	cd $(DESTDIR)@pkgconfigdir@ && \
-		$(LN_S) -f \
-			@PACKAGE_NAME@-@YIMMO_VERSION_MAJOR@.@YIMMO_VERSION_MINOR@.pc \
-			@PACKAGE_NAME@-@YIMMO_VERSION_MAJOR@.pc
-
-fmt:
-	$(top_srcdir)/util/fmt-code.sh
-
-## EOF
 

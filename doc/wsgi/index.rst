@@ -1,3 +1,5 @@
+.. _WSGI Server:
+
 WSGI Server
 ===========
 

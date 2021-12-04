@@ -38,14 +38,14 @@ docs-local:
 		-e "EXT=rst" \
 		-e "DOCDIR=@builddir@" \
 		-p @top_srcdir@/util/c2sphinx-post.sh \
-		@top_srcdir@/lib/ymo_trie.h \
-		@top_srcdir@/lib/ymo_conn.h \
-		@top_srcdir@/lib/ymo_bucket.h \
-		@top_srcdir@/lib/ymo_proto.h \
-		@top_srcdir@/lib/ymo_server.h \
-		@top_srcdir@/lib/ymo_assert.h \
-		@top_srcdir@/lib/ymo_tap.h \
-		@top_srcdir@/lib/ymo_net.h
+		@top_srcdir@/src/core/ymo_trie.h \
+		@top_srcdir@/src/core/ymo_conn.h \
+		@top_srcdir@/src/core/ymo_bucket.h \
+		@top_srcdir@/src/core/ymo_proto.h \
+		@top_srcdir@/src/core/ymo_server.h \
+		@top_srcdir@/src/core/ymo_assert.h \
+		@top_srcdir@/src/core/ymo_tap.h \
+		@top_srcdir@/src/core/ymo_net.h
 	cp -v \
 		@srcdir@/*.rst \
 		@builddir@

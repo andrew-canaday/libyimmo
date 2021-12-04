@@ -25,19 +25,19 @@ docs-local:
 		-s \
 		-e "EXT=rst" \
 		-p @top_srcdir@/util/c2sphinx-post.sh \
-		@top_srcdir@/mod/http/include/ymo_http.h \
+		@top_srcdir@/src/protocol/http/include/ymo_http.h \
 		> @builddir@/api.rst
 	$(C2SPHINX) \
 		-s \
 		-e "EXT=rst" \
 		-e "DOCDIR=@builddir@" \
 		-p @top_srcdir@/util/c2sphinx-post.sh \
-		@top_srcdir@/mod/http/ymo_http_parse.h \
-		@top_srcdir@/mod/http/ymo_proto_http.h \
-		@top_srcdir@/mod/http/ymo_http_hdr_table.h \
-		@top_srcdir@/mod/http/ymo_http_session.h \
-		@top_srcdir@/mod/http/ymo_http_exchange.h \
-		@top_srcdir@/mod/http/ymo_http_response.h
+		@top_srcdir@/src/protocol/http/ymo_http_parse.h \
+		@top_srcdir@/src/protocol/http/ymo_proto_http.h \
+		@top_srcdir@/src/protocol/http/ymo_http_hdr_table.h \
+		@top_srcdir@/src/protocol/http/ymo_http_session.h \
+		@top_srcdir@/src/protocol/http/ymo_http_exchange.h \
+		@top_srcdir@/src/protocol/http/ymo_http_response.h
 	cp -v \
 		@srcdir@/*.rst \
 		@builddir@

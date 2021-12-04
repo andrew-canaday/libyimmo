@@ -4,6 +4,22 @@
 # A pretty bogus flask app that I use for loose testing of the WSGI server.
 #
 #------------------------------------------------------------------------------
+import sys, pprint
+import yimmo
+
+def on_open(ws):
+    print(f"{ws}: open!")
+
+def on_message(ws, msg):
+    print(f"{ws}: {msg}")
+
+def on_close(ws):
+    print(f"{ws}: closed!")
+
+try:
+    yimmo.init_websockets(on_open, on_message, on_close)
+except:
+    pass
 
 USE_GEVENT=False
 
@@ -134,6 +150,10 @@ def py_info():
 def r_info():
     return pprint.pformat(request.environ)
 
+@app.route('/ws')
+def ws():
+    return WS_INDEX
+
 if os.environ.get('YMO_WSGI_USE_WRITE', '') == 'true':
     flapp = app
     def app(environ, start_response):
@@ -148,6 +168,83 @@ if os.environ.get('YMO_WSGI_USE_WRITE', '') == 'true':
         body = flapp(environ,w)
         for i in body:
             w.write(i)
+
+WS_INDEX="""
+<html>
+    <head>
+        <title>
+            Libyimmo: WebSocket Test Page
+        </title>
+        <style>
+            .container {
+                border-radius: 5px;
+                background-color: #F0F0F0;
+                padding: 20px;
+                width:600px;
+                margin: 0 auto;
+                margin-top: 5%;
+                text-align: left;
+                box-shadow: 20px 20px 15px #DDDDDD;
+            }
+
+            .status {
+                border-radius: 5px;
+                background-color: #AFA0AA;
+                padding: 10px;
+                width:300;
+                margin: 0 auto;
+                margin-top: 5%;
+                text-align: left;
+                box-shadow: 12px 12px 5px #777777;
+            }
+
+            .message {
+                border-radius: 5px;
+                background-color: #BBBBBB;
+                padding: 8px;
+                width:560;
+                margin: 0 auto;
+                margin-top: 5%;
+                text-align: left;
+                box-shadow: 3px 3px 5px #7A7A7A;
+            }
+        </style>
+        <script>
+            var no_lines = 0;
+            var ws = new WebSocket("ws://127.0.0.1:8081/");
+            ws.onopen = function() {
+                var d = document.getElementById('msg_in');
+                d.innerHTML += "<p class=\"status\">WebSocket: Open</p>";
+                setInterval(function() {
+                    if( ws.bufferedAmount == 0 ) {
+                        ws.send(new Date().toUTCString());
+                    }
+                }, 500);
+            }
+            ws.onmessage = function(m) {
+                var d = document.getElementById('msg_in');
+                if( no_lines > 3 ) {
+                    ws.close();
+                    d.innerHTML += "<p class=\"status\">WebSocket: Closing</p>";
+                }
+                else {
+                    no_lines++;
+                    d.innerHTML += "<b><p class=\"message\">" + m.data + "</p></b>";
+                };
+            }
+            ws.onclose = function() {
+                var d = document.getElementById('msg_in');
+                d.innerHTML += "<p class=\"status\">WebSocket: Closed</p>";
+            }
+        </script>
+    </head>
+    <body>
+        <h1>Messages:</h1>
+        <div class="container" id="msg_in">
+        </div>
+    </body>
+</html>
+"""
 
 # EOF
 

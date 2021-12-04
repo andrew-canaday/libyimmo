@@ -32,15 +32,15 @@
 
 #include "ymo_log.h"
 #include "ymo_http.h"
-// #include "ymo_server.h"
+#include "ymo_ws.h"
 #include "ymo_http.h"
 #include "ymo_log.h"
 
-#define YMO_WSGI_SESSION_INTERNALS
 #include "ymo_wsgi_server.h"
 #include "ymo_wsgi_worker.h"
 #include "ymo_wsgi_session.h"
 #include "ymo_wsgi_exchange.h"
+#include "ymo_wsgi_websockets.h"
 
 
 /*---------------------------------*
@@ -55,6 +55,7 @@ ymo_status_t ymo_wsgi_server_request_cb(
 {
     ymo_log_debug("WSGI HTTP callback: %s", "REQUEST");
     ymo_status_t status = YMO_WOULDBLOCK;
+
     ymo_wsgi_session_t* wsgi_session = user_data;
     if( !wsgi_session ) {
         return EINVAL;
@@ -76,6 +77,11 @@ ymo_status_t ymo_wsgi_server_header_cb(
         ymo_http_response_t* response,
         void* user_data)
 {
+    /* HACK HACK: skip everything of upgrade requests... */
+    if( ymo_http_hdr_table_get(&request->headers, "upgrade") ) {
+        return YMO_OKAY;
+    }
+
     ymo_log_debug("WSGI HTTP callback: %s", "HEADER");
     ymo_status_t status = YMO_OKAY;
     ymo_wsgi_session_t* wsgi_session = user_data;
@@ -87,6 +93,7 @@ ymo_status_t ymo_wsgi_server_header_cb(
     ymo_wsgi_worker_lock_in(worker);
     ymo_wsgi_exchange_t* exchange = ymo_wsgi_session_create_exchange(
             wsgi_session, request, response);
+    ymo_wsgi_exchange_incref(exchange); /* +1 for server */
     ymo_wsgi_worker_unlock_in(worker);
 
     if( !exchange ) {
@@ -94,7 +101,6 @@ ymo_status_t ymo_wsgi_server_header_cb(
     }
     return status;
 }
-
 
 ymo_server_t* ymo_wsgi_server_init(
         struct ev_loop* loop, in_port_t http_port, ymo_wsgi_proc_t* proc)
@@ -111,6 +117,17 @@ ymo_server_t* ymo_wsgi_server_init(
     ymo_proto_t* http_proto = NULL;
     ymo_server_t* http_srv = NULL;
 
+#if defined(YMO_WSGI_WEBSOCKETS_POC) && (YMO_WSGI_WEBSOCKETS_POC == 1)
+    /* TODO: should be configurable, not installed by default!
+     *
+     * Initialize the websocket protocol: */
+    ymo_proto_t* ws_proto = ymo_proto_ws_create(
+            YMO_WS_SERVER_DEFAULT,
+            &ymo_wsgi_ws_connect_cb,
+            &ymo_wsgi_ws_recv_cb,
+            &ymo_wsgi_ws_close_cb);
+#endif /* YMO_WSGI_WEBSOCKETS_POC */
+
     /* Initialize echo http_srv params: */
     http_proto = ymo_proto_http_create(
             &ymo_wsgi_session_init,
@@ -120,6 +137,15 @@ ymo_server_t* ymo_wsgi_server_init(
             &ymo_wsgi_session_cleanup,
             proc
             );
+
+#if defined(YMO_WSGI_WEBSOCKETS_POC) && (YMO_WSGI_WEBSOCKETS_POC == 1)
+    /* TODO: these should be configurable, not installed by default! */
+    /* Websocket upgrade handler: */
+    ymo_http_add_upgrade_handler(
+        http_proto, ymo_ws_http_upgrade_handler(ws_proto));
+    ymo_http_add_upgrade_handler(
+        http_proto, ymo_http2_no_upgrade_handler());
+#endif /* YMO_WSGI_WEBSOCKETS_POC */
 
     if( !http_proto ) {
         goto http_init_bail;
@@ -181,7 +207,7 @@ static void ymo_wsgi_server_queue_responses(
             ymo_http_response_finish(exchange->response);
 resp_sent:
             exchange->sent = 1;
-            ymo_wsgi_exchange_decref(exchange);
+            ymo_wsgi_exchange_decref(exchange); /* -1 for server */
             ymo_wsgi_session_exchange_done(exchange->session);
         }
 resp_decref:

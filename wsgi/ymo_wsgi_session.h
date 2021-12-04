@@ -61,7 +61,7 @@ struct ymo_wsgi_session {
  *---------------------------------*/
 
 /** */
-void* ymo_wsgi_session_init(
+ymo_status_t ymo_wsgi_session_init(
         void* server_data, ymo_http_session_t* http_session);
 
 /** */

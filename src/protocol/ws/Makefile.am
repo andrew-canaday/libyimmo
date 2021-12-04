@@ -1,0 +1,76 @@
+##=============================================================================
+##
+## libyimmo: src/protocol/ws/Makefile.am
+##
+##=============================================================================
+#==============================================================================
+#  libyimmo
+#
+#  Copyright (c) 2014 Andrew Canaday
+# 
+#  This program is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+# 
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+# 
+#  You should have received a copy of the GNU General Public License
+#  along with this program.  If not, see <ws://www.gnu.org/licenses/>.
+#
+#==============================================================================
+
+yimmo_mod_wsdir=@YIMMO_INCLUDEDIR@/ws
+yimmo_mod_ws_HEADERS=\
+	ymo_proto_ws.h \
+	ymo_ws_parse.h \
+	ymo_ws_session.h
+
+
+SUBDIRS=\
+	include \
+	test
+
+lib_LTLIBRARIES=\
+	libyimmo_ws.la
+
+libyimmo_ws_la_CFLAGS=\
+	-I@top_srcdir@/src \
+ 	-I@top_builddir@/include \
+ 	-I@top_srcdir@/include \
+	-I@top_srcdir@/src/protocol \
+	-I@top_srcdir@/src/protocol/ws/include \
+	-I@top_srcdir@/src/protocol/http/include \
+	@OPENSSL_INCLUDES@ \
+	@BSAT_CFLAGS@
+
+# TODO: Do we pass "-module" here (potentially yielding a "bundle" on Mac OS X)
+# or leave it as a shared library? Contrary to the docs, it looks like shared
+# libs can be dlopened on Mac OS X. This also allows clients to go ahead and
+# link against the shared lib (impossible with a module). Any downside to this?
+libyimmo_ws_la_LDFLAGS=\
+	-version-info @YMO_LIB_VERSION@ \
+	@OPENSSL_LDFLAGS@ \
+	@OPENSSL_LIBS@ \
+	@BSAT_LIBS@
+
+libyimmo_ws_la_SOURCES=\
+	ymo_proto_ws.c \
+	ymo_ws_parse.c \
+	ymo_ws_session.c
+
+
+pkgconfig_DATA=\
+	@PACKAGE_NAME@_ws-@YIMMO_VERSION_MAJOR@.@YIMMO_VERSION_MINOR@.pc
+
+install-data-hook:
+	cd $(DESTDIR)@pkgconfigdir@ && \
+		$(LN_S) -f \
+			@PACKAGE_NAME@_ws-@YIMMO_VERSION_MAJOR@.@YIMMO_VERSION_MINOR@.pc \
+			@PACKAGE_NAME@_ws-@YIMMO_VERSION_MAJOR@.pc
+
+# EOF
+

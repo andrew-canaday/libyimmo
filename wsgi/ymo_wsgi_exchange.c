@@ -45,6 +45,7 @@
 /*---------------------------------*
  *           Functions:
  *---------------------------------*/
+
 ymo_wsgi_exchange_t* ymo_wsgi_exchange_create(ymo_wsgi_session_t* session)
 {
     ymo_wsgi_exchange_t* exchange;
@@ -60,6 +61,7 @@ ymo_wsgi_exchange_t* ymo_wsgi_exchange_create(ymo_wsgi_session_t* session)
             exchange->session = session;
         }
     }
+
     return exchange;
 }
 

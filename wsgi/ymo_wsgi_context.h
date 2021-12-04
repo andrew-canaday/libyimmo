@@ -22,8 +22,8 @@
 
 
 
-#ifndef YMO_WSGI_REQ_CTX_H
-#define YMO_WSGI_REQ_CTX_H
+#ifndef YMO_WSGI_CONTEXT_H
+#define YMO_WSGI_CONTEXT_H
 
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
@@ -157,7 +157,7 @@ PyObject* yimmo_Context_write(
  *
  * HACK: we just use sys.stderr for "wsgi.errors"
  *---------------------------------------------------------------*/
-#endif /* YMO_WSGI_REQ_CTX_H */
+#endif /* YMO_WSGI_CONTEXT_H */
 
 
 

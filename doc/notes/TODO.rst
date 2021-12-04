@@ -42,7 +42,7 @@ Next Up
 - |/| Docs on public vs private
 - |/| Build options for development headers
 - |/| Shift connection header table to hash?
-- |x| Commit to glib/apr neither
+- |x| Commit to gcore/apr neither
 
 Tidying
 .......

@@ -1,0 +1,57 @@
+@startuml
+
+!include skinparams.iuml
+skinparam backgroundColor #FFFFFF
+skinparam sequenceMessageAlign center
+skinparam ParticipantPadding 4
+skinparam BoxPadding 0
+skinparam padding 4
+skinparam roundcorner 8
+hide footbox
+
+box "Clients" #E5EEF0
+    participant "client fd" as client
+end box
+
+box "yimmo" #EEF0E5
+    participant "server" as server
+    participant "protocol" as proto
+end box
+
+box  #F2EEFF
+    participant "application" as app
+end box
+
+/ rnote over server
+    Transport-level:
+    TCP connections,
+    low-level network IO.
+endrnote
+
+/ rnote over proto
+    Protocol-level:
+    Parsing, framing,
+    encoding, etc.
+endrnote
+
+client -> server: request
+activate server
+server -> proto: raw data\n(**callback**)
+deactivate server
+activate proto
+proto -> proto: parse
+proto -> app: message\n(**callback**)
+deactivate proto
+activate app
+proto <- app: message\n(**API call**)
+deactivate app
+activate proto
+proto -> proto: frame/encode
+proto -> server: raw data\n(**API call**)
+deactivate proto
+activate server
+server -> client: response
+deactivate server
+activate app
+
+@enduml

@@ -20,7 +20,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include "ymo_assert.h"
+#include "core/ymo_assert.h"
 
 #include "yimmo.h"
 #include "ymo_log.h"

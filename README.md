@@ -8,7 +8,7 @@
 > To be clear: I wouldn't use this in production until after some test coverage
 > and usability things have been addressed.
 > (I generally use [gunicorn](https://gunicorn.org/) for my production WSGI workloads and
-> [libwebsockets](https://libwebsockets.org/) for websockets. Check 'em out!)
+> [libwebsockets](https://corewebsockets.org/) for websockets. Check 'em out!)
 >
 > There's a bit of cleanup work in flight, and _things are likely to change a
 > bit as the refactor proceeds!_
@@ -24,7 +24,7 @@
 # Introduction
 Yimmo (<i><b>Y</b>up, <b>I</b> <b>M</b>ade <b>M</b>y <b>O</b>wn</i>) is a
 streaming socket framework. The I/O architecture is a traditional reactor
-pattern which uses [libev](http://software.schmorp.de/pkg/libev.html) for I/O readiness notifications.
+pattern which uses [libev](http://software.schmorp.de/pkg/coreev.html) for I/O readiness notifications.
 
 > :bulb: Want to get the gist in a hurry?
 >
@@ -72,8 +72,8 @@ compiler extensions).
 ### Dependencies
 
 Libyimmo requires the following third party libraries:
- - [libev](http://software.schmorp.de/pkg/libev.html) for event management
- - [libbsat](https://github.com/andrew-canaday/libbsat) for timeout management
+ - [libev](http://software.schmorp.de/pkg/coreev.html) for event management
+ - [libbsat](https://github.com/andrew-canaday/corebsat) for timeout management
  - a UUID library — either linux-ng or OSSP ([ax_check_uuid_api.m4](./m4/ax_check_uuid_api.m4) for details)
 
 

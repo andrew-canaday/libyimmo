@@ -32,11 +32,12 @@
 #
 # HACK warning: including lib internals.
 AM_CFLAGS=\
+	-I@top_srcdir@/src \
  	-I@top_builddir@/include \
  	-I@top_srcdir@/include \
-	-I@top_srcdir@/lib \
 	-I@top_srcdir@/wsgi/include \
- 	-I@top_srcdir@/mod/http/include \
+ 	-I@top_srcdir@/src/protocol/http/include \
+ 	-I@top_srcdir@/src/protocol/ws/include \
 	-Wno-error \
 	@BSAT_CFLAGS@ \
 	@PYTHON_CFLAGS@ \
@@ -47,10 +48,10 @@ AM_LDFLAGS=\
 	@PTHREAD_LIBS@
 
 LDADD=\
-	$(top_builddir)/lib/libyimmo.la \
-	$(top_builddir)/mod/http/libyimmo_http.la \
-	$(top_builddir)/mod/ws/libyimmo_ws.la \
-	$(top_builddir)/mod/mqtt/libyimmo_mqtt.la
+	$(top_builddir)/src/core/libyimmo.la \
+	$(top_builddir)/src/protocol/http/libyimmo_http.la \
+	$(top_builddir)/src/protocol/ws/libyimmo_ws.la \
+	$(top_builddir)/src/protocol/mqtt/libyimmo_mqtt.la
 
 AM_DEFAULT_SOURCE_EXT=.c
 if BUILD_WSGI
@@ -69,6 +70,7 @@ yimmo_wsgi_SOURCES=\
 	ymo_wsgi_exchange.c \
 	ymo_wsgi_session.c \
 	ymo_wsgi_context.c \
+	ymo_wsgi_websockets.c \
 	ymo_wsgi_util.c
 
 # EOF

@@ -372,8 +372,8 @@ yimmo_context_t* ymo_wsgi_ctx_update_environ(PyObject* pEnviron, ymo_wsgi_exchan
 {
     yimmo_context_t* ctx = NULL;
 
-    ymo_wsgi_exchange_incref(exchange);
-    if( ymo_wsgi_session_trylock(exchange->session) ) {
+    ymo_wsgi_exchange_incref(exchange); /* +1 for context */
+    if( ymo_wsgi_session_trylock(exchange->session) || exchange->done) {
         /* Release the ref held for us: */
         ymo_wsgi_exchange_decref(exchange);
         errno = EINVAL;

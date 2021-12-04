@@ -50,7 +50,7 @@ ymo_status_t ymo_wsgi_worker_add_exchange(
         ymo_wsgi_worker_t* worker, ymo_wsgi_exchange_t* exchange)
 {
     /* Add one reference that the yimm_Context_t will end up owning: */
-    ymo_wsgi_exchange_incref(exchange); /* +1 for python */
+    ymo_wsgi_exchange_incref(exchange); /* +1 for worker */
     return ymo_queue_append(&worker->queue_in, exchange);
 }
 
@@ -180,7 +180,6 @@ ymo_status_t ymo_wsgi_worker_response_body_append(
         YMO_WSGI_TRACE("Body data done for %p", (void*)exchange);
     }
     exchange->done = done;
-    ymo_wsgi_exchange_incref(exchange); /* +1 for queue */
     ymo_queue_append(&worker->queue_out, exchange);
     ev_async_send(EV_DEFAULT_ &worker->event_out);
     pthread_mutex_unlock(&worker->lock_out);
@@ -330,7 +329,7 @@ static void* ymo_wsgi_worker_main(void* tdata)
             Py_DECREF(pEnviron);
             ymo_log_debug("Failed to create Context for exchange %p: %s",
                     (void*)exchange, strerror(r_val));
-            ymo_wsgi_exchange_decref(exchange);
+            ymo_wsgi_exchange_decref(exchange); /* -1 for worker */
             goto worker_gil_release;
         }
 

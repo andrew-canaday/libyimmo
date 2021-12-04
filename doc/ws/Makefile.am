@@ -25,16 +25,16 @@ docs-local:
 		-s \
 		-e "EXT=rst" \
 		-p @top_srcdir@/util/c2sphinx-post.sh \
-		@top_srcdir@/mod/ws/include/ymo_ws.h \
+		@top_srcdir@/src/protocol/ws/include/ymo_ws.h \
 		> @builddir@/api.rst
 	$(C2SPHINX) \
 		-s \
 		-e "EXT=rst" \
 		-e "DOCDIR=@builddir@" \
 		-p @top_srcdir@/util/c2sphinx-post.sh \
-		@top_srcdir@/mod/ws/ymo_ws_session.h \
-		@top_srcdir@/mod/ws/ymo_ws_parse.h \
-		@top_srcdir@/mod/ws/ymo_proto_ws.h
+		@top_srcdir@/src/protocol/ws/ymo_ws_session.h \
+		@top_srcdir@/src/protocol/ws/ymo_ws_parse.h \
+		@top_srcdir@/src/protocol/ws/ymo_proto_ws.h
 	cp -v \
 		@srcdir@/*.rst \
 		@builddir@

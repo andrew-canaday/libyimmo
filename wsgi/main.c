@@ -73,6 +73,7 @@ static ymo_wsgi_proc_t w_proc = {
     .restart_count = 0
 };
 
+char ymo_wsgi_app_string[256];
 
 /*---------------------------------*
  *             Main:
@@ -94,7 +95,19 @@ int main(int argc, char** argv)
 
     /* HACK HACK HACK: */
     w_proc.module = argv[1];
-    w_proc.app = argv[2];
+
+    memset(ymo_wsgi_app_string, 0, sizeof(ymo_wsgi_app_string));
+    char* c = ymo_wsgi_app_string;
+    for(int i=2; i<argc; i++)
+    {
+        for(size_t n=0; n<strlen(argv[i]); n++)
+        {
+            *c++ = argv[i][n];
+        }
+    }
+    *c++ = '\0';
+    w_proc.app = ymo_wsgi_app_string;
+    ymo_log_notice("WSGI app: %s", w_proc.app);
 
     /* TODO: trim this down to basename: */
     script_name = w_proc.module;
