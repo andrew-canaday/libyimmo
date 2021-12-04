@@ -144,7 +144,7 @@ Waiting:        0    1   2.2      1     127
 Total:          0    1   2.2      1     127
 ```
 
-### C Example Server, 2M clients, ..2 byte status payload.. (C)
+### Apache Bench, 2M clients, ..2 byte status payload.. (C Example Server)
 
 (This one is a little silly. The only payload hooked up to the HTTP example
 is a two-byte "OK" status endpoint...)
