@@ -90,11 +90,11 @@ etc, etc, etc. You get the gist. Each layer optionally provides the one above
 it with a place to store data at init time and makes that data available
 as a callback parameter.
 
-The exact details vary by protocol, but here's a quick look at how this works
-with the HTTP protocol, which should help the illustrate the gist of the thing:
-
 Example: HTTP Data
 ^^^^^^^^^^^^^^^^^^
+
+The exact details vary by protocol, but here's a quick look at how this works
+with the HTTP protocol, which should help the illustrate the gist of the thing:
 
 **Transport-Level**:
 

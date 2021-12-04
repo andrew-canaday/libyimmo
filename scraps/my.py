@@ -7,6 +7,22 @@
 import sys, pprint
 import yimmo
 
+depth=0
+max_depth=3
+def print_obj(obj,lbl=None, indent=0):
+    global depth
+    depth += 1
+    if lbl:
+        print(f'{" " * (indent*2)}{lbl}:')
+
+    if depth >= max_depth:
+        return
+
+    for n in [str(x) for x in dir(yimmo) if not x.startswith('_') and str(x) != lbl]:
+        print_obj(getattr(obj,n,None), lbl=n, indent=indent+1)
+
+print_obj(yimmo, lbl='yimmo')
+
 def on_open(ws):
     print(f"{ws}: open!")
 

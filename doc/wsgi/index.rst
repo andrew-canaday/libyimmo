@@ -34,11 +34,94 @@ Usage
 -----
 
 Configuration is done through env vars.
-You run it like this:
+The executable takes two arguments:
+
+# a module name
+# a python statement whose result is a WSGI app
 
 ```bash
-PYTHONPATH=/some/path/to/modules yimmo-wsgi MODULE_NAME APP_NAME
+yimmo-wsgi MODULE_NAME INIT_STATMENT
 ```
+
+Yimmo WSGI uses the standard interpretter python home and module search path.
+If your module exists outside of the standard search path, you'll need to set
+the ``PYTHONPATH`` environment variable.
+
+Example
+~~~~~~~
+
+Suppose you had the following two flask apps, ``hello.py`` and
+``hello_factory.py``, stored in ``/opt/my_apps``.
+
+App Object
+..........
+
+If your module just contains an app object (e.g. a flask app or something), you
+start it like so:
+
+.. container:: two-col file-title
+
+   .. code-block:: python
+      :caption: hello.py
+
+      from flask import Flask
+
+      app = Flask(__name__)
+
+      @app.route("/")
+      def hello_world():
+          return "<p>Hello, World!</p>"
+
+   .. code-block:: sh
+      :caption: Invocation
+
+      # We'll run hello.py like this:
+      PYTHONPATH=/opt/my_apps \
+          yimmo-wsgi \
+              hello \
+              app
+
+
+App Factory
+...........
+
+If your module just has an app factory that takes zero or more parameters, you
+can pass the invocation on the command line (**NOTE**: here, shell quoting is
+important!), you start it like so:
+
+.. container:: two-col file-title
+
+   .. code-block:: python
+      :caption: hello_factory.py
+
+      from flask import Flask
+
+      def create_app(config_filename):
+          """
+          (NOTE: Of course, this example is silly. Don't copy this pattern!)
+
+          If you're interested in flask app factories, start here:
+          https://flask.palletsprojects.com/en/2.0.x/patterns/appfactories/
+          """
+
+          app = Flask(__name__)
+          print(f'\n\n***\nLoad some configuration from: {config_filename}\n***\n')
+
+          @app.route("/")
+          def hello_world():
+              return '<p>Hello, world!</p>'
+
+          return app
+
+   .. code-block:: sh
+      :caption: Invocation
+
+      # We'll run hello.py like this:
+      PYTHONPATH=/opt/my_apps \
+          yimmo-wsgi \
+              hello_factory \
+              'create_app("my_config.cfg")'
+
 
 Configuration
 ~~~~~~~~~~~~~

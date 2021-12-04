@@ -1013,9 +1013,11 @@ div.code-block-caption > span.caption-text {
 	color: #744;
 }
 
+div.file-title div.code-block-caption > span.caption-text,
 dl.c > dd div.code-block-caption > span.caption-text {
 	font-size: 1.2em;
 }
+
 
 div.highlight {
 	max-width: min-content;

@@ -83,6 +83,8 @@ int main(int argc, char** argv)
     /* HACK: make stderr line-buffered for log output. */
     setvbuf(stderr, NULL, _IOLBF, 0);
 
+    ymo_log_init();
+
     /* HACK: stash process name for worker adjustment later: */
     w_proc.proc_name = argv[0];
     w_proc.proc_name_len = strlen(w_proc.proc_name);
@@ -107,13 +109,13 @@ int main(int argc, char** argv)
     }
     *c++ = '\0';
     w_proc.app = ymo_wsgi_app_string;
-    ymo_log_notice("WSGI app: %s", w_proc.app);
 
     /* TODO: trim this down to basename: */
     script_name = w_proc.module;
 
     /* Say hello */
     issue_startup_msg();
+    ymo_log_notice("WSGI app: %s", w_proc.app);
 
     /* libev w_proc.loop init: */
     w_proc.loop = get_ev_default_loop();

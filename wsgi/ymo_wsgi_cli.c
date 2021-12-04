@@ -89,7 +89,6 @@ void issue_startup_msg()
             YIMMO_VERSION_PATCH);
 
     /* Log level info: */
-    ymo_log_init();
     ymo_log_level_t level = ymo_log_get_level();
 
     puts("Logging:");

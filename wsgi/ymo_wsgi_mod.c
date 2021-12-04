@@ -89,10 +89,12 @@ ymo_status_t ymo_wsgi_init(const char* mod_name, const char* app_name)
     wchar_t* py_exec_prefix = Py_GetExecPrefix();
     wchar_t* py_path = Py_GetPath();
 
+#if defined(YMO_WSGI_DEBUG_PYTHON_EXEC) && YMO_WSGI_DEBUG_PYTHON_EXEC
     ymo_log_debug("Python Program Name: %ls", py_name);
     ymo_log_debug("Python Prefix:       %ls", py_prefix);
     ymo_log_debug("Python Exec Prefix:  %ls", py_exec_prefix);
     ymo_log_debug("Python Path:         %ls", py_path);
+#endif /* YMO_WSGI_DEBUG_PYTHON_EXEC */
 
     ymo_log_notice("Notifying python of process fork");
 #if PY_VERSION_HEX <= 0x03070000
@@ -134,7 +136,15 @@ ymo_status_t ymo_wsgi_init(const char* mod_name, const char* app_name)
         goto module_bail;
     }
 
-    pWsgiAppCallable = PyObject_GetAttrString(pWsgiAppModule, app_name);
+    /* HACK (HACK?): Just run the input in the context of the app module: */
+    PyGILState_STATE gstate;
+    gstate = PyGILState_Ensure();
+    PyObject* pWsgiAppGlobals = PyModule_GetDict(pWsgiAppModule);
+    pWsgiAppCallable = PyRun_String(
+            app_name, Py_eval_input,
+            pWsgiAppGlobals, pWsgiAppGlobals);
+    PyGILState_Release(gstate);
+
     if( !pWsgiAppCallable ) {
         goto module_bail;
     }
