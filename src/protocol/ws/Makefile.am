@@ -23,8 +23,8 @@
 #
 #==============================================================================
 
-yimmo_mod_wsdir=@YIMMO_INCLUDEDIR@/ws
-yimmo_mod_ws_HEADERS=\
+yimmo_proto_wsdir=@YIMMO_INCLUDEDIR@/ws
+yimmo_proto_ws_HEADERS=\
 	ymo_proto_ws.h \
 	ymo_ws_parse.h \
 	ymo_ws_session.h

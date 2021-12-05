@@ -299,7 +299,7 @@ struct ymo_http_hdr_table {
  * ..................
  */
 
-/** Type used to store HTTP traits as binary flags.
+/* Type used to store HTTP traits as binary flags.
  * HTTP flags are 4 bytes, laid out like so:
  *
  * .. code-block::

@@ -30,8 +30,9 @@ Next Up
 - |_| HTTP header compare override
 - |_| Provide faster file handling (sendfile or caching)
 - |_| WSGI code cleanup / PEP3333 compliance check
-- |_| WSGI configuration is inflexible (app must be instantiated)
 - |_| ``EV_EMBED``, ``ev_realloc``, and faux-slab allocator example
+- |_| WSGI example needed!
+- |/| WSGI startup configuration is inflexible (2nd arg can now be an arbitrary python statement).
 - |/| Cleanup allocators/weak/weakref, etc
 - |/| Fix `ymo_base64_encode` memory leak!
 - |/| Clean up configure.sh build time/number of checks!
@@ -42,7 +43,7 @@ Next Up
 - |/| Docs on public vs private
 - |/| Build options for development headers
 - |/| Shift connection header table to hash?
-- |x| Commit to gcore/apr neither
+- |x| Commit to gcore/apr (neither!)
 
 Tidying
 .......
@@ -50,17 +51,19 @@ Tidying
 - |_| We work with lots of strings of known length — make some string utilities and take advantage of that.
 - |_| Most ``_creates`` need an ``_init`` (see `needs init`_) to facilitate static allocation / the next item in this list.
 - |_| Don't ``void*`` + ``malloc`` when an intrusive data structure would do.
+- |_| Multiple alignment CEIL/FLOOR definitions + assumptions about the relationship between ``sizeof()`` and alignment
+- |_| Ditch the bit-fields, just use flags, and skip needing to write a set of rules about when to use which.
 
 TESTS!!!!
 .........
 
 - |_| Facilities for testing custom protocols (*WIP!*)
 - |_| HTTP unit tests (*WIP!*)
-    - |_| Parser: init, loader, tests
-- |_| Core unit tests
+    - |/| Parser: init, loader, tests (*very basics* done)
+- |/| Core unit tests (*very basics* done)
 - |_| WS unit tests
 - |x| (MQTT unit tests)
-- |_| live/integration tests — e.g. HTTP request/response validation against a running server.
+- |_| live/integration tests — e.g. HTTP request/response validation against a running server, autobahn, etc.
 
 DOCS
 ....
@@ -69,7 +72,7 @@ DOCS
 - |_| Use sphinx plantuml plugin instead of bash.
 - |_| Consider using sphinx emoji instead of replacements file.
 - |_| Stop abusing CSS/poor alabaster and make a proper theme.
-- |_| HTTP Overview
+- |/| HTTP Overview (*basic*)
 - |_| WS Overview
 - |/| Callbacks and return codes
 - |/| Core overview

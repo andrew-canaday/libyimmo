@@ -23,8 +23,8 @@
 #
 #==============================================================================
 
-yimmo_mod_mqttdir=@YIMMO_INCLUDEDIR@/mqtt
-yimmo_mod_mqtt_HEADERS=\
+yimmo_proto_mqttdir=@YIMMO_INCLUDEDIR@/mqtt
+yimmo_proto_mqtt_HEADERS=\
 	ymo_mqtt_parse.h \
 	ymo_mqtt_session.h \
 	ymo_proto_mqtt.h

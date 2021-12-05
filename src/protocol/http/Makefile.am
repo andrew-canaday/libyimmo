@@ -23,9 +23,9 @@
 #
 #==============================================================================
 
-yimmo_mod_httpdir=@YIMMO_INCLUDEDIR@/http
+yimmo_proto_httpdir=@YIMMO_INCLUDEDIR@/http
 
-yimmo_mod_http_HEADERS=\
+yimmo_proto_http_HEADERS=\
 	ymo_http_exchange.h \
 	ymo_http_hdr_table.h \
 	ymo_http_parse.h \
