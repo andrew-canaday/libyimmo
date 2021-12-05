@@ -1,14 +1,14 @@
 .. _Core Overview:
 
-Overview
-========
+Architecture
+============
 
 .. toctree::
    :caption: API
    :maxdepth: 2
    :hidden:
 
-   event_flow
+   core/event_flow
 
 Libyimmo has a simple, layered, architecture which compartmentalizes
 functionality into the following three, general, domains:

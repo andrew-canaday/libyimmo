@@ -12,7 +12,6 @@ API documentation for libyimmo.
    :maxdepth: 2
    :caption: API Reference
 
-   index
    yimmo_h
    ymo_env_h
    ymo_alloc_h

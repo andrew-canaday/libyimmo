@@ -14,15 +14,16 @@ Let's have a peek:
 User-space HTTP callback invoked by ymo_http when a new request is received
 from an HTTP session.
 
-- `request`:  the yimmo object containing information on the request
-- `response`:  the response object to be filled out
+- `session`: the session is an HTTP protocol wrapper around the connection
+- `request`: the yimmo object containing information on the request
+- `response`: the response object to be filled out
+- `user_data`: user data associated with this session (`NULL` here; see the API docs for more info)
 
 Return `YMO_OKAY` on success; a value from errno.h on error.
 
 > **NOTE:** Yimmo sends all _payload_ data (i.e. message _bodies_) using
 > Apache-esque "bucket brigades" (`ymo_bucket_t`).
 
-Set the content type to "text/html" and set the body using EXAMPLE_TEXT.
 
 
 ```C

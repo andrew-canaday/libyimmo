@@ -30,6 +30,8 @@
 #include "core/ymo_trie.h"
 #include "ymo_http_exchange.h"
 
+/** .. _HTTP Parser: */
+
 /** Parser
  * ========
  *

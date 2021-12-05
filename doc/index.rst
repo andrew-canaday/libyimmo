@@ -15,9 +15,9 @@ reactor pattern which uses `libev`_ for I/O readiness notifications.
    :class: admonition-info
 
    - To get a feel for the **overall architecture**, see :ref:`Core Overview`.
+   - For detailed information about **using the C library**, see :ref:`C API Usage`.
    - **Examples**: have a peek at the simple `HTTP Example Server`_ or `Websocket
      Echo Server`_ to get a sense for the usage.
-   - For detailed information about **using the C library**, see :ref:`C API Usage`.
    - Interested in running the **WSGI server?** See :ref:`WSGI Server`.
 
 .. contents:: Contents

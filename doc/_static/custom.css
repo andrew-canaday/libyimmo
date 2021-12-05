@@ -623,7 +623,6 @@ div.document h3 a.toc-backref:visited {
 /*div.document h4, */
 div.document h4 a.toc-backref,
 div.document h4 a.toc-backref:visited {
-	color: #444;
 	text-decoration: none;
 	margin-top: 2.0rem;
 	padding-top: 0.5rem;
@@ -645,7 +644,7 @@ div.sphinxsidebarwrapper hr {
 div.sphinxsidebarwrapper hr + ul::before {
 	content: "External Links";
 	display: block;
-	color: #444;
+	color: #682222;
 	font-size: 1.3em;
 	font-weight: 700;
 	font-family: Verdana, Helvetica, sans-serif;
@@ -1013,6 +1012,7 @@ div.code-block-caption > span.caption-text {
 	color: #744;
 }
 
+section > section > section > section div.code-block-caption > span.caption-text,
 div.file-title div.code-block-caption > span.caption-text,
 dl.c > dd div.code-block-caption > span.caption-text {
 	font-size: 1.2em;
