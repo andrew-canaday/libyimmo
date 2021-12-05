@@ -77,18 +77,7 @@
  * HTTP Headers
  *---------------------------------------------------------------*/
 
-/*  */
-typedef uint32_t ymo_http_hdr_flags_t;
-
-#ifdef YMO_HDR_16_BIT
-typedef uint16_t ymo_http_hdr_id_t;
-#else
-typedef uint32_t ymo_http_hdr_id_t;
-#endif /* YMO_HDR_16_BIT */
-
 /**
- * HTTP header table type.
- *
  * .. note::
  *
  *    *Re: Set-Cookie:*
@@ -115,6 +104,43 @@ typedef uint32_t ymo_http_hdr_id_t;
  *
  *    **TL;DR**: The ``Set-Cookie`` header is essentially append-only.
  *
+ *
+ * .. warning::
+ *
+ *    *Re: storage:*
+ *
+ *    Generally, yimmo *does not copy header field names or data* (the only
+ *    exception is concatenation — see :c:func:`ymo_http_hdr_table_add` for
+ *    more info). The pointers you pass in are the locations in memory the
+ *    header table will actually read from (but not write to — it does not
+ *    modify any data passed in).
+ *
+ *    This means that you **are responsible for ensuring that the data
+ *    referenced by the header name/value parameters exists at least as long
+ *    as the yimmo response object**.
+ *
+ *    **Don't worry!**: there are facilities in the :c:struct:`ymo_http_request`
+ *    type to facilitate exactly this kind of memory pattern (i.e. allocation
+ *    arenas associated with a particular HTTP exchange) via the ``ws``
+ *    (workspace) field.
+ *
+ *    For more info, see:
+ *
+ *    - :c:struct:`ymo_http_request`
+ *    - :c:macro:`YMO_BLALLOC`, :c:func:`ymo_blalloc` and :c:func:`ymo_blalloc_strdup`
+ */
+
+/*  */
+typedef uint32_t ymo_http_hdr_flags_t;
+
+#ifdef YMO_HDR_16_BIT
+typedef uint16_t ymo_http_hdr_id_t;
+#else
+typedef uint32_t ymo_http_hdr_id_t;
+#endif /* YMO_HDR_16_BIT */
+
+/**
+ * HTTP header table type.
  */
 typedef struct ymo_http_hdr_table ymo_http_hdr_table_t;
 
@@ -236,13 +262,9 @@ void ymo_http_hdr_table_free(ymo_http_hdr_table_t* table);
 /*
  * .. todo::
  *   This should be adaptive (or at least configurable).
- *   At the moment, 128 is fastest (but big!). 32 is second (-200RPS).
- *   Every n*16 increment between 1 and 256 is slower by ~ 500RPS for every
- *   16 from 128 (...save for 32, which...is better than 64 for reasons
- *   that are almost certainly anecdotal/reflect the test setup...
  */
 #define YMO_HDR_TABLE_BUCKET_SIZE 8
-#define YMO_HDR_TABLE_POOL_SIZE   8
+#define YMO_HDR_TABLE_POOL_SIZE   84
 #define YMO_HDR_TABLE_MASK        0x7fff
 
 /**  */
@@ -364,6 +386,41 @@ typedef uint16_t ymo_http_status_t;
  */
 
 /** HTTP request callback structure.
+ *
+ * .. note::
+ *
+ *    *Re: request "Workspaces"*
+ *
+ *    Yimmo provides a Varnish-style, per-request, block-memory, workspace which
+ *    can be used to acquire memory on demand which is automatically freed after
+ *    the request has completed (or otherwise been disposed of), e.g.:
+ *
+ *    .. code-block:: c
+ *
+ *       // Contrived example: set the HTTP header
+ *       // "hex-counter" to the value of some global
+ *       // counter, incremented with each request:
+ *       typedef ymo_status_t my_http_callback(
+ *               ymo_http_session_t* session,
+ *               ymo_http_request_t* request,
+ *               ymo_http_response_t* response,
+ *               void* user_data)
+ *       {
+ *          // Allocate space enough for "0x" + 4 hex digits + '\0' terminal:
+ *          char* value = ymo_blalloc(request->ws, alignof(char), 7);
+ *          snprintf(value, "0x%x", ++my_global_counter, 7);
+ *
+ *          ymo_http_hdr_table_insert(&request->headers, "hex-counter", value);
+ *
+ *          // ... do other request handling stuff ...
+ *          ymo_http_response_finish(response);
+ *          return YMO_OKAY;
+ *       }
+ *
+ *    The workspace object, ``ws`` is allocated and deallocated by yimmo
+ *    automatically — i.e. ``ws`` is already usable at the time that
+ *    any of the HTTP callbacks are invoked. No :c:func:`ymo_blalloc_create` or
+ *    :c:func:`ymo_blalloc_free` invocations are required!
  */
 struct ymo_http_request {
     const char*           method;           /* GET, POST, etc */

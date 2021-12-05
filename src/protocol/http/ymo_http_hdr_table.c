@@ -199,23 +199,8 @@ ymo_http_hdr_id_t ymo_http_hdr_table_insert(
 {
     size_t hdr_len;
     ymo_http_hdr_id_t h_id = YMO_HDR_HASH_FN(hdr, &hdr_len);
-    ymo_http_hdr_id_t index = h_id % YMO_HDR_TABLE_BUCKET_SIZE;
-    ymo_http_hdr_table_node_t* current = table->bucket[index];
-    while( current ) {
-        if( YMO_HTTP_HDR_CMP(current, hdr, h_id) ) {
-            if( current->buffer ) {
-                free(current->buffer);
-            }
-
-            current->hdr = hdr;
-            current->value = value;
-            current->hdr_len = hdr_len;
-            return h_id;
-        }
-        current = current->next;
-    }
-
-    return table_insert_first(table, h_id, index, hdr_len, hdr, value);
+    return ymo_http_hdr_table_insert_precompute(
+            table, h_id, hdr, hdr_len, value);
 }
 
 

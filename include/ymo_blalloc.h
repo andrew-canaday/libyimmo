@@ -118,7 +118,17 @@ char* ymo_blalloc_strdup(struct ymo_blalloc* block, const char* s);
  */
 void ymo_blalloc_reset(ymo_blalloc_t* block);
 
-/** Free a block alloc pool.
+/** Free a block alloc **pool.**
+ *
+ * .. warning::
+ *
+ *    This is the **pool** free function — i.e. it is used to free the
+ *    :c:type:`ymo_blalloc_t` created by :c:type:`ymo_blalloc_create`.
+ *
+ *    Don't call this function to free memory allocated allocated *from* a pool
+ *    by :c:func:`ymo_blalloc`!
+ *
+ *
  *
  * :param block: the pool to free
  */
