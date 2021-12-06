@@ -22,8 +22,8 @@
 
 
 
-#ifndef YMO_WSGI_WEBSOCKETS_H
-#define YMO_WSGI_WEBSOCKETS_H
+#ifndef YMO_PY_WEBSOCKETS_H
+#define YMO_PY_WEBSOCKETS_H
 
 #include "yimmo.h"
 #include "ymo_ws.h"
@@ -72,4 +72,4 @@ void ymo_wsgi_ws_close_cb(ymo_ws_session_t* session, void* user_data);
 PyObject* yimmo_init_websockets(
         PyObject* self, PyObject* const* args, PyObject* kwargs);
 
-#endif /* YMO_WSGI_WEBSOCKETS_H */
+#endif /* YMO_PY_WEBSOCKETS_H */

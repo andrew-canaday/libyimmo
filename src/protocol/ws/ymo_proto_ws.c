@@ -46,6 +46,7 @@
 /* Buffering recv_cb used when YMO_WS_SERVER_BUFFERED is set: */
 static ymo_status_t ws_buffer_msg(
         ymo_ws_session_t* session,
+        void* user_data,
         uint8_t flags,
         const char* msg,
         size_t len);
@@ -179,6 +180,7 @@ void ymo_proto_ws_conn_cleanup(
 
 static ymo_status_t ws_buffer_msg(
         ymo_ws_session_t* session,
+        void* user_data,
         uint8_t flags,
         const char* msg,
         size_t len)
@@ -253,6 +255,7 @@ callback_bail:
 static ymo_status_t
 ws_echo_cb(
         ymo_ws_session_t* session,
+        void* user_data,
         uint8_t flags,
         const char* data,
         size_t len)

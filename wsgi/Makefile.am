@@ -60,6 +60,7 @@ else
 EXTRA_PROGRAMS=yimmo-wsgi
 endif
 
+if BUILD_PY_WEBSOCKETS
 yimmo_wsgi_SOURCES=\
 	main.c \
 	ymo_wsgi_cli.c \
@@ -70,8 +71,21 @@ yimmo_wsgi_SOURCES=\
 	ymo_wsgi_exchange.c \
 	ymo_wsgi_session.c \
 	ymo_wsgi_context.c \
-	ymo_wsgi_websockets.c \
+	ymo_py_websockets.c \
 	ymo_wsgi_util.c
+else
+yimmo_wsgi_SOURCES=\
+	main.c \
+	ymo_wsgi_cli.c \
+	ymo_wsgi_mod.c \
+	ymo_wsgi_server.c \
+	ymo_wsgi_worker.c \
+	ymo_wsgi_proc.c \
+	ymo_wsgi_exchange.c \
+	ymo_wsgi_session.c \
+	ymo_wsgi_context.c \
+	ymo_wsgi_util.c
+endif
 
 # EOF
 

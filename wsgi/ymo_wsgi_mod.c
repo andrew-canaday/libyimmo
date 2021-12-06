@@ -32,9 +32,9 @@
 #include "ymo_wsgi_mod.h"
 #include "ymo_wsgi_context.h"
 
-#if defined(YMO_WSGI_WEBSOCKETS_POC) && (YMO_WSGI_WEBSOCKETS_POC == 1)
-#include "ymo_wsgi_websockets.h"
-#endif /* YMO_WSGI_WEBSOCKETS_POC */
+#if defined(YIMMO_PY_WEBSOCKETS) && (YIMMO_PY_WEBSOCKETS == 1)
+#include "ymo_py_websockets.h"
+#endif /* YIMMO_PY_WEBSOCKETS */
 
 
 /*---------------------------------*
@@ -84,12 +84,12 @@ ymo_status_t ymo_wsgi_init(const char* mod_name, const char* app_name)
      *------------------------------------------------------------------*/
     ymo_log_notice("Starting embedded python interpretter");
     Py_InitializeEx(0);
+#if defined(YMO_WSGI_DEBUG_PYTHON_EXEC) && YMO_WSGI_DEBUG_PYTHON_EXEC
     wchar_t* py_name = Py_GetProgramName();
     wchar_t* py_prefix = Py_GetPrefix();
     wchar_t* py_exec_prefix = Py_GetExecPrefix();
     wchar_t* py_path = Py_GetPath();
 
-#if defined(YMO_WSGI_DEBUG_PYTHON_EXEC) && YMO_WSGI_DEBUG_PYTHON_EXEC
     ymo_log_debug("Python Program Name: %ls", py_name);
     ymo_log_debug("Python Prefix:       %ls", py_prefix);
     ymo_log_debug("Python Exec Prefix:  %ls", py_exec_prefix);
@@ -267,7 +267,7 @@ int ymo_wsgi_shutdown()
 /*---------------------------------------------------------------------------*
  *                              Module Init:
  *---------------------------------------------------------------------------*/
-#if defined(YMO_WSGI_WEBSOCKETS_POC) && (YMO_WSGI_WEBSOCKETS_POC == 1)
+#if defined(YIMMO_PY_WEBSOCKETS) && (YIMMO_PY_WEBSOCKETS == 1)
 static PyMethodDef yimmo_Methods[] = {
     {"init_websockets",  yimmo_init_websockets,
         METH_VARARGS | METH_KEYWORDS, INIT_WEBSOCKETS_DOC},
@@ -275,7 +275,7 @@ static PyMethodDef yimmo_Methods[] = {
 };
 #else
 static PyMethodDef yimmo_Methods[] = { {NULL, NULL, 0, NULL} };
-#endif /* YMO_WSGI_WEBSOCKETS_POC */
+#endif /* YIMMO_PY_WEBSOCKETS */
 
 
 static PyModuleDef yimmo_Module = {
@@ -294,11 +294,11 @@ ymo_wsgi_module_init()
         return NULL;
     }
 
-#if defined(YMO_WSGI_WEBSOCKETS_POC) && (YMO_WSGI_WEBSOCKETS_POC == 1)
+#if defined(YIMMO_PY_WEBSOCKETS) && (YIMMO_PY_WEBSOCKETS == 1)
     if( PyType_Ready(&yimmo_WebSocketType) < 0 ) {
         return NULL;
     }
-#endif /* YMO_WSGI_WEBSOCKETS_POC */
+#endif /* YIMMO_PY_WEBSOCKETS */
 
     m = PyModule_Create(&yimmo_Module);
     if( m == NULL ) {
@@ -313,7 +313,7 @@ ymo_wsgi_module_init()
         return NULL;
     }
 
-#if defined(YMO_WSGI_WEBSOCKETS_POC) && (YMO_WSGI_WEBSOCKETS_POC == 1)
+#if defined(YIMMO_PY_WEBSOCKETS) && (YIMMO_PY_WEBSOCKETS == 1)
     Py_INCREF(&yimmo_WebSocketType);
     if( PyModule_AddObject(
             m, "WebSocket", (PyObject*)&yimmo_WebSocketType) < 0 ) {
@@ -321,7 +321,7 @@ ymo_wsgi_module_init()
         Py_DECREF(m);
         return NULL;
     }
-#endif /* YMO_WSGI_WEBSOCKETS_POC */
+#endif /* YIMMO_PY_WEBSOCKETS */
 
     return m;
 }

@@ -32,7 +32,7 @@
 
 #include "yimmo_wsgi.h"
 #include "ymo_wsgi_util.h"
-#include "ymo_wsgi_websockets.h"
+#include "ymo_py_websockets.h"
 
 
 /*----------------------------------------------------------------------------

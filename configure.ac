@@ -185,6 +185,21 @@ AS_IF([test "x$enable_wsgi" = "xyes"],[
 	   	AC_DEFINE([YIMMO_WSGI],[0],[Do not build the yimmo wsgi module])
 	])
 
+##--- PY_WEBSOCKETS: ---
+## Add flag to explicitly build py-websockets code, by default. If absent, py-websockets
+## programs are compiled as an automake "EXTRA" target:
+AC_ARG_ENABLE([py-websockets],
+    AS_HELP_STRING(
+        [--enable-py-websockets],
+        [Build py-websockets programs]))
+
+AM_CONDITIONAL([BUILD_PY_WEBSOCKETS],[test "x$enable_py_websockets" = "xyes"])
+AS_IF([test "x$enable_py_websockets" = "xyes"],[
+		AC_DEFINE([YIMMO_PY_WEBSOCKETS],[1],[Do build optional websockets support into yimmo-wsgi])
+	],[
+	   	AC_DEFINE([YIMMO_PY_WEBSOCKETS],[0],[Do not build optional websockets support into yimmo-wsgi])
+	])
+
 ##--- Maintainer Debug: ---
 ## Check for maintainer-debug:
 AC_ARG_ENABLE([maintainer-debug],

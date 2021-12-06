@@ -40,8 +40,10 @@
 #include "ymo_wsgi_worker.h"
 #include "ymo_wsgi_session.h"
 #include "ymo_wsgi_exchange.h"
-#include "ymo_wsgi_websockets.h"
 
+#if defined(YIMMO_PY_WEBSOCKETS) && (YIMMO_PY_WEBSOCKETS == 1)
+#include "ymo_py_websockets.h"
+#endif /* YIMMO_PY_WEBSOCKETS */
 
 /*---------------------------------*
  *        Server Functions:
@@ -117,7 +119,7 @@ ymo_server_t* ymo_wsgi_server_init(
     ymo_proto_t* http_proto = NULL;
     ymo_server_t* http_srv = NULL;
 
-#if defined(YMO_WSGI_WEBSOCKETS_POC) && (YMO_WSGI_WEBSOCKETS_POC == 1)
+#if defined(YIMMO_PY_WEBSOCKETS) && (YIMMO_PY_WEBSOCKETS == 1)
     /* TODO: should be configurable, not installed by default!
      *
      * Initialize the websocket protocol: */
@@ -126,7 +128,7 @@ ymo_server_t* ymo_wsgi_server_init(
             &ymo_wsgi_ws_connect_cb,
             &ymo_wsgi_ws_recv_cb,
             &ymo_wsgi_ws_close_cb);
-#endif /* YMO_WSGI_WEBSOCKETS_POC */
+#endif /* YIMMO_PY_WEBSOCKETS */
 
     /* Initialize echo http_srv params: */
     http_proto = ymo_proto_http_create(
@@ -138,14 +140,14 @@ ymo_server_t* ymo_wsgi_server_init(
             proc
             );
 
-#if defined(YMO_WSGI_WEBSOCKETS_POC) && (YMO_WSGI_WEBSOCKETS_POC == 1)
+#if defined(YIMMO_PY_WEBSOCKETS) && (YIMMO_PY_WEBSOCKETS == 1)
     /* TODO: these should be configurable, not installed by default! */
     /* Websocket upgrade handler: */
     ymo_http_add_upgrade_handler(
         http_proto, ymo_ws_http_upgrade_handler(ws_proto));
     ymo_http_add_upgrade_handler(
         http_proto, ymo_http2_no_upgrade_handler());
-#endif /* YMO_WSGI_WEBSOCKETS_POC */
+#endif /* YIMMO_PY_WEBSOCKETS */
 
     if( !http_proto ) {
         goto http_init_bail;
