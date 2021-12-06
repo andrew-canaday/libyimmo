@@ -96,6 +96,8 @@ ymo_http_flags_t ymo_http_request_flags(const ymo_http_exchange_t* exchange)
 void ymo_http_exchange_free(ymo_http_exchange_t* exchange)
 {
     if( exchange ) {
+        ymo_http_hdr_table_clear(&exchange->request.headers);
+
         if( exchange->request.ws ) {
             ymo_blalloc_free(exchange->request.ws);
         }

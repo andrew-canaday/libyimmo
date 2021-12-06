@@ -128,6 +128,8 @@ static int setup_suite(void)
     ymo_proto_t* http_proto = get_proto_http(http_ok_cb);
     test_server = test_server_create(http_proto);
     ymo_assert(test_server != NULL);
+
+    init_r_info();
     return 0;
 }
 

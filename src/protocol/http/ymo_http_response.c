@@ -517,6 +517,9 @@ ymo_bucket_t* ymo_http_response_body_get(
 void ymo_http_response_free(ymo_http_response_t* response)
 {
     if( response ) {
+        ymo_http_hdr_table_clear(&response->headers);
+
+        /* TODO: doc this + handler EAGAIN behavior! */
         if( response->exchange ) {
             ymo_http_exchange_free(response->exchange);
         }

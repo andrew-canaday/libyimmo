@@ -36,9 +36,11 @@
 #include "core/ymo_test_proto.h"
 
 #include "ymo_http.h"
+#include "ymo_http_hdr_table.h"
 #include "ymo_proto_http.h"
 #include "ymo_http_response.h"
 
+#define MAX_URI_LEN       128
 #define MAX_REQUEST_SIZE  1024
 #define MAX_RESPONSE_SIZE 1024
 
@@ -56,10 +58,11 @@
 ymo_test_server_t* test_server = NULL;
 
 struct {
-    int      called;
-    char     uri[128];
-    char     response_data[MAX_RESPONSE_SIZE+1];
-    ssize_t  bytes_sent;
+    int                   called;
+    char                  uri[MAX_URI_LEN];
+    char                  response_data[MAX_RESPONSE_SIZE+1];
+    ssize_t               bytes_sent;
+    ymo_http_hdr_table_t  headers;
 } r_info;
 
 static ymo_status_t http_ok_cb(
@@ -86,9 +89,17 @@ static ymo_status_t http_ok_cb(
  * TODO: tidy these and move to reusable header.
  *-------------------------------------------------------------*/
 
-static void reset_r_info(void)
+static void init_r_info(void)
 {
     memset(&r_info, 0, sizeof(r_info));
+    ymo_http_hdr_table_init(&r_info.headers);
+    return;
+}
+
+static void reset_r_info(void)
+{
+    ymo_http_hdr_table_clear(&r_info.headers);
+    init_r_info();
     return;
 }
 
