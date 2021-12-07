@@ -48,7 +48,7 @@ This project is licensed under version 3 of the GNU GPL (see [LICENSE](./LICENSE
 
 ## Documentation
 
- - [libyimmo](http://blog.yimmo.org/yimmo/index.html)
+ - [Yimmo Docs](http://blog.yimmo.org/yimmo/index.html)
  - [WSGI](http://blog.yimmo.org/yimmo/wsgi/index.html)
 
 ## Features
@@ -76,7 +76,6 @@ Libyimmo requires the following third party libraries:
  - [libbsat](https://github.com/andrew-canaday/libbsat) for timeout management
  - a UUID library — either linux-ng or OSSP ([ax_check_uuid_api.m4](./m4/ax_check_uuid_api.m4) for details)
 
-
 ### Setup
 
 Before anything else is done, your source directory has to be initialized:
@@ -86,6 +85,7 @@ Before anything else is done, your source directory has to be initialized:
 ```
 
 ### Compiling
+
 Libyimmo compilation follows the standard GNU idiom:
 
 ```bash
@@ -96,7 +96,6 @@ Libyimmo compilation follows the standard GNU idiom:
 mkdir -p ./build && cd ./build
 ../configure --prefix=/usr/local && make && make check && make install
 ```
-
 
 ## Gisty Benchmarks
 
