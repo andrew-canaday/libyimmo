@@ -52,7 +52,7 @@
  *
  * Libyimmo uses `Semantic Versioning <https://semver.org/>`_ for package
  * releases versions, and
- * `libtool versioning <https://www.gnu.org/software/coretool/manual/html_node/Updating-version-info.html>`_
+ * `libtool versioning <https://www.gnu.org/software/libtool/manual/html_node/Libtool-versioning.html>`_
  * for the library's ABI version.
  *
  * The following macros can be used to determine version info at compile-time:

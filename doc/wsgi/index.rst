@@ -33,6 +33,30 @@ The basic idea: use python to *handle* requests; use C for *I/O*.
 Usage
 -----
 
+.. note::
+
+   The Yimmo WSGI server is an optional build target, by default.
+
+   To build the WSGI server from a default configuration, do:
+
+   .. code-block:: sh
+
+      # Do the build as usual:
+      ./configure && make
+
+      # Build the WSGI server:
+      make -C ./wsgi yimmo-wsgi
+
+   To enable the libyimmo WSGI server in *all builds*, pass ``--enable-wsgi``
+   to ``configure``, e.g.:
+
+   .. code-block:: sh
+
+      # Make the WSGI server non-optional
+      # at configure time:
+      ./configure --enable-wsgi && make
+
+
 Configuration is done through env vars.
 The executable takes two arguments:
 

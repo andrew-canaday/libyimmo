@@ -89,6 +89,9 @@ Before anything else is done, your source directory has to be initialized:
 Libyimmo compilation follows the standard GNU idiom:
 
 ```bash
+# To see a list of configuration options:
+./configure --help
+
 # PRO TIP: do your builds outside of the project root!
 mkdir -p ./build && cd ./build
 ../configure --prefix=/usr/local && make && make check && make install

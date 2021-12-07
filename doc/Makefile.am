@@ -26,6 +26,8 @@
 	wsgi \
 	images \
 	examples \
+	sphinx-html \
+	check-docs \
 	checklinks
 
 SUBDIRS=\
@@ -47,6 +49,7 @@ SPHINXBUILD   = $(PYTHON3) -msphinx
 SPHINXPROJ    = libyimmo
 SOURCEDIR     ?= @builddir@
 HTMLDOCSDIR   ?= @builddir@/_build/html
+MANDOCSDIR    ?= @builddir@/_build/man
 LINKCHECKDIR  ?= @builddir@/_build/link_check
 
 
@@ -68,7 +71,7 @@ images:
 ##----------------------------
 
 # Some horrible hacks here:
-docs-local: images
+sphinx-html: images
 if !HAVE_C2SPHINX
 	@echo "c2sphinx is required for API documentation"
 	exit 1
@@ -90,7 +93,16 @@ endif
 		"$(HTMLDOCSDIR)" \
 		$(SPHINXOPTS)
 
-checklinks:
+sphinx-man:
+	$(SPHINXBUILD) \
+		-b man \
+		-c @builddir@ \
+		"$(SOURCEDIR)" \
+		"$(MANDOCSDIR)" \
+		$(SPHINXOPTS)
+
+
+checklinks: docs-local
 	$(SPHINXBUILD) \
 		-b linkcheck \
 		"$(SOURCEDIR)" \
@@ -98,4 +110,11 @@ checklinks:
 		$(SPHINXOPTS)
 	@echo
 	@echo "Check finished. Report is in $(LINKCHECKDIR)."
+
+check-docs: checklinks
+
+docs-local: sphinx-html
+
+manual-local: sphinx-man
+
 

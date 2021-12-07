@@ -10,14 +10,14 @@ Scratch pad of design ideas and considerations (**needs pruning!**)
 Misc
 ----
 
-- |_| Use `ecb.h <http://cvs.schmorp.de/coreecb/ecb.h>`_?
+- |_| Use `ecb.h <http://cvs.schmorp.de/libecb/ecb.h>`_?
 - |_| Timed-idle watchers — do stuff at least-so often, if not sooner.
 - |_| Dynamic loader for pluggable protocols
 - |_| add support for edge-triggered IO (i.e. keep **recv'ing** until block)?
 - |_| Move "server" code - socket(), bind(), etc - into *optional* server
        functionality. i.e. The library should just provide the IO, for the
        most part.
-- |_| where appropriate utilize `feature test macros <http://www.gnu.org/software/corec/manual/html_node/Feature-Test-Macros.html>`_
+- |_| where appropriate utilize `feature test macros <https://www.gnu.org/software/libc/manual/html_node/Feature-Test-Macros.html>`_
 
 Network IO
 ----------
@@ -86,13 +86,13 @@ Protocols
 ---------
 
 - Which pre-standard versions of websockets are supported?
-    - |x| `hybi-10 <http://tools.ietf.org/html/draft-ietf-hybi-thewebsocketprotocol-10>`_
-    - |x| `hybi-7 <http://tools.ietf.org/html/draft-ietf-hybi-thewebsocketprotocol-07>`_
-    - |x| `hybi-00 <http://tools.ietf.org/html/draft-ietf-hybi-thewebsocketprotocol-00>`_
-    - |x| `hixie-76 <http://tools.ietf.org/html/draft-hixie-thewebsocketprotocol-76>`_
-    - |x| `hixie-75 <http://tools.ietf.org/html/draft-hixie-thewebsocketprotocol-75>`_
+    - |x| hybi-10
+    - |x| hybi-7
+    - |x| hybi-00
+    - |x| hixie-76
+    - |x| hixie-75
 - |_| Support HTTP/2.0
-    - `HTTP/2.0 <https://tools.ietf.org/html/draft-ietf-httpbis-http2-17>`_
-    - `HPACK <https://tools.ietf.org/html/draft-ietf-httpbis-header-compression-12>`_
+    - `HTTP/2.0 <https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-http2-17>`_
+    - `HPACK <https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-header-compression-12>`_
 - |_| (?) Support `QUIC <https://github.com/devsisters/corequic>`_
 

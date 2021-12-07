@@ -21,3 +21,9 @@ Libyimmo developer documentation.
    wsgi/maintainer
 
 
+.. admonition:: Docs Targets
+
+   - Doc Targets:
+
+     - test: ``make -C ./doc check-docs``
+     - manpage (needs love): ``make manual``

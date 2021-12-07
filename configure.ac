@@ -314,7 +314,7 @@ AC_CONFIG_FILES([
     ])
 
 ## libyimmo doc output files:
-AM_EXTRA_RECURSIVE_TARGETS([docs])
+AM_EXTRA_RECURSIVE_TARGETS([docs manual])
 AC_CONFIG_FILES([
     doc/Makefile
     doc/conf.py

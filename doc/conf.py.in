@@ -125,7 +125,7 @@ else:
 # Alabaster static files search directory:
 html_static_path = [
         '@srcdir@/_static',
-        '@top_srcdir@/example',
+        '@top_srcdir@/examples',
         ]
 html_extra_path = [
         '@srcdir@/img',
