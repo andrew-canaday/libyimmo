@@ -48,7 +48,7 @@ This project is licensed under version 3 of the GNU GPL (see [LICENSE](./LICENSE
 
 ## Documentation
 
- - [libyimmo](http://blog.yimmo.org/yimmo/index.html)
+ - [Yimmo Docs](http://blog.yimmo.org/yimmo/index.html)
  - [WSGI](http://blog.yimmo.org/yimmo/wsgi/index.html)
 
 ## Features
@@ -76,7 +76,6 @@ Libyimmo requires the following third party libraries:
  - [libbsat](https://github.com/andrew-canaday/libbsat) for timeout management
  - a UUID library — either linux-ng or OSSP ([ax_check_uuid_api.m4](./m4/ax_check_uuid_api.m4) for details)
 
-
 ### Setup
 
 Before anything else is done, your source directory has to be initialized:
@@ -86,6 +85,7 @@ Before anything else is done, your source directory has to be initialized:
 ```
 
 ### Compiling
+
 Libyimmo compilation follows the standard GNU idiom:
 
 ```bash
@@ -97,7 +97,6 @@ mkdir -p ./build && cd ./build
 ../configure --prefix=/usr/local && make && make check && make install
 ```
 
-
 ## Gisty Benchmarks
 
 > :construction: **These are _informal benchmarks and lack rigor_.** (They're
@@ -107,22 +106,21 @@ mkdir -p ./build && cd ./build
 >
 > - Naturally, I posted the most flattering benchmarks. :stuck_out_tongue_winking_eye:
 > - Results from wrk, seige, and go-wrk differ by ~ 5%.
-> - I get better numbers with `gcc-10`, worse with `clang 12.0.5` (difference < 1%)
+> - I get better numbers with `gcc-10`, worse with `gcc-11` (difference < 1%)
 > - RPS on my home Ubuntu Server, Core i7, 32GB RAM are ~ 60% of those below.
 >
 > Probably, I'll get some _real_ benchmarks put together when I stand up some
 > CI. In the interim, here's the gist:
-
- - Compiler: gcc version 11.1.0
- - CFLAGS: `-Ofast`
- - Hardware (compile and test):  Mac Mini (M1, 16GB RAM).
- - Tested using: [Apache Bench](https://httpd.apache.org/docs/2.4/programs/ab.html).
 
 ### Apache Bench, 250k clients, 10k HTML Payload (WSGI)
 
 > (:wave: **Reminder**: the overwhelming odds are that _your Python WSGI server
 > is not the bottleneck in your production workloads!_)
 
+- Compiler: Apple clang 12.0.5
+- CFLAGS: `-O0`
+- Hardware (compile and test):  Mac Mini (M1, 16GB RAM).
+- Tested using: [Apache Bench](https://httpd.apache.org/docs/2.4/programs/ab.html).
 - `YIMMO_WSGI_NO_PROC=4`
 - `YIMMO_WSGI_NO_THREADS=1`
 
@@ -131,27 +129,32 @@ Document Path:          /10k
 Document Length:        10240 bytes
 
 Concurrency Level:      32
-Time taken for tests:   5.717 seconds
+Time taken for tests:   5.533 seconds
 Complete requests:      250000
 Failed requests:        0
 Keep-Alive requests:    250000
 Total transferred:      2586500000 bytes
 HTML transferred:       2560000000 bytes
-Requests per second:    43729.90 [#/sec] (mean)
-Time per request:       0.732 [ms] (mean)
-Time per request:       0.023 [ms] (mean, across all concurrent requests)
-Transfer rate:          441825.75 [Kbytes/sec] received
+Requests per second:    45182.78 [#/sec] (mean)
+Time per request:       0.708 [ms] (mean)
+Time per request:       0.022 [ms] (mean, across all concurrent requests)
+Transfer rate:          456504.87 [Kbytes/sec] received
 
 Connection Times (ms)
               min  mean[+/-sd] median   max
 Connect:        0    0   0.0      0       1
-Processing:     0    1   2.2      1     127
-Waiting:        0    1   2.2      1     127
-Total:          0    1   2.2      1     127
+Processing:     0    1   0.5      1      30
+Waiting:        0    1   0.5      1      30
+Total:          0    1   0.5      1      30
 ```
 
 ### Apache Bench, 2M clients, ..2 byte status payload.. (C Example Server)
 
+- Compiler: gcc 11.2.0
+- CFLAGS: `-Ofast`
+- Hardware (compile and test):  Mac Mini (M1, 16GB RAM).
+- Tested using: [Apache Bench](https://httpd.apache.org/docs/2.4/programs/ab.html).
+-
 (This one is a little silly. The only payload hooked up to the HTTP example
 is a two-byte "OK" status endpoint... The RSS stays under `3,870` for the
 duration of the test, though).

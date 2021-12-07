@@ -127,7 +127,7 @@ static ymo_status_t test_http_callback(
         ymo_http_response_t* response,
         void* user_data)
 {
-    ymo_http_response_set_header(response, "content-type", "text/plain");
+    ymo_http_response_insert_header(response, "content-type", "text/plain");
     ymo_bucket_t* content = YMO_BUCKET_FROM_REF("OK", 2);
     ymo_http_response_set_status_str(response, "200 OK");
     ymo_http_response_body_append(response, content);

@@ -182,7 +182,14 @@ const char* ymo_http_response_get_header(
     return ymo_http_hdr_table_get(&response->headers, hdr_name);
 }
 
-ymo_status_t ymo_http_response_set_header(
+ymo_status_t ymo_http_response_add_header(
+        ymo_http_response_t* response, const char* header, const char* value)
+{
+    ymo_http_hdr_table_insert(&response->headers, header, value);
+    return YMO_OKAY;
+}
+
+ymo_status_t ymo_http_response_insert_header(
         ymo_http_response_t* response, const char* header, const char* value)
 {
     ymo_http_hdr_table_insert(&response->headers, header, value);

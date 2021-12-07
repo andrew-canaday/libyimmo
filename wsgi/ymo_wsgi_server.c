@@ -144,9 +144,9 @@ ymo_server_t* ymo_wsgi_server_init(
     /* TODO: these should be configurable, not installed by default! */
     /* Websocket upgrade handler: */
     ymo_http_add_upgrade_handler(
-        http_proto, ymo_ws_http_upgrade_handler(ws_proto));
+            http_proto, ymo_ws_http_upgrade_handler(ws_proto));
     ymo_http_add_upgrade_handler(
-        http_proto, ymo_http2_no_upgrade_handler());
+            http_proto, ymo_http2_no_upgrade_handler());
 #endif /* YIMMO_PY_WEBSOCKETS */
 
     if( !http_proto ) {

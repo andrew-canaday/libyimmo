@@ -7,6 +7,15 @@ This section gives a high-level view of libyimmo usage, architecture,
 and development files. It isn't a tutorial (*coming soon!*), just some
 supplementary information that ought to make the API docs [#f1]_ more intelligible.
 
+.. toctree::
+   :maxdepth: 3
+   :caption: Sections
+
+   overview
+   settings
+   files
+   http
+
 The Basics
 ----------
 
@@ -19,13 +28,6 @@ At a high-level, this is the way it works:
 5. Prep the server for startup by invoking :c:func:`ymo_server_init`.
 6. Start you event loop with `ev_run <http://pod.tst.eu/http://cvs.schmorp.de/libev/ev.pod#SYNOPSIS>`_.
 
-
-.. toctree::
-   :maxdepth: 3
-   :caption: More Info
-
-   overview
-   settings
-   files
+----
 
 .. [#f1] (WIP, also — like everything else here!)

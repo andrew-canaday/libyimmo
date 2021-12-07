@@ -30,10 +30,10 @@ reactor pattern which uses `libev`_ for I/O readiness notifications.
    :caption: Contents
 
    examples/index
-   usage
+   guide/index
    api
    wsgi/index
-   maintainer
+   maintainer/index
    genindex
 
 

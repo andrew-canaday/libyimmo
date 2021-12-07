@@ -44,13 +44,13 @@ static int create_response(void)
 
 static int add_headers()
 {
-    status = ymo_http_response_set_header(
+    status = ymo_http_response_insert_header(
             response, "Server", "ymo_http_response");
     ymo_assert(status == YMO_OKAY);
-    status = ymo_http_response_set_header(
+    status = ymo_http_response_insert_header(
             response, "Content-Type", "application/json; charset=UTF-8");
     ymo_assert(status == YMO_OKAY);
-    status = ymo_http_response_set_header(
+    status = ymo_http_response_insert_header(
             response, "Content-Length", "0");
     ymo_assert(status == YMO_OKAY);
     YMO_TAP_PASS("Same here...");

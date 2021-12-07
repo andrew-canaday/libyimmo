@@ -90,11 +90,11 @@ struct ymo_http_exchange {
         };
     };
 
-    http_state_t      state;
-    http_state_t      next_state;
-    char*             recv_current;
-    size_t            remain;
-    char              recv_buf[YMO_HTTP_RECV_BUF_SIZE];
+    http_state_t  state;
+    http_state_t  next_state;
+    char*         recv_current;
+    size_t        remain;
+    char          recv_buf[YMO_HTTP_RECV_BUF_SIZE];
 
     /* Response:
      *

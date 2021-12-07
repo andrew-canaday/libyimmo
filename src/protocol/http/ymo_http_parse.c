@@ -180,7 +180,7 @@ static ymo_status_t ymo_http_session_init_response(
         if( exchange->request.flags & YMO_HTTP_FLAG_VERSION_1_1 ) {
             ymo_http_hdr_table_insert_precompute(
                     &response->headers, HDR_ID_CONNECTION,
-                       "Connection", sizeof("Connection")-1, "close");
+                    "Connection", sizeof("Connection")-1, "close");
         }
     }
 
@@ -461,10 +461,10 @@ ssize_t ymo_parse_http_headers(
                             check_headers(session, exchange, &current);
                         if( header_status == YMO_OKAY ) {
                             if( header_cb
-                                    /* HACK: don't issue header cb for
-                                     *       upgrade requests (for now): */
-                                    && !(exchange->request.flags & YMO_HTTP_FLAG_UPGRADE)
-                                    ) {
+                                /* HACK: don't issue header cb for
+                                 *       upgrade requests (for now): */
+                                && !(exchange->request.flags & YMO_HTTP_FLAG_UPGRADE)
+                                ) {
                                 ymo_status_t cb_status = header_cb(
                                         session,
                                         &exchange->request,

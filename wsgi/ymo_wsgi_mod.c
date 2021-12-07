@@ -270,7 +270,7 @@ int ymo_wsgi_shutdown()
 #if defined(YIMMO_PY_WEBSOCKETS) && (YIMMO_PY_WEBSOCKETS == 1)
 static PyMethodDef yimmo_Methods[] = {
     {"init_websockets",  yimmo_init_websockets,
-        METH_VARARGS | METH_KEYWORDS, INIT_WEBSOCKETS_DOC},
+     METH_VARARGS | METH_KEYWORDS, INIT_WEBSOCKETS_DOC},
     {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 #else

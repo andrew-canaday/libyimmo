@@ -39,7 +39,7 @@ static ymo_status_t test_http_callback(
         ymo_log_info("Got body data: %s", request->body);
     }
 
-    ymo_http_response_set_header(response, "content-type", "text/html");
+    ymo_http_response_insert_header(response, "content-type", "text/html");
     ymo_http_response_set_status_str(response, "200 OK");
     ymo_bucket_t* content = YMO_BUCKET_FROM_REF("OK", 2);
 

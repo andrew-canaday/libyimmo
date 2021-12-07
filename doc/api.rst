@@ -1,7 +1,7 @@
 .. _yimmo public API:
 
-C API Ref
-=========
+C API Reference
+===============
 
 The libyimmo API is split into two primary domains:
 

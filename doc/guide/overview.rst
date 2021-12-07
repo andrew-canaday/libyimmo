@@ -8,7 +8,7 @@ Architecture
    :maxdepth: 2
    :hidden:
 
-   core/event_flow
+   /core/event_flow
 
 Libyimmo has a simple, layered, architecture which compartmentalizes
 functionality into the following three, general, domains:

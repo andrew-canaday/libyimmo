@@ -100,9 +100,9 @@ int main(int argc, char** argv)
 
     memset(ymo_wsgi_app_string, 0, sizeof(ymo_wsgi_app_string));
     char* c = ymo_wsgi_app_string;
-    for(int i=2; i<argc; i++)
+    for( int i = 2; i < argc; i++ )
     {
-        for(size_t n=0; n<strlen(argv[i]); n++)
+        for( size_t n = 0; n < strlen(argv[i]); n++ )
         {
             *c++ = argv[i][n];
         }

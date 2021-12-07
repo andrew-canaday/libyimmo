@@ -73,7 +73,7 @@ static ymo_status_t http_ok_cb(
 {
     r_info.called = 1;
     strcpy(r_info.uri, request->uri);
-    ymo_http_response_set_header(response, "content-type", "text/plain");
+    ymo_http_response_insert_header(response, "content-type", "text/plain");
     ymo_http_response_set_status_str(response, "200 OK");
     ymo_bucket_t* content = YMO_BUCKET_FROM_REF("OK", 2);
 

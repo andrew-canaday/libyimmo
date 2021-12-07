@@ -103,8 +103,6 @@ void ymo_http_exchange_free(ymo_http_exchange_t* exchange)
         }
 
         if( exchange->request.body ) {
-            /* HACK: make the limit configurable! */
-#define HTTP_MAX_BODY 4096
             YMO_FREE(exchange->request.body);
         }
     }

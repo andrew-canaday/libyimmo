@@ -32,27 +32,27 @@
 
 #define INIT_WEBSOCKETS_DOC \
     PyDoc_STR( \
-            "init_websockets(on_open, on_message, on_close)\n" \
-            "--\n\n" \
-            "Enable websockets upgrades and define callbacks for \n" \
-            "connect, message, and disconnect events.\n" \
-            "\n" \
-            "Keyword Arguments:\n" \
-            "\n" \
-            "  on_open    -- callable (or None) invoked on connect.\n" \
-            "  on_message -- callable (or None) invoked on message.\n" \
-            "  on_close   -- callable (or None) invoked on close.\n" \
-            "\n" \
-            "Callbacks:\n" \
-            "\n" \
-            "  The on_open and on_close functions must accept a single\n" \
-            "  argument, ``ws``, which is a yimmo.WebSocket object.\n" \
-            "\n" \
-            "  The on_message function must accept three arguments:\n" \
-            "  ``ws``    the yimmo.WebSocket object\n" \
-            "  ``msg``   the websockets message payload as bytes\n" \
-            "  ``flags`` websocket message flags as an int\n\n" \
-            )
+        "init_websockets(on_open, on_message, on_close)\n" \
+        "--\n\n" \
+        "Enable websockets upgrades and define callbacks for \n" \
+        "connect, message, and disconnect events.\n" \
+        "\n" \
+        "Keyword Arguments:\n" \
+        "\n" \
+        "  on_open    -- callable (or None) invoked on connect.\n" \
+        "  on_message -- callable (or None) invoked on message.\n" \
+        "  on_close   -- callable (or None) invoked on close.\n" \
+        "\n" \
+        "Callbacks:\n" \
+        "\n" \
+        "  The on_open and on_close functions must accept a single\n" \
+        "  argument, ``ws``, which is a yimmo.WebSocket object.\n" \
+        "\n" \
+        "  The on_message function must accept three arguments:\n" \
+        "  ``ws``    the yimmo.WebSocket object\n" \
+        "  ``msg``   the websockets message payload as bytes\n" \
+        "  ``flags`` websocket message flags as an int\n\n" \
+        )
 
 
 extern PyTypeObject yimmo_WebSocketType;
@@ -63,9 +63,9 @@ ymo_status_t ymo_wsgi_ws_connect_cb(ymo_ws_session_t* session);
 ymo_status_t ymo_wsgi_ws_recv_cb(
         ymo_ws_session_t* session,
         void*             user_data,
-        uint8_t           flags,
+        uint8_t flags,
         const char*       data,
-        size_t            len);
+        size_t len);
 
 void ymo_wsgi_ws_close_cb(ymo_ws_session_t* session, void* user_data);
 

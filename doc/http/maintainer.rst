@@ -3,13 +3,7 @@
 libyimmo_http
 =============
 
-.. c:namespace:: HTTP
-
 Yimmo HTTP maintainer docs.
-
-
-.. contents:: Contents
-  :local:
 
 .. toctree::
    :maxdepth: 1
@@ -21,10 +15,4 @@ Yimmo HTTP maintainer docs.
    ymo_http_exchange_h
    ymo_http_response_h
    ymo_http_session_h
-
---------
-Overview
---------
-
-.. include:: overview.rst
 

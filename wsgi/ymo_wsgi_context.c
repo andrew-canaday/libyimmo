@@ -143,7 +143,7 @@ PyObject* yimmo_Context_start_response(
         Py_DECREF(py_name);
         Py_DECREF(py_val);
         if( hdr_name && hdr_val ) {
-            ymo_http_response_set_header(
+            ymo_http_response_insert_header(
                     self->exchange->response, hdr_name, hdr_val);
         }
     }
@@ -373,7 +373,7 @@ yimmo_context_t* ymo_wsgi_ctx_update_environ(PyObject* pEnviron, ymo_wsgi_exchan
     yimmo_context_t* ctx = NULL;
 
     ymo_wsgi_exchange_incref(exchange); /* +1 for context */
-    if( ymo_wsgi_session_trylock(exchange->session) || exchange->done) {
+    if( ymo_wsgi_session_trylock(exchange->session) || exchange->done ) {
         /* Release the ref held for us: */
         ymo_wsgi_exchange_decref(exchange);
         errno = EINVAL;

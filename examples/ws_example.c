@@ -76,9 +76,9 @@ static ymo_status_t test_ws_connect_cb(ymo_ws_session_t* session);
 static ymo_status_t test_ws_recv_cb(
         ymo_ws_session_t* session,
         void*             user_data,
-        uint8_t           flags,
+        uint8_t flags,
         const char*       data,
-        size_t            len);
+        size_t len);
 
 /* WS close callback: log close */
 static void test_ws_close_cb(ymo_ws_session_t* session, void* user_data);
@@ -121,9 +121,9 @@ static ymo_status_t test_ws_connect_cb(ymo_ws_session_t* session)
 static ymo_status_t test_ws_recv_cb(
         ymo_ws_session_t* session,
         void*             user_data,
-        uint8_t           flags,
+        uint8_t flags,
         const char*       data,
-        size_t            len)
+        size_t len)
 {
     if( data && len ) {
         ymo_log_info("Recv from %p: \"%.*s\"",
@@ -181,7 +181,7 @@ static ymo_status_t test_http_callback(
         ymo_http_response_t* response,
         void* user_data)
 {
-    ymo_http_response_set_header(response, "content-type", "text/plain");
+    ymo_http_response_insert_header(response, "content-type", "text/plain");
     ymo_bucket_t* content = YMO_BUCKET_FROM_REF("OK", 2);
     ymo_http_response_set_status_str(response, "200 OK");
     ymo_http_response_body_append(response, content);

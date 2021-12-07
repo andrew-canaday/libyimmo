@@ -70,7 +70,7 @@ images:
 ## Sphinx (HTML) docs:
 ##----------------------------
 
-# Some horrible hacks here:
+# Some horrible hacks here (getting worse too. FIXIT!)
 sphinx-html: images
 if !HAVE_C2SPHINX
 	@echo "c2sphinx is required for API documentation"
@@ -83,8 +83,12 @@ endif
 		@builddir@
 
 	cp -rv \
-		@srcdir@/notes/ \
-		@builddir@/notes
+		@srcdir@/guide/ \
+		@builddir@/guide
+
+	cp -rv \
+		@srcdir@/maintainer/ \
+		@builddir@/maintainer
 
 	$(SPHINXBUILD) \
 		-b html \

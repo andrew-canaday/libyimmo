@@ -50,7 +50,6 @@
  *    :maxdepth: 2
  *    :hidden:
  *
- *    index
  */
 
 /* Protocol flags: */
@@ -263,9 +262,18 @@ void ymo_http_hdr_table_free(ymo_http_hdr_table_t* table);
  * .. todo::
  *   This should be adaptive (or at least configurable).
  */
-#define YMO_HDR_TABLE_BUCKET_SIZE 8
-#define YMO_HDR_TABLE_POOL_SIZE   84
-#define YMO_HDR_TABLE_MASK        0x7fff
+#ifndef YMO_HDR_TABLE_BUCKET_SIZE
+#  define YMO_HDR_TABLE_BUCKET_SIZE 8
+#endif /* YMO_HDR_TABLE_BUCKET_SIZE */
+
+#ifndef YMO_HDR_TABLE_POOL_SIZE
+#  define YMO_HDR_TABLE_POOL_SIZE   4
+#endif /* YMO_HDR_TABLE_POOL_SIZE */
+
+#ifndef YMO_HDR_TABLE_MASK
+#  define YMO_HDR_TABLE_MASK        0x7fff
+#endif /* YMO_HDR_TABLE_MASK */
+
 
 /**  */
 struct ymo_http_hdr_table_node {
@@ -278,16 +286,20 @@ struct ymo_http_hdr_table_node {
     char*                      buffer;
 };
 
+#if YMO_HDR_TABLE_POOL_SIZE
 /**  */
 struct ymo_http_hdr_table_pool {
     ymo_http_hdr_table_node_t* head;
     ymo_http_hdr_table_node_t  items[YMO_HDR_TABLE_POOL_SIZE];
 };
+#endif /* YMO_HDR_TABLE_POOL_SIZE */
 
 /**  */
 struct ymo_http_hdr_table {
     ymo_http_hdr_table_node_t* bucket[YMO_HDR_TABLE_BUCKET_SIZE];
+#if YMO_HDR_TABLE_POOL_SIZE
     ymo_http_hdr_table_pool_t  pool;
+#endif /* YMO_HDR_TABLE_POOL_SIZE */
 };
 
 
@@ -452,7 +464,18 @@ const char* ymo_http_get_response_header(
  *
  * :returns: YMO_OKAY on success; appropriate errno on failure
  */
-ymo_status_t ymo_http_response_set_header(
+ymo_status_t ymo_http_response_add_header(
+        ymo_http_response_t* response, const char* header, const char* value);
+
+/** Used to set HTTP header values for responses
+ *
+ * :param response: the HTTP response object to modify
+ * :param header: the HTTP header to set
+ * :param value: the value for the header
+ *
+ * :returns: YMO_OKAY on success; appropriate errno on failure
+ */
+ymo_status_t ymo_http_response_insert_header(
         ymo_http_response_t* response, const char* header, const char* value);
 
 /** Add HTTP body data

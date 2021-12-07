@@ -43,7 +43,7 @@
 #define ymo_wsgi_ws_argcheck(arg) \
     if( arg != NULL && !PyCallable_Check(arg) ) { \
         PyErr_SetString(PyExc_TypeError, \
-                "Parameter :\"" #arg "\" must be callable or None."); \
+        "Parameter :\"" #arg "\" must be callable or None."); \
         return NULL; \
     }
 
@@ -91,16 +91,16 @@ static PyObject* yimmo_WebSocket_close(
 
 PyMethodDef yimmo_WebSocketType_methods[] = {
     {"send", (PyCFunction) yimmo_WebSocket_send, METH_FASTCALL,
-        "Send a websocket message"},
+     "Send a websocket message"},
     {"close", (PyCFunction) yimmo_WebSocket_close, METH_FASTCALL,
-        "Close the connection"},
+     "Close the connection"},
     {NULL}  /* Sentinel */
 };
 
 
 PyTypeObject yimmo_WebSocketType = {
     PyVarObject_HEAD_INIT(NULL, 0)
-        .tp_name = "yimmo.WebSocket",
+    .tp_name = "yimmo.WebSocket",
     .tp_doc = "YIMMO WebSocket",
     .tp_basicsize = sizeof(yimmo_websocket_t),
     .tp_itemsize = 0,
@@ -117,20 +117,20 @@ PyTypeObject yimmo_WebSocketType = {
 PyObject* yimmo_init_websockets(
         PyObject* self, PyObject* const* args, PyObject* kwargs)
 {
-    static char *kwlist[] = {
+    static char*kwlist[] = {
         "on_open",
         "on_message",
         "on_close",
         NULL
     };
 
-    PyObject* on_open    = NULL;
+    PyObject* on_open = NULL;
     PyObject* on_message = NULL;
-    PyObject* on_close   = NULL;
+    PyObject* on_close = NULL;
 
-    if (!PyArg_ParseTupleAndKeywords(
-                args, kwargs, "OOO", kwlist,
-                &on_open, &on_message, &on_close)) {
+    if( !PyArg_ParseTupleAndKeywords(
+            args, kwargs, "OOO", kwlist,
+            &on_open, &on_message, &on_close)) {
         return NULL;
     }
 
@@ -168,9 +168,9 @@ ymo_status_t ymo_wsgi_ws_connect_cb(ymo_ws_session_t* session)
 ymo_status_t ymo_wsgi_ws_recv_cb(
         ymo_ws_session_t* session,
         void*             user_data,
-        uint8_t           flags,
+        uint8_t flags,
         const char*       data,
-        size_t            len)
+        size_t len)
 {
     if( !ws_callbacks.on_message ) {
         return EINVAL;

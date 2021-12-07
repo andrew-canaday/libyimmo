@@ -95,16 +95,19 @@ ymo_http_hdr_table_t* ymo_http_hdr_table_create()
 
 void ymo_http_hdr_table_init(ymo_http_hdr_table_t* table)
 {
+#if YMO_HDR_TABLE_POOL_SIZE
     for( size_t i = 0; i < YMO_HDR_TABLE_POOL_SIZE-1; i++ ) {
         table->pool.items[i].next = &(table->pool.items[i+1]);
     }
     table->pool.head = &(table->pool.items[0]);
+#endif /* YMO_HDR_TABLE_POOL_SIZE */
     return;
 }
 
-static ymo_http_hdr_table_node_t* ymo_http_hdr_table_node_create(ymo_http_hdr_table_t* table)
+static inline ymo_http_hdr_table_node_t* ymo_http_hdr_table_node_create(ymo_http_hdr_table_t* table)
 {
     ymo_http_hdr_table_node_t* node = NULL;
+#if YMO_HDR_TABLE_POOL_SIZE
     if( table->pool.head ) {
         node = table->pool.head;
         table->pool.head = node->next;
@@ -114,7 +117,9 @@ static ymo_http_hdr_table_node_t* ymo_http_hdr_table_node_create(ymo_http_hdr_ta
             node->flags |= YMO_HDR_FLAG_NOPOOL;
         }
     }
-
+#else
+    node = YMO_NEW(ymo_http_hdr_table_node_t);
+#endif /* YMO_HDR_TABLE_POOL_SIZE */
     return node;
 }
 
@@ -126,12 +131,16 @@ static void ymo_http_hdr_table_node_free(
         node->buffer = NULL;
     }
 
+#if YMO_HDR_TABLE_POOL_SIZE
     if( node->flags & YMO_HDR_FLAG_NOPOOL ) {
         YMO_DELETE(ymo_http_hdr_table_node_t, node);
     } else {
         node->next = table->pool.head;
         table->pool.head = node;
     }
+#else
+    YMO_DELETE(ymo_http_hdr_table_node_t, node);
+#endif /* YMO_HDR_TABLE_POOL_SIZE */
     return;
 }
 
@@ -157,6 +166,7 @@ static ymo_http_hdr_id_t table_insert_first(
         node->hdr_len = hdr_len;
         node->value = value;
         node->next = table->bucket[index];
+        node->buffer = NULL;
         table->bucket[index] = node;
     } else {
         errno = ENOMEM;

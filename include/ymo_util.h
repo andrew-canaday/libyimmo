@@ -67,15 +67,43 @@ extern const char YMO_BASE64_TABLE[];
 
 #define YMO_PTR_ALIGN (sizeof(void*) - 1)
 
-/** Round a pointer DOWN to the nearest alignment boundary.
+/** Round a pointer DOWN to the nearest void* alignment boundary.
  *
  */
 #define YMO_PTR_FLOOR(p) (((uintptr_t)p) & ~YMO_PTR_ALIGN)
 
-/** Round a pointer UP to the nearest alignment boundary.
+/** Round a pointer UP to the nearest void* alignment boundary.
  *
  */
 #define YMO_PTR_CEIL(p) ((((uintptr_t)p) + YMO_PTR_ALIGN) & ~YMO_PTR_ALIGN)
+
+/** .. c:macro:: YMO_TYPE_ALIGN(t)
+ *
+ * Get the alignment for the given type, ``t``.
+ *
+ */
+
+#define YMO_UTIL_USE_ALIGNOF 1
+
+#if defined(YMO_UTIL_USE_ALIGNOF) && YMO_UTIL_USE_ALIGNOF \
+        && defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L
+
+#  define YMO_TYPE_ALIGN(t) _Alignof(t)
+#else
+#  define YMO_TYPE_ALIGN(t) YMO_PTR_ALIGN
+#endif
+
+
+/** Round the input address DOWN to the nearest value that's a multiple
+ * of the alignment for the type given by ``s``.
+ */
+#define YMO_TYPE_FLOOR(s, p) ( ((uintptr_t)p) & ~YMO_TYPE_ALIGN(s))
+
+/** Round the input address UP to the nearest value that's a multiple
+ * of the alignment for the type given by ``s``.
+ */
+#define YMO_TYPE_CEIL(s, p) (( ((uintptr_t)p) + YMO_TYPE_ALIGN(s)) & ~YMO_TYPE_ALIGN(s))
+
 
 
 /**---------------------------------------------------------------

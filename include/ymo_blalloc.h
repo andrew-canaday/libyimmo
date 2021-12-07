@@ -32,23 +32,8 @@
 #include <stdalign.h>
 
 #include "yimmo.h"
+#include "ymo_util.h"
 
-
-/**---------------------------------------------------------------
- * Macros
- *---------------------------------------------------------------*/
-
-#define YMO_TYPE_ALIGN(s) (s - 1)
-
-/** Round the input address DOWN to the nearest value that's a multiple
- * of the alignment for the type given by ``s``.
- */
-#define YMO_TYPE_FLOOR(s, p) ( ((uintptr_t)p) & ~YMO_TYPE_ALIGN(s))
-
-/** Round the input address UP to the nearest value that's a multiple
- * of the alignment for the type given by ``s``.
- */
-#define YMO_TYPE_CEIL(s, p) (( ((uintptr_t)p) + YMO_TYPE_ALIGN(s)) & ~YMO_TYPE_ALIGN(s))
 
 /**---------------------------------------------------------------
  * Types
@@ -92,9 +77,16 @@ ymo_blalloc_t* ymo_blalloc_create(size_t n) YMO_FUNC_MALLOC;
 #define YMO_BLALLOC(b,t) \
     ymo_blalloc(b, alignof(t), sizeof(t))
 
-/** Allocate a type from the block (prefer the YMO_BLALLOC(b, t) macro)
- * e.g. ymo_blalloc(block, alignof(my_type_t), sizeof(my_type_t))
- * e.g. ymo_blalloc(block, alignof(char), strlen(my_str))
+/** Allocate a type from the block (prefer :c:macro:`YMO_BLALLOC` ).
+ *
+ * e.g.:
+ *
+ * .. code-block:: c
+ *
+ *    my_type_t* obj = ymo_blalloc(
+ *        block, alignof(my_type_t), sizeof(my_type_t));
+ *
+ *    char* my_str = ymo_blalloc(block, alignof(char), strlen(my_str));
  *
  * :param t_align: type alignment (per alignof)
  * :param t_size: type size in bytes (per sizeof)

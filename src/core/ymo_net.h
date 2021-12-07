@@ -92,13 +92,13 @@
 #endif
 
 #if HAVE_DECL_MSG_DONTWAIT
-#define ymo_client_sock_nonblocking(x) /* x */
+#define ymo_client_sock_nonblocking(x) (0)
 #else
 #define ymo_client_sock_nonblocking(x) ymo_sock_nonblocking(x)
 #endif /* HAVE_DECL_MSG_DONTWAIT */
 
 #if HAVE_DECL_MSG_NOSIGNAL
-#define ymo_client_sock_nosigpipe(x) /* x */
+#define ymo_client_sock_nosigpipe(x) (0)
 #else
 #define ymo_client_sock_nosigpipe(x) ymo_sock_nosigpipe
 #endif /* MSG_NOSIGNAL */

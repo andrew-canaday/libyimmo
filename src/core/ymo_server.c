@@ -42,7 +42,7 @@
 #include "ymo_net.h"
 #include "ymo_env.h"
 
-#define YMO_SERVER_TRACE 1
+#define YMO_SERVER_TRACE 0
 #if defined(YMO_SERVER_TRACE) && YMO_SERVER_TRACE == 1
 # define SERVER_TRACE(fmt, ...) ymo_log_trace(fmt, __VA_ARGS__);
 #else
@@ -75,8 +75,10 @@ static inline void close_and_free_connection(
 
     ymo_conn_free(conn);  /* Free */
     server->no_conn--;
+#if 0
     SERVER_TRACE("%i server (%i) #connections: %zu",
             (int)getpid(), (int)server->config.port, server->no_conn);
+#endif
 
     /* If we're doing a graceful shutdown and that was the last connection,
      * let's bail out now.
@@ -355,7 +357,9 @@ void ymo_accept_cb(struct ev_loop* loop, struct ev_io* watcher, int revents)
     }
 #endif /* YIMMO_WSGI */
 
-    ymo_log_debug("accept callback invoked for %i", (int)getpid());
+#if 0
+    SERVER_TRACE("accept callback invoked for %i", (int)getpid());
+#endif
     struct sockaddr_in client_addr;
     socklen_t client_len = sizeof(client_addr);
     if( EV_ERROR & revents ) {
@@ -366,7 +370,9 @@ void ymo_accept_cb(struct ev_loop* loop, struct ev_io* watcher, int revents)
         return;
     }
 
-    ymo_log_debug("%i invoking accept()", (int)getpid());
+#if 0
+    SERVER_TRACE("%i invoking accept()", (int)getpid());
+#endif
     int client_fd = accept(
             watcher->fd, (struct sockaddr*)&client_addr, &client_len);
 #if YIMMO_WSGI
@@ -383,22 +389,12 @@ void ymo_accept_cb(struct ev_loop* loop, struct ev_io* watcher, int revents)
         return;
     }
 
-#ifdef DEBUG_SOCK_OPT
     ymo_client_sock_nonblocking(client_fd);
     ymo_client_sock_nosigpipe(client_fd);
-    unsigned long linger;
-    unsigned long send_buf;
-    unsigned long recv_buf;
-    unsigned int linger_len;
-    unsigned int send_buf_len;
-    unsigned int recv_buf_len;
-    getsockopt(client_fd, SOL_SOCKET, SO_SNDBUF, (void*)&send_buf, &send_buf_len);
-    getsockopt(client_fd, SOL_SOCKET, SO_RCVBUF, (void*)&recv_buf, &recv_buf_len);
-    getsockopt(client_fd, SOL_SOCKET, SO_LINGER, (void*)&linger, &linger_len);
-    printf("Socket options: send=%li; recv=%li; linger=%li\n", send_buf, recv_buf, linger);
-#endif /* DEBUG_SOCK_OPT */
 
-    ymo_log_debug("%i: Accepted new connection on %i", (int)getpid(), client_fd);
+#if 0
+    SERVER_TRACE("%i: Accepted new connection on %i", (int)getpid(), client_fd);
+#endif
     ymo_conn_t* conn = NULL;
     conn = ymo_conn_create(
             server, server->proto, client_fd, ymo_read_cb, ymo_write_cb);
@@ -428,8 +424,10 @@ void ymo_accept_cb(struct ev_loop* loop, struct ev_io* watcher, int revents)
     }
 
     server->no_conn++;
+#if 0
     SERVER_TRACE("%i server (%i) #connections: %zu",
             (int)getpid(), (int)server->config.port, server->no_conn);
+#endif
     ymo_log_trace_uuid("Session created; Enabling read for socket %i",
             conn->id, client_fd);
     /* Start the idle disconnect timer for this conn: */
