@@ -27,7 +27,7 @@ FLAMBORP="asdf"
 YMO_BOX([Init])
 # NOTE: This is the PACKAGE version (SemVer), NOT the ABI version (libtool):
 AC_INIT(
-    [libyimmo], [0.0.3],
+    [libyimmo], [0.0.4],
     [andrew.canaday@gmail.com],[libyimmo],
     [https://github.com/andrew-canaday/libyimmo])
 AC_CONFIG_AUX_DIR([./build-aux])
@@ -82,7 +82,7 @@ AC_SUBST([PACKAGE_SUMMARY],["Lightweight socket server framework"])
 # - https://autotools.io/coretool/version.html
 AC_SUBST([YMO_ABI_CURRENT],[0],[Yimmo libtool ABI current])
 AC_SUBST([YMO_ABI_AGE],[0],[Yimmo libtool ABI age])
-AC_SUBST([YMO_ABI_REVISION],[3],[Yimmo libtool ABI revision])
+AC_SUBST([YMO_ABI_REVISION],[4],[Yimmo libtool ABI revision])
 AC_SUBST([YMO_LIB_VERSION],["$YMO_ABI_CURRENT:$YMO_ABI_REVISION:$YMO_ABI_AGE"])
 
 ## Package Version:
