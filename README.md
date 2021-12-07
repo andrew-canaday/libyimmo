@@ -13,13 +13,25 @@
 > There's a bit of cleanup work in flight, and _things are likely to change a
 > bit as the refactor proceeds!_
 >
-> :information_source: **I'm not accepting PR's, at the moment**, due to the
+> <hr />
+>
+> :hand: **I'm not accepting PR's, at the moment**, due to the
 > above and some procedural things to resolve re: code contributions.
 >
 > _Please feel free to have a peek! It's **GPL'd**, so you are free to fork
 > it and hack around!_
 >
 > (Just mind the cobwebs).
+>
+> <hr />
+>
+> :thumbsup: **Issues are welcome, though!** If you're tinkering with the
+> library and discover a bug, have a feature request, or want to surface
+> a usability issue, please feel free! (Documentation issues are
+> also welcome, though the odds are high it's already on one TODO list or
+> another).
+>
+> **Bonus points**: if you add a [label](https://github.com/andrew-canaday/libyimmo/labels).
 
 # Introduction
 Yimmo (<i><b>Y</b>up, <b>I</b> <b>M</b>ade <b>M</b>y <b>O</b>wn</i>) is a
