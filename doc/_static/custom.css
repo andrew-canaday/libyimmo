@@ -414,9 +414,25 @@ div.literal-block-wrapper {
 }
 
 /*------------------------------------------------------------------------
+ * Footnotes
+ *------------------------------------------------------------------------*/
+
+dl.footnote {
+	margin-top: 4.0em;
+	padding-top: 1.0em;
+	padding-bottom: 1.0em;
+	border-top: 1px solid #000;
+}
+
+dl.footnote * {
+	font-size: 0.85rem;
+}
+
+/*------------------------------------------------------------------------
  * Tables
  *------------------------------------------------------------------------*/
 div.bodywrapper > div.body > section table {
+	margin-top: 2.0em;
 	overflow-x: auto;
 }
 
@@ -585,6 +601,12 @@ div.document h6 {
 	letter-spacing: -0.025em;
 }
 
+div.document h4,
+div.document h5,
+div.document h6 {
+	margin-top: 3.0em;
+}
+
 div.document h1,
 div.document h1 a.toc-backref, div.document h1 a.toc-backref:visited,
 div.document h2 a.toc-backref, div.document h2 a.toc-backref:visited,
@@ -615,7 +637,7 @@ div.document h3,
 div.document h3 a.toc-backref,
 div.document h3 a.toc-backref:visited {
 	/* color: #444; */
-	margin-top: 2.0rem;
+	margin-top: 2.0em;
 	padding-top: 0.5rem;
 	border-top: 1.0px solid #0000001E;
 }
@@ -832,6 +854,12 @@ section > blockquote > div > p > strong:first-of-type {
 	margin-right: 4px;
 }
 
+div.bodywrapper > div.body > section h1 + p,
+div.bodywrapper > div.body > section h2 + p,
+div.bodywrapper > div.body > section h3 + p,
+div.bodywrapper > div.body > section h4 + p {
+	margin-top: 1.0em;
+}
 
 /*------------------------------------------------------------------------
  * Lists

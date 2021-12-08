@@ -28,6 +28,4 @@ At a high-level, this is the way it works:
 5. Prep the server for startup by invoking :c:func:`ymo_server_init`.
 6. Start you event loop with `ev_run <http://pod.tst.eu/http://cvs.schmorp.de/libev/ev.pod#SYNOPSIS>`_.
 
-----
-
 .. [#f1] (WIP, also — like everything else here!)

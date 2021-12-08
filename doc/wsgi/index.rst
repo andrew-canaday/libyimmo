@@ -183,16 +183,17 @@ Levels
      - An event has occurred which limits or prevents normal operation for at least
        one connection.
    * - ``WARNING``
-     - An error may occur if no corrective action is taken.
+     - An error may occur if no corrective action is taken. You should probably
+       have a look at it.
    * - ``NOTICE``
-     - An anomlous or noteworthy event has taken place.
+     - An anomalous or noteworthy event has taken place.
    * - ``INFO``
-     - General non-error, no-developer information.
+     - General, non-error, non-developer information.
    * - ``DEBUG``
-     - General non-error, developer information.
+     - General, non-error, developer information.
    * - ``TRACE``
-     - This is a log level intended library development. It provides fine-grained
-       logging on most of the internal functions.
+     - This is a log level intended primarily for yimmo development. It provides
+       fine-grained logging of some of the internal functions.
 
 .. note::
    Log levels can be configured at runtime, but *only within* the range built-in

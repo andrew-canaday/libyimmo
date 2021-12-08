@@ -11,7 +11,7 @@ Architecture
    /core/event_flow
 
 Libyimmo has a simple, layered, architecture which compartmentalizes
-functionality into the following three, general, domains:
+functionality into the following three general domains:
 
 - the transport (e.g. TCP) — handled by the :ref:`server <server>`
 - the protocol (e.g. HTTP/WS) — handled by :ref:`protocols`
