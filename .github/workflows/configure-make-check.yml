@@ -1,0 +1,48 @@
+name: configure-make-check
+on:
+  push:
+    branches:
+      - main
+jobs:
+  make_check:
+    runs-on: ubuntu-latest
+    steps:
+      # Install libev:
+      - run: sudo apt-get install -y libev-dev
+
+      # Checkout bsat:
+      - uses: actions/checkout@v2
+        with:
+          repository: 'andrew-canaday/libbsat'
+          path: 'libbsat'
+
+      # Build and install libbsat:
+      - name: install libbsat
+        run: |
+          ./autogen.sh
+          ./configure
+          make
+          make check
+          make dist
+          sudo make install
+        working-directory: ./libbsat
+
+      # Checkout libyimmo:
+      - uses: actions/checkout@v2
+        with:
+          repository: 'andrew-canaday/libyimmo'
+
+      # Build libyimmo:
+      - name: Generate Configuration
+        run: ./autogen.sh
+      - name: Configure
+        run: ./configure
+      - name: Compile
+        run: make
+      - name: Unit Tests
+        run: make VERBOSE='true' check
+        env:
+          LD_LIBRARY_PATH: /usr/local/lib
+      - name: Dist Tarball
+        run: make dist
+
