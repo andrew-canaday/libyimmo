@@ -36,7 +36,7 @@ jobs:
       - name: Generate Configuration
         run: ./autogen.sh
       - name: Configure
-        run: ./configure
+        run: ./configure --enable-examples --enable-wsgi
       - name: Compile
         run: make
       - name: Unit Tests
