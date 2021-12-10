@@ -9,8 +9,8 @@
 >
 > To be clear: I wouldn't use this in production until after some test coverage
 > and usability things have been addressed.
-> (I generally use [gunicorn](https://gunicorn.org/) for my production WSGI workloads and
-> [libwebsockets](https://corewebsockets.org/) for websockets. Check 'em out!)
+> (_**I use [gunicorn](https://gunicorn.org/) for my production WSGI workloads and
+> [libwebsockets](https://corewebsockets.org/) for websockets.** Check 'em out!_)
 >
 > There's a bit of cleanup work in flight, and _things are likely to change a
 > bit as the refactor proceeds!_
