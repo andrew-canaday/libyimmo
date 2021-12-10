@@ -1,5 +1,7 @@
 # libyimmo
 
+[![configure-make-check](https://github.com/andrew-canaday/libyimmo/actions/workflows/configure-make-check.yml/badge.svg)](https://github.com/andrew-canaday/libyimmo/actions/workflows/configure-make-check.yml)
+
 > :warning: **WARNING**: _This is my long running, spare time, for fun,
 > project._ Most of it works pretty well (it's [pretty _fast!_](#gisty-benchmarks)), but it also
 > bears the marks of being my on-again/off-again, personal C-refresher/protocol
