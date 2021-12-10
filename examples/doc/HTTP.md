@@ -24,6 +24,11 @@ Return `YMO_OKAY` on success; a value from errno.h on error.
 > **NOTE:** Yimmo sends all _payload_ data (i.e. message _bodies_) using
 > Apache-esque "bucket brigades" (`ymo_bucket_t`).
 
+For more info, see:
+
+- HTTP Guide: http://blog.yimmo.org/yimmo/guide/http.html
+- HTTP API: http://blog.yimmo.org/yimmo/http/api.html
+
 
 
 ```C
