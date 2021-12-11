@@ -75,6 +75,11 @@ static void sigint_handler(struct ev_loop* loop, ev_signal* w, int revents);
  * > **NOTE:** Yimmo sends all _payload_ data (i.e. message _bodies_) using
  * > Apache-esque "bucket brigades" (`ymo_bucket_t`).
  *
+ * For more info, see:
+ *
+ * - HTTP Guide: http://blog.yimmo.org/yimmo/guide/http.html
+ * - HTTP API: http://blog.yimmo.org/yimmo/http/api.html
+ *
  */
 static ymo_status_t test_http_callback(
         ymo_http_session_t* session,

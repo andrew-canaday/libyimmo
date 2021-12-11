@@ -865,7 +865,8 @@ div.bodywrapper > div.body > section h4 + p {
  * Lists
  *------------------------------------------------------------------------*/
 div.body ul.simple li {
-	margin-bottom: 0.5em;
+	margin-bottom: 0.4em;
+	margin-bottom: 0.6em;
 }
 
 /*------------------------------------------------------------------------

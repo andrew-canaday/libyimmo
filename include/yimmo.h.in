@@ -203,6 +203,7 @@ typedef struct ymo_bucket ymo_bucket_t;
 
 typedef void (*ymo_bucket_free_fn)(ymo_bucket_t* bucket);
 
+/** .. _Yimmo Buckets: */
 
 /**---------------------------------------------------------------
  *  Buckets

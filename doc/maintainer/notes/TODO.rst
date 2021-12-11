@@ -293,7 +293,7 @@ Socket Writes
    - |/| ``...send( YMO_BUCKET_FROM_REF(const char* data, size_t len) )``
    - |_| ``...send( ymo_bucket_from_file(FILE* fp) )``
    - |_| ``...send( ymo_bucket_from_socket(ymo_conn_t* conn) )``
-- |/| Websocket write
+- |/| WebSocket write
 - |/| Standard HTTP
    - |/| Header writes
    - |/| HTTP bodies
@@ -373,11 +373,11 @@ Error Codes
     - |_| Error out with 431 for excessive header content!
 - |x| Multi-line header values. (Obsoleted).
 
-Websockets
+WebSockets
 ..........
 
 - |/| Upgrade
-- |/| Websocket read
+- |/| WebSocket read
 - |/| Write
 - |_| Extensions
     - |_| ``permessage-deflate``

@@ -354,7 +354,7 @@ PyMethodDef yimmo_ContextType_methods[] = {
 PyTypeObject yimmo_ContextType = {
     PyVarObject_HEAD_INIT(NULL, 0)
     .tp_name = "yimmo.Context",
-    .tp_doc = "YIMMO WSGI yimmo_Context",
+    .tp_doc = "YIMMO WSGI Context",
     .tp_basicsize = sizeof(yimmo_context_t),
     .tp_itemsize = 0,
     .tp_dealloc = (destructor)yimmo_Context_dealloc,

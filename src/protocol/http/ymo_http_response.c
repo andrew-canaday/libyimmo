@@ -176,6 +176,12 @@ ymo_http_response_t* ymo_http_response_create(ymo_http_session_t* session)
     return response;
 }
 
+ymo_http_hdr_table_t* ymo_http_response_get_headers(
+        const ymo_http_response_t* response)
+{
+    return &response->headers;
+}
+
 const char* ymo_http_response_get_header(
         const ymo_http_response_t* response, const char* hdr_name)
 {

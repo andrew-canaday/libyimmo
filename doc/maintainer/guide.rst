@@ -1,6 +1,9 @@
 Guide
 =====
 
+The following is a set of guidelines aimed at creating and maintaining a
+stable and predictable API.
+
 .. contents:: Table of Contents
    :local:
    :depth: 1
@@ -222,7 +225,7 @@ Testing
 -------
 
 - |/| Unit tests (WIP)
-- |x| Protocol tests (TODO)
+- |/| Protocol tests (WIP)
 - |_| Integration tests (TODO)
 
 Unit Tests
@@ -309,8 +312,11 @@ Unit Tests
        )
 
 
-The following is a set of guidelines aimed at creating and maintaining a
-stable and predictable API.
+Protocol Tests
+..............
+
+Tests run against a live server are WIP and are located in the top-level
+``tests`` directory. They can be run using ``make server-test``.
 
 Headers
 -------

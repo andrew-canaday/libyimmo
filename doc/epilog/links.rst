@@ -22,6 +22,6 @@
 .. _libyimmo: https://github.com/andrew-canaday/libyimmo
 .. _libyimmo_http: ymo_http_h.html
 .. _HTTP Example Server: /examples/http_example_c.html
-.. _Websocket Echo Server: /examples/ws_example_c.html
+.. _WebSocket Echo Server: /examples/ws_example_c.html
 .. _Pkg-Config: https://www.freedesktop.org/wiki/Software/pkg-config/
 .. _PKG_CHECK_MODULES: https://autotools.io/pkgconfig/pkg_check_modules.html

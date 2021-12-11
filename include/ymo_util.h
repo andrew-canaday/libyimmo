@@ -86,7 +86,7 @@ extern const char YMO_BASE64_TABLE[];
 #define YMO_UTIL_USE_ALIGNOF 1
 
 #if defined(YMO_UTIL_USE_ALIGNOF) && YMO_UTIL_USE_ALIGNOF \
-        && defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L
+    && defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L
 
 #  define YMO_TYPE_ALIGN(t) _Alignof(t)
 #else

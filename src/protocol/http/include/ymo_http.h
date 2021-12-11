@@ -143,8 +143,10 @@ typedef uint32_t ymo_http_hdr_id_t;
  */
 typedef struct ymo_http_hdr_table ymo_http_hdr_table_t;
 
+/** HTTP header table node type. */
 typedef struct ymo_http_hdr_table_node ymo_http_hdr_table_node_t;
 
+/** HTTP header table node pool type (when enabled). */
 typedef struct ymo_http_hdr_table_pool ymo_http_hdr_table_pool_t;
 
 /** HTTP header table node pointer — used by :c:func:`ymo_http_hdr_table_next`
@@ -275,7 +277,6 @@ void ymo_http_hdr_table_free(ymo_http_hdr_table_t* table);
 #endif /* YMO_HDR_TABLE_MASK */
 
 
-/**  */
 struct ymo_http_hdr_table_node {
     ymo_http_hdr_id_t          h_id;
     ymo_http_hdr_flags_t       flags;
@@ -287,14 +288,12 @@ struct ymo_http_hdr_table_node {
 };
 
 #if YMO_HDR_TABLE_POOL_SIZE
-/**  */
 struct ymo_http_hdr_table_pool {
     ymo_http_hdr_table_node_t* head;
     ymo_http_hdr_table_node_t  items[YMO_HDR_TABLE_POOL_SIZE];
 };
 #endif /* YMO_HDR_TABLE_POOL_SIZE */
 
-/**  */
 struct ymo_http_hdr_table {
     ymo_http_hdr_table_node_t* bucket[YMO_HDR_TABLE_BUCKET_SIZE];
 #if YMO_HDR_TABLE_POOL_SIZE
@@ -452,9 +451,18 @@ struct ymo_http_request {
  * ...........
  */
 
-/** */
-const char* ymo_http_get_response_header(
-        const ymo_http_response_t* exchange, const char* hdr_name);
+/** Get the header table for a response object. */
+ymo_http_hdr_table_t* ymo_http_response_get_headers(
+        const ymo_http_response_t* response);
+
+/** Get the value of the header given by ``hdr_name``.
+ *
+ * :param response: the HTTP response object to modify
+ * :param header: the HTTP header to get
+ *
+ */
+const char* ymo_http_response_get_header(
+        const ymo_http_response_t* response, const char* hdr_name);
 
 /** Used to set HTTP header values for responses
  *
@@ -481,8 +489,8 @@ ymo_status_t ymo_http_response_insert_header(
 /** Add HTTP body data
  *
  * :param response: the HTTP response object to which we append body data
- * :param data: body data to append
- * :param len: length of the body data to append
+ * :param body_data: the body payload as a :c:type:`ymo_bucket_t` (see :ref:`Yimmo Buckets` for more info)
+ *
  */
 void ymo_http_response_body_append(
         ymo_http_response_t* response, ymo_bucket_t* body_data);
@@ -504,18 +512,11 @@ void ymo_http_response_set_status(
 int ymo_http_response_set_status_str(
         ymo_http_response_t* response, const char* status_str);
 
-/** Used to get common HTTP response traits
- *
- * :param response: the HTTP response object to query
- *
- * :returns: ymo_http_flags_t type indicating response traits
- */
-ymo_http_flags_t ymo_http_response_flags(const ymo_http_response_t* response);
-
+/* Internal only, at the moment + schedule for refactor. */
 ymo_status_t ymo_http_response_issue(
         ymo_http_response_t* response, ymo_http_status_t status);
 
-/** Set connection behavior
+/* Set HTTP response flags (internal only + subject to refactor).
  *
  * :param response: the HTTP response object to modify
  * :param flags: HTTP response traits
@@ -531,7 +532,7 @@ void ymo_http_response_ready(ymo_http_response_t* response);
  */
 int ymo_http_response_is_ready(const ymo_http_response_t* response);
 
-/** Mark the response as complete.
+/** Mark the response data as complete (i.e. fully ready to transmit)
  */
 void ymo_http_response_finish(ymo_http_response_t* response);
 
@@ -556,6 +557,13 @@ void* ymo_http_session_get_userdata(const ymo_http_session_t* session);
 /**---------------------------------------------------------------
  * Callbacks
  *---------------------------------------------------------------*/
+
+/**
+ * .. note::
+ *
+ *    See :ref:`HTTP Callbacks` for more info.
+ *
+ */
 
 /** Session initialization callback.
  */

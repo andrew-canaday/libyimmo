@@ -268,8 +268,6 @@ AS_IF([test "x$enable_verbose_assert" = "xyes"], [
 YMO_BOX([Generating output files])
 AC_CONFIG_HEADERS([src/core/ymo_config.h])
 
-AC_CONFIG_LINKS([examples/index.html:examples/index.html])
-
 ## yimmo general output files:
 AC_CONFIG_FILES([
     Makefile
@@ -278,6 +276,8 @@ AC_CONFIG_FILES([
     wsgi/Makefile
     benchmarks/Makefile
     src/protocol/Makefile
+    tests/Makefile
+    tests/http/Makefile
     ])
 
 ## libyimmo core output files:
@@ -313,8 +313,10 @@ AC_CONFIG_FILES([
     src/protocol/mqtt/libyimmo_mqtt-${YIMMO_VERSION_MAJOR}.${YIMMO_VERSION_MINOR}.pc:src/protocol/mqtt/libyimmo_mqtt.pc.in
     ])
 
+## Extra targets...TODO: better names.
+AM_EXTRA_RECURSIVE_TARGETS([docs manual server-test])
+
 ## libyimmo doc output files:
-AM_EXTRA_RECURSIVE_TARGETS([docs manual])
 AC_CONFIG_FILES([
     doc/Makefile
     doc/conf.py

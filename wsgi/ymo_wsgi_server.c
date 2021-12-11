@@ -29,6 +29,7 @@
 
 /** Default TCP accept waitlist length. */
 #define HTTP_DEFAULT_LISTEN_BACKLOG 100
+#include "ymo_config.h"
 
 #include "ymo_log.h"
 #include "ymo_http.h"
@@ -41,7 +42,7 @@
 #include "ymo_wsgi_session.h"
 #include "ymo_wsgi_exchange.h"
 
-#if defined(YIMMO_PY_WEBSOCKETS) && (YIMMO_PY_WEBSOCKETS == 1)
+#if (YIMMO_PY_WEBSOCKETS == 1)
 #include "ymo_py_websockets.h"
 #endif /* YIMMO_PY_WEBSOCKETS */
 
@@ -79,10 +80,14 @@ ymo_status_t ymo_wsgi_server_header_cb(
         ymo_http_response_t* response,
         void* user_data)
 {
-    /* HACK HACK: skip everything of upgrade requests... */
-    if( ymo_http_hdr_table_get(&request->headers, "upgrade") ) {
+#if (YIMMO_PY_WEBSOCKETS == 1)
+    /* HACK HACK: don't queue upgrade requests */
+    const char* upgrade_val = NULL;
+    if( (upgrade_val = ymo_http_hdr_table_get(&request->headers, "upgrade")) ) {
+        ymo_log_debug("WSGI ignoring: %s", upgrade_val);
         return YMO_OKAY;
     }
+#endif /* YIMMO_PY_WEBSOCKETS */
 
     ymo_log_debug("WSGI HTTP callback: %s", "HEADER");
     ymo_status_t status = YMO_OKAY;
@@ -119,7 +124,7 @@ ymo_server_t* ymo_wsgi_server_init(
     ymo_proto_t* http_proto = NULL;
     ymo_server_t* http_srv = NULL;
 
-#if defined(YIMMO_PY_WEBSOCKETS) && (YIMMO_PY_WEBSOCKETS == 1)
+#if (YIMMO_PY_WEBSOCKETS == 1)
     /* TODO: should be configurable, not installed by default!
      *
      * Initialize the websocket protocol: */
@@ -140,9 +145,9 @@ ymo_server_t* ymo_wsgi_server_init(
             proc
             );
 
-#if defined(YIMMO_PY_WEBSOCKETS) && (YIMMO_PY_WEBSOCKETS == 1)
+#if (YIMMO_PY_WEBSOCKETS == 1)
     /* TODO: these should be configurable, not installed by default! */
-    /* Websocket upgrade handler: */
+    /* WebSocket upgrade handler: */
     ymo_http_add_upgrade_handler(
             http_proto, ymo_ws_http_upgrade_handler(ws_proto));
     ymo_http_add_upgrade_handler(

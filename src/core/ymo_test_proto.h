@@ -22,6 +22,15 @@
 #define YMO_PROTO_TEST_H
 
 #include "ymo_config.h"
+
+#include <stdlib.h>
+#include <unistd.h>
+#include <errno.h>
+#include <sys/socket.h>
+#include <netinet/tcp.h>
+#include <fcntl.h>
+#include <sys/ioctl.h>
+
 #include "ymo_tap.h"
 
 #include "yimmo.h"

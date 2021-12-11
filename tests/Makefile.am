@@ -18,14 +18,6 @@
 #
 #==============================================================================
 
-ACLOCAL_AMFLAGS=-Im4
-
 SUBDIRS=\
-	include \
-	src \
-	examples \
-	wsgi \
-	benchmarks \
-	tests \
-	doc
+	http
 

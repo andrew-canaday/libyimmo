@@ -1,5 +1,5 @@
 /*=============================================================================
- * libyimmo: C MQTT/Websocket framework
+ * libyimmo: C MQTT/WebSocket framework
  *
  * Copyright (c) 2014 Andrew Canaday
  *

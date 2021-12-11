@@ -72,7 +72,7 @@ typedef union ymo_ws_frame_flags {
     };
 } ymo_ws_frame_flags_t;
 
-/** Websocket frame */
+/** WebSocket frame */
 typedef struct ymo_ws_frame {
     uint64_t  len;     /* TODO: just use top-bit for the masked flag? */
     size_t    parsed;

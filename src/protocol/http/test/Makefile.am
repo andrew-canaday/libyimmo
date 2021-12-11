@@ -29,6 +29,7 @@ TEST_LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) \
                   @top_srcdir@/build-aux/tap-driver.sh
 
 AM_CFLAGS=\
+	-D_DEFAULT_SOURCE \
 	-I@top_srcdir@/src \
 	-I@top_builddir@/include \
 	-I@top_srcdir@/include \

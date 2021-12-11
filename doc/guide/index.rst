@@ -21,7 +21,7 @@ The Basics
 
 At a high-level, this is the way it works:
 
-1. Choose a protocol (HTTP, Websockets, etc)
+1. Choose a protocol (HTTP, WebSockets, etc)
 2. Define each of the required callbacks required by the protocol (e.g. see :ref:`HTTP Overview`)
 3. Create a protocol object (e.g. :c:func:`ymo_proto_http_create`), passing in your callbacks.
 4. Create a server object (:c:func:`ymo_server_create`), passing in your protocol and a :c:struct:`ymo_server_config`.

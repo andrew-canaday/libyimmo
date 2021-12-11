@@ -461,7 +461,7 @@ ymo_ws_issue_101(
     ymo_http_response_insert_header(response, "Server", "ymo_test_server");
     ymo_http_response_insert_header(response, "Upgrade", "websocket");
     ymo_http_response_insert_header(response, "Connection", "upgrade");
-    ymo_http_response_insert_header(response, "Sec-Websocket-Accept", accept_hdr);
+    ymo_http_response_insert_header(response, "Sec-WebSocket-Accept", accept_hdr);
     ymo_http_response_set_flags(response, YMO_HTTP_FLAG_REQUEST_KEEPALIVE);
     ymo_http_response_finish(response);
     return YMO_OKAY;

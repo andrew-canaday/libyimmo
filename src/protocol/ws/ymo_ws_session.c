@@ -1,5 +1,5 @@
 /*=============================================================================
- * libyimmo: C WS/Websocket framework
+ * libyimmo: C WS/WebSocket framework
  *
  *  Copyright (c) 2014 Andrew Canaday
  *

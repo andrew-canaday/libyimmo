@@ -26,6 +26,8 @@ Sessions & Exchanges
 An "exchange" consists of one HTTP request-response pair. An *client* session
 consists of all the exchanges made over a single TCP connection.
 
+.. _HTTP Callbacks:
+
 Callbacks
 ---------
 
@@ -86,10 +88,10 @@ Whether HTTP bodies are buffered or unbuffered is determined based on the
      - ``request->body``
    * - ``NULL``
      - **Yes**
-     - ``NULL``
-   * - non-``NULL``
+     - Request body data
+   * - User-provided
      - **No**
-     - non-``NULL``
+     - ``NULL``
 
 Buffered Requests
 .................
@@ -147,6 +149,58 @@ to proceed with the request via its return code:
    * - All other values
      - the return code is interpretted as an ``errno`` value. The connection
        will be closed at the TCP-level (i.e. no HTTP error response is sent).
+
+
+Transfer-Encoding and Content-Length
+....................................
+
+HTTP response bodies are assembled by one or more calls to :c:func:`ymo_http_response_body_append`,
+followed by one call to :c:func:`ymo_http_response_finish`.
+
+After yimmo has parsed and received an entire HTTP request, it invokes the user
+:c:type:`ymo_http_cb_t` to hand it off for response generation. When the user
+HTTP callback returns, yimmo sets the ``Content-Length`` and ``Transfer-Encoding``
+headers as follows:
+
+If the user code has set ``Content-Length``:
+
+  Yimmo will send the response headers and whatever data it has on hand, then
+  move on to handle IO for other sockets. Subsequent invocations of
+  :c:func:`ymo_http_body_append` will re-arm the IO watcher for the request. The
+  response is complete once the user code invokes
+  :c:func:`ymo_http_response_finish`.
+
+
+If the user code has already called :c:func:`ymo_http_response_finish`:
+
+  The length of the payload is known; the ``Content-Length`` header is set to
+  the total length of the payload data provided by the user in calls to
+  :c:func:`ymo_http_response_body_append`.  Chunked transfer encoding is *not*
+  used.
+
+If the user has appended data, but not "finished" the request and the client
+supports chunked transfer encoding:
+
+  Yimmo sets ``Transfer-Encoding: chunked`` and transmits whatever data it has
+  on hand, then moves on to handle IO for other sockets.
+
+  **NOTE**: *yimmo handles the chunked body formatting — prepending the chunk
+  size octets and appending the CRLR to each chunk automatically.*
+
+  Subsequent invocations of :c:func:`ymo_http_body_append` will re-arm the IO
+  watcher for the request. The terminal chunk is automatically generated when
+  :c:func:`ymo_http_response_complete` is invoked.
+
+If the user has appended data, but not "finished" the request and the client
+does not support chunked transfer encoding (i.e. HTTP 1.0 clients):
+
+
+  **No data for this response is immediately transmitted.** Yimmo will move on
+  to handling IO for other sockets until after the user code
+  has called :c:func:`ymo_http_response_finish`. At this point, the content
+  length is calculated from the total payload length, the ``Content-Length``
+  header is set, and chunked transfer encoding is *not* used.
+
 
 Synchronous Response Handling
 .............................

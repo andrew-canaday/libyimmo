@@ -35,7 +35,7 @@
 /** WebSockets API
  * ================
  *
- * Yimmo Websockets public API.
+ * Yimmo WebSockets public API.
  *
  *
  * .. toctree::
@@ -159,7 +159,7 @@ typedef uint8_t ymo_ws_server_flags_t;
  */
 typedef struct ymo_ws_session ymo_ws_session_t;
 
-/** Websocket connect callback type.
+/** WebSocket connect callback type.
  *
  * :session: a new websocket connection
  * :returns: ``NULL`` or a ``void*`` to custom data to associate with the session
@@ -167,7 +167,7 @@ typedef struct ymo_ws_session ymo_ws_session_t;
  */
 typedef ymo_status_t (*ymo_ws_connect_cb_t)(ymo_ws_session_t* session);
 
-/** Websocket receive callback type — invoked for each packet of data.
+/** WebSocket receive callback type — invoked for each packet of data.
  *
  * :session: the WebSocket session sending the message
  * :user_data: an optional pointer to user data associated with the session
@@ -184,7 +184,7 @@ typedef ymo_status_t (*ymo_ws_recv_cb_t)(
         const char* msg,
         size_t len);
 
-/** Websocket close callback type.
+/** WebSocket close callback type.
  *
  * :session: the session for the closed websocket
  * :user_data: an optional pointer to user data associated with the session

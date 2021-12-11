@@ -347,8 +347,7 @@ handle_callback_result:
     if( status == YMO_OKAY ) {
         ymo_http_session_add_response(http_session, response);
 
-        if( ymo_http_response_flags(response)
-            & YMO_HTTP_FLAG_REQUEST_KEEPALIVE ) {
+        if( response->flags & YMO_HTTP_FLAG_REQUEST_KEEPALIVE ) {
             HTTP_PROTO_TRACE("Resetting http exchange: %p", (void*)exchange);
             ymo_http_exchange_reset(exchange);
         }

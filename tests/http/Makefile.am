@@ -18,14 +18,13 @@
 #
 #==============================================================================
 
-ACLOCAL_AMFLAGS=-Im4
+.PHONY: http-tests
 
-SUBDIRS=\
-	include \
-	src \
-	examples \
-	wsgi \
-	benchmarks \
-	tests \
-	doc
+http-tests:
+	rm -rf @srcdir@/__pycache__
+	pytest \
+		-v \
+		--disable-warnings \
+		@srcdir@
 
+server-test-local: http-tests

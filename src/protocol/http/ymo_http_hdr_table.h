@@ -214,10 +214,10 @@ const char* ymo_http_hdr_table_get_id(
 #define HDR_ID_REPORT_TO                               2987  /* "Report-To" */
 #define HDR_ID_RETRY_AFTER                            21570  /* "Retry-After" */
 #define HDR_ID_SAVE_DATA                              18729  /* "Save-Data" */
-#define HDR_ID_SEC_WEBSOCKET_EXTENSIONS               11183  /* "Sec-Websocket-Extensions" */
-#define HDR_ID_SEC_WEBSOCKET_KEY                       1788  /* "Sec-Websocket-Key" */
-#define HDR_ID_SEC_WEBSOCKET_PROTOCOL                 19175  /* "Sec-Websocket-Protocol" */
-#define HDR_ID_SEC_WEBSOCKET_VERSION                  16357  /* "Sec-Websocket-Version" */
+#define HDR_ID_SEC_WEBSOCKET_EXTENSIONS               11183  /* "Sec-WebSocket-Extensions" */
+#define HDR_ID_SEC_WEBSOCKET_KEY                       1788  /* "Sec-WebSocket-Key" */
+#define HDR_ID_SEC_WEBSOCKET_PROTOCOL                 19175  /* "Sec-WebSocket-Protocol" */
+#define HDR_ID_SEC_WEBSOCKET_VERSION                  16357  /* "Sec-WebSocket-Version" */
 #define HDR_ID_SERVER                                 30792  /* "Server" */
 #define HDR_ID_SET_COOKIE                             10316  /* "Set-Cookie" */
 #define HDR_ID_STATUS                                  6483  /* "Status" */
