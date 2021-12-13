@@ -103,13 +103,17 @@
 #define ymo_client_sock_nosigpipe(x) ymo_sock_nosigpipe
 #endif /* MSG_NOSIGNAL */
 
+#define YMO_SSL_WANT_READ(x) (x == SSL_ERROR_WANT_READ)
+#define YMO_SSL_WANT_WRITE(x) (x == SSL_ERROR_WANT_WRITE)
+#define YMO_SSL_WANT_RW(x) (YMO_SSL_WANT_READ(x) || YMO_SSL_WANT_WRITE(x))
+
 /**---------------------------------------------------------------
  * Socket I/O
  *---------------------------------------------------------------*/
 
 /** Send a bucket chain over the socket given by ``fd``.
  */
-ymo_status_t ymo_send_buckets(int fd, ymo_bucket_t** head);
+ymo_status_t ymo_net_send_buckets(int fd, ymo_bucket_t** head);
 
 /**---------------------------------------------------------------
  * Socket Trait Functions

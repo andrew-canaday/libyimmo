@@ -99,8 +99,7 @@ ymo_http_session_free_request(ymo_http_session_t* http_session)
     return EINVAL;
 }
 
-ymo_status_t
-ymo_http_session_add_response(
+ymo_status_t ymo_http_session_add_response(
         ymo_http_session_t* http_session, ymo_http_response_t* response_in)
 {
     ymo_log_trace(
@@ -118,14 +117,14 @@ ymo_http_session_add_response(
     return YMO_OKAY;
 }
 
-ymo_http_response_t*
-ymo_http_session_next_response(ymo_http_session_t* http_session)
+ymo_http_response_t* ymo_http_session_next_response(
+        ymo_http_session_t* http_session)
 {
     return http_session->response;
 }
 
-ymo_status_t
-ymo_http_session_complete_response(ymo_http_session_t* http_session)
+ymo_status_t ymo_http_session_complete_response(
+        ymo_http_session_t* http_session)
 {
     /* Pop the first guy off the list: */
     ymo_http_response_t* response_out = http_session->response;
@@ -141,8 +140,7 @@ ymo_http_session_complete_response(ymo_http_session_t* http_session)
     return EINVAL;
 }
 
-ymo_status_t
-ymo_http_session_is_read_ready(ymo_http_session_t* http_session)
+ymo_status_t ymo_http_session_is_read_ready(ymo_http_session_t* http_session)
 {
     ymo_status_t status = YMO_OKAY;
 

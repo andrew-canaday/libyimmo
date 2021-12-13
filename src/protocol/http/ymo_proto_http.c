@@ -690,8 +690,8 @@ ymo_status_t ymo_proto_http_write(
     if( http_session->send_buffer ) {
 #endif
     /* We're good to write: */
-    status = ymo_send_buckets(
-            socket, &http_session->send_buffer);
+    status = ymo_conn_send_buckets(
+            conn, &http_session->send_buffer);
 #if 0
 } else {
     /* We're either done with this response, or else waiting on more

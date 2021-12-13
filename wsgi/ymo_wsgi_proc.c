@@ -189,7 +189,7 @@ static int worker_proc_init(
     w_proc->http_srv = ymo_wsgi_server_init(
             w_proc->loop, w_proc->http_port, &w_proc);
     if( !w_proc->http_srv ) {
-        ymo_log_warning("Failed to create HTTP server: %s", strerror(errno));
+        ymo_log_fatal("Failed to create HTTP server: %s", strerror(errno));
         return -1;
     }
     #endif /* YMO_WSGI_REUSEPORT */

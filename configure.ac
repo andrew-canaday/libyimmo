@@ -122,6 +122,8 @@ YMO_OPTION([HDR_HASH_ALLOW_WEAK],[0],
 ##-----------------------------
 ##    Server Options:
 ##-----------------------------
+YMO_OPTION([ENABLE_TLS],[0],
+    [Enable the use of TLS on server ports])
 YMO_OPTION([SERVER_IDLE_TIMEOUT],[5],
     [Default client idle disconnect period in seconds])
 YMO_OPTION_DEPRECATED([SERVER_RECV_BUF_SIZE],[8192],
@@ -225,6 +227,7 @@ AS_IF([test "x$enable_maintainer_debug" = "xyes"], [
         -Wno-error=strict-aliasing \
         -Wno-error=missing-field-initializers \
         -Wno-error=implicit-fallthrough \
+        -Werror=implicit \
         -DYMO_LOG_LEVEL_MAX=6 -DYMO_LOG_LEVEL_DEFAULT=5"
     ])
 AM_CONDITIONAL([MAINTAINER_DEBUG],[test "x$enable_maintainer_debug" = "xyes"])

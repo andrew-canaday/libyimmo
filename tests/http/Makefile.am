@@ -20,6 +20,9 @@
 
 .PHONY: http-tests
 
+http-1-0-tests:
+	@srcdir@/test_http_1_0_basic.sh
+
 http-tests:
 	rm -rf @srcdir@/__pycache__
 	pytest \
@@ -27,4 +30,6 @@ http-tests:
 		--disable-warnings \
 		@srcdir@
 
-server-test-local: http-tests
+server-test-local: \
+	http-1-0-tests \
+	http-tests

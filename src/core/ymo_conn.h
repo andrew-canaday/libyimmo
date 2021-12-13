@@ -36,6 +36,10 @@
 #include <bsat.h>
 #include <uuid/uuid.h>
 
+#if YMO_ENABLE_TLS
+#include <openssl/ssl.h>
+#endif /* YMO_ENABLE_TLS */
+
 #include "yimmo.h"
 
 
@@ -49,6 +53,15 @@ YMO_ENUM8_TYPEDEF(conn_state) {
     CONNECTION_STATE_CLOSED,
     CONNECTION_STATE_CLOSING,
 } YMO_ENUM8_AS(conn_state_t);
+
+YMO_ENUM8_TYPEDEF(conn_ssl_state) {
+    CONNECTION_SSL_NONE,
+    CONNECTION_SSL_HANDSHAKE,
+    CONNECTION_SSL_OPEN,
+    CONNECTION_SSL_CLOSING,
+    CONNECTION_SSL_CLOSED,
+    CONNECTION_SSL_ERROR,
+} YMO_ENUM8_AS(conn_ssl_state_t);
 
 /** Internal structure used to manage a yimmo conn.
  */
@@ -64,6 +77,10 @@ struct ymo_conn {
     int                  ev_flags;     /* Used to store EV_READ/EV_WRITE flags */
     struct ev_io         w_read;       /* Per-connection read watcher */
     struct ev_io         w_write;      /* Per-connection write watcher */
+#if YMO_ENABLE_TLS
+    SSL*                 ssl;          /* Optional SSL connection info */
+    conn_ssl_state_t     ssl_state;    /* Track SSL state */
+#endif /* YMO_ENABLE_TLS */
 #if defined(YMO_CONN_LOCK) && (YMO_CONN_LOCK == 1)
     pthread_mutexattr_t  lattr;        /* Per-connection mutex attributes */
     pthread_mutex_t      lock;         /* Per-connection mutex */
@@ -111,6 +128,10 @@ void ymo_conn_cancel_idle_timeout(ymo_conn_t* conn);
  */
 ymo_status_t ymo_conn_transition_proto(
         ymo_conn_t* conn, ymo_proto_t* proto_new);
+
+/** Send buckets over the wire. */
+ymo_status_t ymo_conn_send_buckets(
+        ymo_conn_t* conn, ymo_bucket_t** head_p);
 
 
 /** Turn receiving on/off, according to flag (0 = off; 1 = on)

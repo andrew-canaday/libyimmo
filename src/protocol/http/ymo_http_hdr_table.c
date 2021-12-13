@@ -52,18 +52,18 @@ const char* ymo_http_hdr_hash_override_method(void)
     && (HAVE_FUNC_ATTRIBUTE_WEAK == 1) \
     && defined(YMO_HTTP_HDR_HASH_ALLOW_WEAK) \
     && YMO_HTTP_HDR_HASH_ALLOW_WEAK
-__attribute__((weak)) ymo_http_hdr_id_t ymo_http_hdr_hash_init(void)
+__attribute__((YMO_FUNC_PURE_P weak)) ymo_http_hdr_id_t ymo_http_hdr_hash_init(void)
 {
     return 5;
 }
 
-__attribute__((weak)) ymo_http_hdr_id_t ymo_http_hdr_hash_ch(
+__attribute__((YMO_FUNC_PURE_P weak)) ymo_http_hdr_id_t ymo_http_hdr_hash_ch(
         ymo_http_hdr_id_t h, char c)
 {
     return (h*283) + (c & 0xdf);
 }
 
-__attribute__((weak)) ymo_http_hdr_id_t ymo_http_hdr_hash(
+__attribute__((YMO_FUNC_PURE_P weak)) ymo_http_hdr_id_t ymo_http_hdr_hash(
         const char* str_in, size_t* len)
 {
     const char* hdr_start = str_in;
@@ -104,7 +104,8 @@ void ymo_http_hdr_table_init(ymo_http_hdr_table_t* table)
     return;
 }
 
-static inline ymo_http_hdr_table_node_t* ymo_http_hdr_table_node_create(ymo_http_hdr_table_t* table)
+static inline ymo_http_hdr_table_node_t* ymo_http_hdr_table_node_create(
+        ymo_http_hdr_table_t* table)
 {
     ymo_http_hdr_table_node_t* node = NULL;
 #if YMO_HDR_TABLE_POOL_SIZE

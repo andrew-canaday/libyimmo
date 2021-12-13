@@ -32,6 +32,12 @@
 #include <sys/mman.h>
 #include <stdatomic.h>
 
+#if YMO_ENABLE_TLS
+#include <openssl/bio.h>
+#include <openssl/ssl.h>
+#include <openssl/err.h>
+#endif /* YMO_ENABLE_TLS */
+
 #include "yimmo.h"
 #include "ymo_alloc.h"
 #include "ymo_log.h"
@@ -42,7 +48,7 @@
 #include "ymo_net.h"
 #include "ymo_env.h"
 
-#define YMO_SERVER_TRACE 0
+#define YMO_SERVER_TRACE 1
 #if defined(YMO_SERVER_TRACE) && YMO_SERVER_TRACE == 1
 # define SERVER_TRACE(fmt, ...) ymo_log_trace(fmt, __VA_ARGS__);
 #else
@@ -52,12 +58,20 @@
 /*---------------------------------------------------------------*
  *  Static Functions:
  *---------------------------------------------------------------*/
-/* Convenience macro to close and free ymo conn: */
 static inline void close_and_free_connection(
         ymo_server_t* server, ymo_conn_t* conn)
 {
-    ymo_proto_t* proto = conn->proto;
-    ymo_conn_close(conn);  /* Close */
+#if YMO_ENABLE_TLS
+    /* If the connection had SSL, let's clean that up now: */
+    if( conn->ssl && conn->ssl_state == CONNECTION_SSL_OPEN ) {
+        /* TODO: check for error? */
+        SERVER_TRACE("Cleaning up SSL for %i", conn->fd);
+        SSL_shutdown(conn->ssl);
+        SSL_free(conn->ssl);
+    }
+#endif /* YMO_ENABLE_TLS */
+
+    ymo_conn_close(conn);
 
     /* Invoke user cleanup, if present: */
     if( server->config.user_cleanup ) {
@@ -67,18 +81,15 @@ static inline void close_and_free_connection(
     }
 
     /* Invoke proto cleanup, if present: */
+    ymo_proto_t* proto = conn->proto;
     if( proto && proto->vtable.conn_cleanup_cb ) {
         SERVER_TRACE("Invoking proto cleanup with %p", conn->proto_data);
         proto->vtable.conn_cleanup_cb(
                 proto->data, conn, conn->proto_data);
     }
 
-    ymo_conn_free(conn);  /* Free */
+    ymo_conn_free(conn);
     server->no_conn--;
-#if 0
-    SERVER_TRACE("%i server (%i) #connections: %zu",
-            (int)getpid(), (int)server->config.port, server->no_conn);
-#endif
 
     /* If we're doing a graceful shutdown and that was the last connection,
      * let's bail out now.
@@ -111,13 +122,55 @@ static void idle_timeout_cb(bsat_toq_t* toq, bsat_timeout_t* item)
 
 
 /*---------------------------------------------------------------*
+ *  Yimmo Server TLS Functions (HACK/POC):
+ *---------------------------------------------------------------*/
+#if YMO_ENABLE_TLS
+static ymo_status_t ymo_init_ssl_ctx(ymo_server_t* server)
+{
+    ymo_log_notice("Configuring SSL context for port: %i", server->config.port);
+
+    const SSL_METHOD* method;
+    method = TLS_server_method();
+
+    server->ssl_ctx = SSL_CTX_new(method);
+    if( !server->ssl_ctx ) {
+        ymo_log_warning("Unable to create SSL context: %s", strerror(errno));
+        return errno;
+    }
+
+    int rc = SSL_CTX_use_certificate_file(
+            server->ssl_ctx,
+            server->config.cert_path,
+            SSL_FILETYPE_PEM);
+    ymo_log_notice("Cert config rc: %i", rc);
+    if( rc <= 0 ) {
+        ERR_print_errors_fp(stderr);
+        return EINVAL;
+    }
+
+    rc = SSL_CTX_use_PrivateKey_file(
+            server->ssl_ctx,
+            server->config.key_path,
+            SSL_FILETYPE_PEM);
+    ymo_log_notice("Key config rc: %i", rc);
+    if( rc <= 0 ) {
+        ERR_print_errors_fp(stderr);
+        return EINVAL;
+    }
+
+    return YMO_OKAY;
+}
+#endif /* YMO_ENABLE_TLS */
+
+
+/*---------------------------------------------------------------*
  *  Yimmo Server Functions:
  *---------------------------------------------------------------*/
 ymo_server_t* ymo_server_create(
         ymo_server_config_t* config,
         ymo_proto_t* proto)
 {
-    ymo_server_t* server = YMO_NEW(ymo_server_t);
+    ymo_server_t* server = YMO_NEW0(ymo_server_t);
     if( !server ) {
         goto server_create_bail;
     }
@@ -180,21 +233,27 @@ ymo_status_t ymo_server_init(ymo_server_t* server)
     listen_addr.sin_family = AF_INET;
     listen_addr.sin_addr.s_addr = INADDR_ANY;
 
+#if YMO_ENABLE_TLS
+    /* Configure SSL, if enabled: */
+    if( server->config.cert_path && server->config.key_path ) {
+        if( (status = ymo_init_ssl_ctx(server)) ) {
+            ymo_log_fatal("SSL context initialization failed.");
+            goto server_init_close_and_bail;
+        }
+    }
+#endif /* YMO_ENABLE_TLS */
+
     /* Set socket traits: */
     if( (status = ymo_sock_reuse(listen_fd, server->config.flags)) ) {
         ymo_log_fatal("Failed to set server flags: %s", strerror(status));
         goto server_init_close_and_bail;
     }
-    ymo_log_info("%s:%i Server flags set...",
-            server->proto->name, server->config.port);
 
     if( (status = ymo_sock_nonblocking(listen_fd)) ) {
         ymo_log_fatal("PID %i: Unable to put listen socket in non-blocking mode!",
                 (int)getpid());
         goto server_init_close_and_bail;
     }
-    ymo_log_info("%s:%i Listen socket in non-blocking mode...",
-            server->proto->name, server->config.port);
 
     /* Bind: */
     if( bind(listen_fd, (struct sockaddr*)&listen_addr, sizeof(listen_addr)) ) {
@@ -344,6 +403,12 @@ void ymo_accept_cb(struct ev_loop* loop, struct ev_io* watcher, int revents)
 {
     ymo_server_t* server = watcher->data;
 
+#if YMO_ENABLE_TLS
+    if( server->ssl_ctx ) {
+        ERR_clear_error();
+    }
+#endif /* YMO_ENABLE_TLS */
+
     /* HACK HACK HACK: we shouldn't be adjusting server internals for
      * an external program! (yimmo-wsgi)
      */
@@ -389,12 +454,13 @@ void ymo_accept_cb(struct ev_loop* loop, struct ev_io* watcher, int revents)
         return;
     }
 
-    ymo_client_sock_nonblocking(client_fd);
-    ymo_client_sock_nosigpipe(client_fd);
-
 #if 0
     SERVER_TRACE("%i: Accepted new connection on %i", (int)getpid(), client_fd);
 #endif
+
+    ymo_client_sock_nonblocking(client_fd);
+    ymo_client_sock_nosigpipe(client_fd);
+
     ymo_conn_t* conn = NULL;
     conn = ymo_conn_create(
             server, server->proto, client_fd, ymo_read_cb, ymo_write_cb);
@@ -406,6 +472,31 @@ void ymo_accept_cb(struct ev_loop* loop, struct ev_io* watcher, int revents)
         close(client_fd);
         return;
     }
+
+#if YMO_ENABLE_TLS
+    /* If running in SSL mode, init the SSL for the connection: */
+    if( server->ssl_ctx ) {
+        conn->ssl = SSL_new(server->ssl_ctx);
+
+        if( !conn->ssl ) {
+            ymo_log_warning(
+                    "Failed to create SSL for connection on fd %i: %s",
+                    client_fd, strerror(errno));
+            close(client_fd);
+            YMO_DELETE(ymo_conn_t, conn);
+            return;
+        }
+
+        if( !SSL_set_fd(conn->ssl, client_fd) ) {
+            ymo_log_warning("Failed to set the SSL fd for %i", client_fd);
+            close(client_fd);
+            YMO_DELETE(ymo_conn_t, conn);
+            return;
+        } else {
+            conn->ssl_state = CONNECTION_SSL_HANDSHAKE;
+        }
+    }
+#endif /* YMO_ENABLE_TLS */
 
     ymo_status_t init_status = ymo_server_conn_init(server->proto, conn);
     if( init_status != YMO_OKAY ) {
@@ -444,15 +535,85 @@ void ymo_read_cb(struct ev_loop* loop, struct ev_io* watcher, int revents)
     }
 
     ymo_conn_t* conn = (ymo_conn_t*)watcher->data;
-
     /* Reset the idle disconnect timer: */
     ymo_server_t* server = conn->server;
     ymo_conn_reset_idle_timeout(conn, &(server->idle_toq));
 
+#if YMO_ENABLE_TLS
+    if( conn->ssl ) {
+        ERR_clear_error();
+    }
+
+    /* If we haven't completed the SSL handshake, let's try now: */
+    if( conn->ssl_state == CONNECTION_SSL_HANDSHAKE ) {
+        int accept_rc = 0;
+        accept_rc = SSL_accept(conn->ssl);
+
+        if( accept_rc == 1 ) {
+            conn->ssl_state = CONNECTION_SSL_OPEN;
+            goto conn_do_read;
+        }
+
+        int ssl_err = SSL_get_error(conn->ssl, accept_rc);
+        if( YMO_SSL_WANT_RW(ssl_err) ) {
+            ymo_log_debug("SSL handshake in progress on %i", conn->fd);
+            return;
+        } else {
+            conn->ssl_state = CONNECTION_SSL_ERROR;
+            ymo_log_debug(
+                    "Failed to initialize SSL for connection on fd %i with "
+                    "return %i and error code %i: (%s)",
+                    conn->fd, accept_rc, ssl_err,
+                    ERR_error_string(ERR_get_error(), NULL));
+
+            errno = ECONNABORTED;
+            goto read_cb_close_and_free;
+        }
+    }
+#endif /* YMO_ENABLE_TLS */
+
     /* Read the payload: */
     char* recv_buf;
-    ssize_t len = recv(watcher->fd, server->recv_buf,
+    ssize_t len;
+
+conn_do_read:
+
+#if !(YMO_ENABLE_TLS)
+    len = recv(watcher->fd, server->recv_buf,
             YMO_SERVER_RECV_BUF_SIZE, YMO_RECV_FLAGS);
+#else
+    if( !conn->ssl ) {
+        len = recv(watcher->fd, server->recv_buf,
+                YMO_SERVER_RECV_BUF_SIZE, YMO_RECV_FLAGS);
+    } else {
+        size_t bytes_read = 0;
+        int read_rc = 0;
+
+        read_rc = SSL_read_ex(conn->ssl, server->recv_buf,
+                YMO_SERVER_RECV_BUF_SIZE, &bytes_read);
+
+        if( read_rc == 1 ) {
+            goto conn_ssl_read_ok;
+        }
+
+        int ssl_err = SSL_get_error(conn->ssl, read_rc);
+        if( YMO_SSL_WANT_RW(ssl_err) ) {
+            ymo_log_debug("SSL buffering on read from %i", conn->fd);
+            return;
+        } else {
+            conn->ssl_state = CONNECTION_SSL_ERROR;
+            ymo_log_debug(
+                    "SSL read for connection on fd %i failed error code %i: (%s)",
+                    conn->fd, ssl_err, ERR_reason_error_string(ssl_err));
+            goto read_cb_close_and_free;
+        }
+
+conn_ssl_read_ok:
+        ymo_log_debug("SSL read for %i: %zu", conn->fd, bytes_read);
+        len = bytes_read;
+    }
+#endif /* YMO_ENABLE_TLS */
+
     if( len < 0 ) {
         if( YMO_IS_BLOCKED(errno) ) {
             ymo_log_debug("Read would block (%i); returning", watcher->fd);
@@ -474,7 +635,7 @@ void ymo_read_cb(struct ev_loop* loop, struct ev_io* watcher, int revents)
     ymo_status_t status = YMO_OKAY;
     recv_buf = server->recv_buf;
     SERVER_TRACE("Read %li bytes from socket", len);
-    // SERVER_TRACE("Read \"%.*s\" from socket", len, recv_buf);
+    SERVER_TRACE("Read \"%.*s\" from socket", len, recv_buf);
     do {
         ssize_t n = 0;
 
@@ -514,6 +675,13 @@ void ymo_read_cb(struct ev_loop* loop, struct ev_io* watcher, int revents)
     }
 
 read_cb_okay:
+#ifdef CHECK_SSL_PENDING
+    /* HACK: if pending SSL data, put this FD back in the event queue */
+    if( conn->ssl_state == CONNECTION_SSL_OPEN && SSL_pending(conn->ssl) ) {
+        goto conn_do_read;
+        /* ev_invoke(conn->server->config.loop, &conn->w_read, EV_READ); */
+    }
+#endif /* CHECK_SSL_PENDING */
     return;
 
 read_cb_close_and_free:
@@ -564,6 +732,12 @@ void ymo_server_free(ymo_server_t* server)
         ymo_log_notice("%i: invoking proto cleanup callback", my_pid);
         server->proto->vtable.cleanup_cb(server->proto, server);
     }
+
+#if YMO_ENABLE_TLS
+    if( server->ssl_ctx ) {
+        SSL_CTX_free(server->ssl_ctx);
+    }
+#endif /* YMO_ENABLE_TLS */
     ymo_log_notice("%i: freeing server object", my_pid);
     YMO_DELETE(ymo_server_t, server);
 }

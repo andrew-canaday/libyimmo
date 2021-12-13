@@ -59,23 +59,38 @@ TESTS!!!!
 
 - |_| Facilities for testing custom protocols (*WIP!*)
 - |_| HTTP unit tests (*WIP!*)
+    - |/| Header tables
     - |/| Parser: init, loader, tests (*very basics* done)
+- |_| HTTP client/server tests (*WIP!*)
+    - |/| HTTP 1.1 Basics
+    - |/| HTTP 1.0 Basics
 - |/| Core unit tests (*very basics* done)
 - |_| WS unit tests
 - |x| (MQTT unit tests)
-- |_| live/integration tests — e.g. HTTP request/response validation against a running server, autobahn, etc.
+- |_| automatic live/integration tests — e.g. HTTP request/response validation against a running server, autobahn, etc.
+- |_| How to test client/server in CI (GH Actions, atm)? Docker compose?
 
 DOCS
 ....
 
 - |_| Tidy ``c2sphinx`` + make public.
-- |_| Use sphinx plantuml plugin instead of bash.
+- |x| Use sphinx plantuml plugin instead of bash. (Nah)
 - |_| Consider using sphinx emoji instead of replacements file.
 - |_| Stop abusing CSS/poor alabaster and make a proper theme.
 - |/| HTTP Overview (*basic*)
 - |_| WS Overview
 - |/| Callbacks and return codes
 - |/| Core overview
+- |_| Tutorials (and/or make info in the guide step-wise, not incidental)
+- |_| More comprehensive examples
+
+Packaging
+.........
+
+- |_| Distribute ``make dist`` output as tar.gz?
+- |_| Docker (WSGI runner, example servers)
+- |_| Homebrew
+- |_| RPM's? Deb? (...or whatever else is cool and used a lot?...)
 
 
 Accidental Not-Invented-Here-Syndrome Fixes
@@ -202,6 +217,10 @@ Misc
 Interface
 ---------
 
+- |_| Users should be able to set up their own socket and still use server
+- |_| Should users be able to manage their own events and just invoke protocols?
+- |_| Clean up server/conn/proto cross-contamination + tidy interfaces
+- |_| (Should more of the connection functions be public?)
 - |/| Provide bind/listen code
 - |/| Eliminate two-struct http_request scheme
 - |/| Clean up compressed header table generation
@@ -220,7 +239,6 @@ Core Architecture
 - |/| Leverage ``SO_REUSEPORT``
 - |_| Add optional multi-threading support to core.
 - |_| Add optional multi-process support to core? (Probably: *no*).
-- |_| TLS support
 
 Concurrency
 ...........
@@ -297,6 +315,13 @@ Socket Writes
 - |/| Standard HTTP
    - |/| Header writes
    - |/| HTTP bodies
+
+
+TLS
+...
+- |/| TLS support (*HACKY WIP POC, FOLKS!*)
+- |_| No gatter/scather IO for ``SSL_write_ex`` — buffer multiple small chunks to avoided repeated calls in to libssl + the system.
+- |_| support/configuration for alternate TLS libs
 
 Python/WSGI
 -----------
@@ -441,5 +466,4 @@ Dependencies
 - |/| configuration for libbsat
 - |x| configuration for glib (removed)
 - |/| configuration for uuid
-- |_| configuration for OpenSSL (or other TLS lib).
 

@@ -40,7 +40,7 @@
 # -------------------------------------------------------------------
 AC_DEFUN([YMO_OPTION],[
         AC_ARG_VAR([YMO_$1],[$3 (default $2)])
-        AS_VAR_SET_IF([YMO_$1],[ymo_opt_val=$$1],[ymo_opt_val=$2])
+        AS_VAR_SET_IF([YMO_$1],[ymo_opt_val=$YMO_$1],[ymo_opt_val=$2])
 
         AS_IF([test "x$ymo_opt_val" == "x$2"],[
             ymo_color="01;32"

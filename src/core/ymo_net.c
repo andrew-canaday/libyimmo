@@ -40,8 +40,7 @@
 #define YMO_NET_TRACE(fmt, ...)
 #endif /* YMO_TRACE_NET */
 
-
-ymo_status_t ymo_send_buckets(int fd, ymo_bucket_t** head_p)
+ymo_status_t ymo_net_send_buckets(int fd, ymo_bucket_t** head_p)
 {
     size_t i = 0;
     size_t to_send = 0;

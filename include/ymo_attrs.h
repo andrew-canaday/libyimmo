@@ -114,6 +114,16 @@
 #  define YMO_FUNC_UNUSED_P
 #endif /* HAVE_FUNC_ATTRIBUTE_UNUSED */
 
+#if defined(HAVE_FUNC_ATTRIBUTE_PURE) && (HAVE_FUNC_ATTRIBUTE_PURE == 1)
+#  define YMO_FUNC_PURE    __attribute__((pure))
+#  define YMO_FUNC_PURE_A  pure
+#  define YMO_FUNC_PURE_P  pure,
+#else
+#  define YMO_FUNC_PURE
+#  define YMO_FUNC_PURE_A
+#  define YMO_FUNC_PURE_P
+#endif /* HAVE_FUNC_ATTRIBUTE_PURE */
+
 #if defined(HAVE_FUNC_ATTRIBUTE_FLATTEN) && (HAVE_FUNC_ATTRIBUTE_FLATTEN == 1)
 #  define YMO_FUNC_FLATTEN    __attribute__((flatten))
 #  define YMO_FUNC_FLATTEN_A  flatten

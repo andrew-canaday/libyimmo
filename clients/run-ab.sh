@@ -17,7 +17,7 @@ run_cmd ab \
     -r \
     -n ${YMO_NO_CLIENTS:-"100000"} \
     -c ${YMO_NO_CONCURRENT:-"32"} \
-    "${YMO_EXAMPLE_URL:-"http://127.0.0.1:8081/index.html"}"
+    "${YMO_EXAMPLE_URL:-"http://127.0.0.1:8081/status"}"
 
 # EOF
 

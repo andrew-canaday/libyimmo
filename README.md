@@ -1,6 +1,7 @@
 # libyimmo
 
-[![configure-make-check](https://github.com/andrew-canaday/libyimmo/actions/workflows/configure-make-check.yml/badge.svg)](https://github.com/andrew-canaday/libyimmo/actions/workflows/configure-make-check.yml)
+[![Configure, Make, and Check (Defaults + WSGI Build)](https://github.com/andrew-canaday/libyimmo/actions/workflows/configure_make_check.yml/badge.svg)](https://github.com/andrew-canaday/libyimmo/actions/workflows/configure_make_check.yml)
+[![Yimmo-WSGI Docker Image](https://github.com/andrew-canaday/libyimmo/actions/workflows/docker_wsgi.yml/badge.svg)](https://github.com/andrew-canaday/libyimmo/actions/workflows/docker_wsgi.yml)
 
 > :warning: **WARNING**: _This is my long running, spare time, for fun,
 > project._ Most of it works pretty well (it's [pretty _fast!_](#gisty-benchmarks)), but it also
@@ -45,6 +46,27 @@ pattern which uses [libev](http://software.schmorp.de/pkg/coreev.html) for I/O r
 > - [HTTP](./example/doc/HTTP.md) — minimal libyimmo_http web server
 > - [WebSockets](./example/doc/WS.md) — minimal libyimmo_ws socket server
 > - [WSGI](http://blog.yimmo.org/yimmo/wsgi/index.html)
+
+### (Docker Quickstart)
+
+Don't want to build it? Try the WSGI image:
+
+```bash
+# This will start the WSGI server on port 8081:
+docker run \
+    -v ${PWD}/wsgi/demo:/opt/yimmo/demo \
+    -p 8081:8081 \
+    -e PYTHONPATH="/opt/yimmo/demo" \
+    -e YIMMO_WSGI_MODULE="demo_app" \
+    -e YIMMO_WSGI_APP="app" \
+    andrewcanaday/yimmo-wsgi:0-alpha
+```
+
+> **NOTES**:
+>
+>  - The port number (`8081`) and max HTTP POST body (`4096`) are hardcoded (_sorry! This'll be fixed in the next push!_)
+>  - TLS support is _disabled in the image at compile time_.
+>  - See [the WSGI docs](http://blog.yimmo.org/yimmo/wsgi/index.html) for more info.
 
 ## License
 
@@ -178,16 +200,16 @@ Document Path:          /status
 Document Length:        2 bytes
 
 Concurrency Level:      32
-Time taken for tests:   8.904 seconds
+Time taken for tests:   8.533 seconds
 Complete requests:      2000000
 Failed requests:        0
 Keep-Alive requests:    2000000
 Total transferred:      178000000 bytes
 HTML transferred:       4000000 bytes
-Requests per second:    224613.31 [#/sec] (mean)
-Time per request:       0.142 [ms] (mean)
+Requests per second:    234394.84 [#/sec] (mean)
+Time per request:       0.137 [ms] (mean)
 Time per request:       0.004 [ms] (mean, across all concurrent requests)
-Transfer rate:          19522.05 [Kbytes/sec] received
+Transfer rate:          20372.21 [Kbytes/sec] received
 
 Connection Times (ms)
               min  mean[+/-sd] median   max

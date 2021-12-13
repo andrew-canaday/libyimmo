@@ -864,10 +864,24 @@ div.bodywrapper > div.body > section h4 + p {
 /*------------------------------------------------------------------------
  * Lists
  *------------------------------------------------------------------------*/
-div.body ul.simple li {
+div.bodywrapper > div.body > section ol.simple li,
+div.bodywrapper > div.body > section ul.simple li {
 	margin-bottom: 0.4em;
 	margin-bottom: 0.6em;
 }
+
+div.bodywrapper > div.body > section div.admonition ol li p,
+div.bodywrapper > div.body > section div.admonition ul li p {
+	margin-top: 0.5em;
+	margin-bottom: 1.0em;
+}
+
+div.bodywrapper > div.body > section div.admonition ol li p + p,
+div.bodywrapper > div.body > section div.admonition ul li p + p {
+	margin-top: -1.0em;
+	margin-bottom: 1.0em;
+}
+
 
 /*------------------------------------------------------------------------
  * Admonitions:

@@ -120,6 +120,10 @@ ymo_server_t* ymo_wsgi_server_init(
     http_cfg.flags = (YMO_SERVER_REUSE_ADDR | YMO_SERVER_REUSE_PORT);
     http_cfg.listen_backlog = HTTP_DEFAULT_LISTEN_BACKLOG;
 
+    /* TODO: maybe the env isn't the most secure way to pass this info... */
+    http_cfg.cert_path = getenv("YIMMO_TLS_CERT_PATH");
+    http_cfg.key_path = getenv("YIMMO_TLS_KEY_PATH");
+
     int n = 0;
     ymo_proto_t* http_proto = NULL;
     ymo_server_t* http_srv = NULL;

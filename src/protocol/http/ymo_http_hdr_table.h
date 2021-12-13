@@ -49,9 +49,9 @@
 /** Default hash function used by header table.
  *
  */
-ymo_http_hdr_id_t ymo_http_hdr_hash_init(void);
-ymo_http_hdr_id_t ymo_http_hdr_hash(const char* str_in, size_t* len);
-ymo_http_hdr_id_t ymo_http_hdr_hash_ch(ymo_http_hdr_id_t h, char c);
+YMO_FUNC_PURE ymo_http_hdr_id_t ymo_http_hdr_hash_init(void);
+YMO_FUNC_PURE ymo_http_hdr_id_t ymo_http_hdr_hash(const char* str_in, size_t* len);
+YMO_FUNC_PURE ymo_http_hdr_id_t ymo_http_hdr_hash_ch(ymo_http_hdr_id_t h, char c);
 
 #else
 
@@ -72,7 +72,7 @@ ymo_http_hdr_id_t ymo_http_hdr_hash_ch(ymo_http_hdr_id_t h, char c);
 #  endif /* YMO_HTTP_HDR_HASH_INIT */
 
 
-YMO_FUNC_UNUSED static inline ymo_http_hdr_id_t ymo_http_hdr_hash_283_5(
+__attribute__((YMO_FUNC_PURE_P, YMO_FUNC_UNUSED_A)) static inline ymo_http_hdr_id_t ymo_http_hdr_hash_283_5(
         const char* str_in, size_t* len)
 {
     const char* hdr_start = str_in;

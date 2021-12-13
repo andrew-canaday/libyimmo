@@ -73,7 +73,7 @@ static ymo_wsgi_proc_t w_proc = {
     .restart_count = 0
 };
 
-char ymo_wsgi_app_string[256];
+static char ymo_wsgi_app_string[256];
 
 /*---------------------------------*
  *             Main:
@@ -90,25 +90,35 @@ int main(int argc, char** argv)
     w_proc.proc_name_len = strlen(w_proc.proc_name);
     w_proc.proc_name_buflen = w_proc.proc_name_len+1;
 
-    if( argc < 3 ) {
-        fprintf(stderr, "Usage: ymo_wsgi MODULE FUNC\n");
-        return 1;
-    }
+    /* TODO: a little hacky here. Let's tidy it to use module:<stmt>... */
+    w_proc.module = getenv("YIMMO_WSGI_MODULE");
+    w_proc.app = getenv("YIMMO_WSGI_APP");
 
-    /* HACK HACK HACK: */
-    w_proc.module = argv[1];
-
-    memset(ymo_wsgi_app_string, 0, sizeof(ymo_wsgi_app_string));
-    char* c = ymo_wsgi_app_string;
-    for( int i = 2; i < argc; i++ )
-    {
-        for( size_t n = 0; n < strlen(argv[i]); n++ )
-        {
-            *c++ = argv[i][n];
+    if( !w_proc.module || !w_proc.app) {
+        /* If we didn't get app and module through env, check command line */
+        if( argc < 3 ) {
+            fprintf(stderr, "Usage: ymo_wsgi MODULE FUNC\n"
+                    "(Or set YIMMO_WSGI_MODULE and YIMMO_WSGI_APP)\n");
+            return 1;
         }
+
+        /* First arg is module: */
+        w_proc.module = argv[1];
+
+        /* Everything thereafter is app: */
+        memset(ymo_wsgi_app_string, 0, sizeof(ymo_wsgi_app_string));
+        char* c = ymo_wsgi_app_string;
+        for( int i = 2; i < argc; i++ )
+        {
+            for( size_t n = 0; n < strlen(argv[i]); n++ )
+            {
+                *c++ = argv[i][n];
+            }
+        }
+        *c++ = '\0';
+        w_proc.app = ymo_wsgi_app_string;
     }
-    *c++ = '\0';
-    w_proc.app = ymo_wsgi_app_string;
+
 
     /* TODO: trim this down to basename: */
     script_name = w_proc.module;
@@ -198,7 +208,7 @@ static int init_http_server(ymo_wsgi_proc_t* w_proc)
     w_proc->http_srv = ymo_wsgi_server_init(w_proc->loop, http_port, w_proc);
 
     if( !w_proc->http_srv ) {
-        ymo_log_warning("Failed to create HTTP server: %s", strerror(errno));
+        ymo_log_fatal("Failed to create HTTP server: %s", strerror(errno));
         return -1;
     }
 #endif /* YMO_WSGI_REUSEPORT */

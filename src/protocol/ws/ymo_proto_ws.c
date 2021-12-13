@@ -32,14 +32,17 @@
 
 #include "yimmo.h"
 #include "ymo_log.h"
+#include "ymo_alloc.h"
+#include "ymo_util.h"
+#include "ymo_http.h"
+
 #include "core/ymo_net.h"
 #include "core/ymo_server.h"
 #include "core/ymo_conn.h"
-#include "ymo_alloc.h"
-#include "ymo_util.h"
+
+
 #include "ymo_ws.h"
 #include "ymo_proto_ws.h"
-#include "ymo_http.h"
 #include "ymo_ws_parse.h"
 #include "ymo_ws_session.h"
 
@@ -400,7 +403,7 @@ ymo_status_t ymo_proto_ws_write(
         return YMO_OKAY;
     }
 
-    status = ymo_send_buckets(socket, &session->send_head);
+    status = ymo_conn_send_buckets(conn, &session->send_head);
 
     /* If all data was sent okay, clear the send queue: */
     if( status == YMO_OKAY ) {

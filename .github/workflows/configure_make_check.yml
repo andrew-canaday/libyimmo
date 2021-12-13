@@ -1,0 +1,76 @@
+name: Configure, Make, and Check (Defaults + WSGI Build)
+on:
+  push:
+    branches:
+      - main
+      - develop
+jobs:
+  build_and_test_default_w_wsgi:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      #------------------------------------
+      # Setup:
+      #------------------------------------
+      - name: Create build dirs
+        run: |
+          mkdir -p ./build/bsat
+          mkdir -p ./build/yimmo
+
+      #------------------------------------
+      # Dependencies:
+      #------------------------------------
+      - run: sudo apt-get install -y libev-dev
+
+      - name: Checkout libbsate
+        uses: actions/checkout@v2
+        with:
+          repository: 'andrew-canaday/libbsat'
+          path: 'libbsat'
+
+      - name: Generate BSAT Configuration
+        run: ./autogen.sh
+        working-directory: ./libbsat
+
+      - name: install libbsat
+        run: |
+          ../../libbsat/configure
+          make
+          make check
+          make dist
+          sudo make install
+        working-directory: ./build/bsat
+
+      #--------------------------------------------------------------------
+      # Checkout, configure, make, run tests, and make dist for libyimmo:
+      #--------------------------------------------------------------------
+      - name: Checkout libyimmo
+        uses: actions/checkout@v2
+        with:
+          repository: 'andrew-canaday/libyimmo'
+          path: 'libyimmo'
+
+      - name: Generate Configuration
+        run: ./autogen.sh
+        working-directory: ./libyimmo
+
+      - name: Configure
+        run: ../../libyimmo/configure --enable-examples --enable-wsgi
+        working-directory: ./build/yimmo
+
+      - name: Compile
+        run: make
+        working-directory: ./build/yimmo
+
+      - name: Unit Tests
+        run: make VERBOSE='true' check
+        env:
+          # We didn't ldconfig, so just set the path:
+          LD_LIBRARY_PATH: /usr/local/lib
+        working-directory: ./build/yimmo
+
+      - name: Dist Tarball
+        run: make dist
+        working-directory: ./build/yimmo

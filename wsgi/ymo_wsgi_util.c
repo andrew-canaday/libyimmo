@@ -55,7 +55,7 @@ int ymo_wsgi_signal_mask(int signum, int how)
     errno = 0;
     int r_sig = pthread_sigmask(how, &signal_mask, NULL);
     if( r_sig ) {
-        ymo_log_warning(
+        ymo_log_error(
                 "Failed to set signal mask for child process %i: %s",
                 (int)getpid(), strerror(errno));
     } else {

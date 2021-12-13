@@ -1,0 +1,26 @@
+name: Yimmo/Yimmo-WSGI Test Image
+on:
+  push:
+    branches:
+      - develop
+jobs:
+  docker_build_yimmo_test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Log in to Docker Hub
+        uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+      - name: Build Docker Image
+        id: docker_build
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          tags: andrewcanaday/yimmo-wsgi-test:latest
+          file: ./docker/Dockerfile.test
+

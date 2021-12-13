@@ -57,6 +57,10 @@
 #include <ev.h>
 #include <bsat.h>
 
+#if YMO_ENABLE_TLS
+#include <openssl/ssl.h>
+#endif /* YMO_ENABLE_TLS */
+
 #include "yimmo.h"
 #include "ymo_proto.h"
 
@@ -74,6 +78,9 @@ struct ymo_server {
     int                  listen_fd; /* Socket for `listen`/`accept` */
     ymo_server_state_t   state;
     size_t               no_conn;
+#if YMO_ENABLE_TLS
+    SSL_CTX*             ssl_ctx;        /* Optional SSL context */
+#endif /* YMO_ENABLE_TLS */
 #if defined(YIMMO_WSGI) && (YIMMO_WSGI == 1)
     atomic_int*          accepting;
 #endif /* YIMMO_WSGI */

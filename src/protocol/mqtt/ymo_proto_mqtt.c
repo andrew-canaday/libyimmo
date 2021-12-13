@@ -24,10 +24,11 @@
 #include "yimmo.h"
 #include "ymo_log.h"
 #include "ymo_alloc.h"
+
 #include "core/ymo_net.h"
 #include "core/ymo_proto.h"
-
 #include "core/ymo_conn.h"
+
 #include "ymo_proto_mqtt.h"
 #include "ymo_mqtt_parse.h"
 
@@ -198,8 +199,8 @@ ymo_status_t ymo_proto_mqtt_write(
     ymo_mqtt_session_t* session = conn_data;
 
     if( session->send_head ) {
-        status = ymo_send_buckets(
-                socket, &session->send_head);
+        status = ymo_conn_send_buckets(
+                conn, &session->send_head);
     }
 
     /* This means they're all sent: */
