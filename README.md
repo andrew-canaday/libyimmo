@@ -67,6 +67,8 @@ docker run \
 >  - The port number (`8081`) and max HTTP POST body (`4096`) are hardcoded (_sorry! This'll be fixed in the next push!_)
 >  - TLS support is _disabled in the image at compile time_.
 >  - See [the WSGI docs](http://blog.yimmo.org/yimmo/wsgi/index.html) for more info.
+>  - Docker image is currently built for `x86` on Ubuntu
+>  - Apple M1 users: the docker image *will run*, but you'll get _way better performance_ building and installing natively (arm64 build on the TODO list).
 
 ## License
 
