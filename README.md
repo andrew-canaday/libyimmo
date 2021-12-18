@@ -45,8 +45,8 @@ pattern which uses [libev](http://software.schmorp.de/pkg/coreev.html) for I/O r
 
 > :bulb: Want to get the gist in a hurry?
 >
-> - [HTTP](./example/doc/HTTP.md) — minimal libyimmo_http web server
-> - [WebSockets](./example/doc/WS.md) — minimal libyimmo_ws socket server
+> - [HTTP](./examples/doc/HTTP.md) — minimal libyimmo_http web server
+> - [WebSockets](./examples/doc/WS.md) — minimal libyimmo_ws socket server
 > - [WSGI](http://blog.yimmo.org/yimmo/wsgi/index.html)
 
 ### (Docker Quickstart)
