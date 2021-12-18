@@ -1,7 +1,9 @@
 # libyimmo
 
 [![Configure, Make, and Check (Defaults + WSGI Build)](https://github.com/andrew-canaday/libyimmo/actions/workflows/configure_make_check.yml/badge.svg)](https://github.com/andrew-canaday/libyimmo/actions/workflows/configure_make_check.yml)
-[![Yimmo-WSGI Docker Image](https://github.com/andrew-canaday/libyimmo/actions/workflows/docker_wsgi.yml/badge.svg)](https://github.com/andrew-canaday/libyimmo/actions/workflows/docker_wsgi.yml)
+[![Server Tests](https://github.com/andrew-canaday/libyimmo/actions/workflows/server-tests.yml/badge.svg)](https://github.com/andrew-canaday/libyimmo/actions/workflows/server-tests.yml)
+[![Publish Yimmo-WSGI Docker Image](https://github.com/andrew-canaday/libyimmo/actions/workflows/docker_wsgi.yml/badge.svg)](https://github.com/andrew-canaday/libyimmo/actions/workflows/docker_wsgi.yml)
+[![Create Release on Tag](https://github.com/andrew-canaday/libyimmo/actions/workflows/create_release_on_tag.yml/badge.svg)](https://github.com/andrew-canaday/libyimmo/actions/workflows/create_release_on_tag.yml)
 
 > :warning: **WARNING**: _This is my long running, spare time, for fun,
 > project._ Most of it works pretty well (it's [pretty _fast!_](#gisty-benchmarks)), but it also
