@@ -33,7 +33,6 @@ AC_DEFUN([YMO_CHECK_DEPENDENCIES],[
     ##         Programs:
     ##-----------------------------
     YMO_BOX([Checking for required programs])
-    AM_INIT_AUTOMAKE([-Wall foreign])
     AC_PROG_CC
     m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
     LT_INIT

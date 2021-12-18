@@ -48,18 +48,20 @@
 #include "ymo_net.h"
 #include "ymo_env.h"
 
-#define YMO_SERVER_TRACE 1
+#define YMO_SERVER_TRACE 0
 #if defined(YMO_SERVER_TRACE) && YMO_SERVER_TRACE == 1
 # define SERVER_TRACE(fmt, ...) ymo_log_trace(fmt, __VA_ARGS__);
+# define SERVER_TRACE_UUID(fmt, ...) ymo_log_trace_uuid(fmt, __VA_ARGS__);
 #else
 # define SERVER_TRACE(fmt, ...)
+# define SERVER_TRACE_UUID(fmt, ...)
 #endif /* YMO_SERVER_TRACE */
 
 /*---------------------------------------------------------------*
  *  Static Functions:
  *---------------------------------------------------------------*/
 static inline void close_and_free_connection(
-        ymo_server_t* server, ymo_conn_t* conn)
+        ymo_server_t* server, ymo_conn_t* conn, int clean)
 {
 #if YMO_ENABLE_TLS
     /* If the connection had SSL, let's clean that up now: */
@@ -71,7 +73,10 @@ static inline void close_and_free_connection(
     }
 #endif /* YMO_ENABLE_TLS */
 
-    ymo_conn_close(conn);
+    /* If we're mid shutdown sequence, wait on another read sec: */
+    if( ymo_conn_close(conn, clean) == CONNECTION_CLOSING ) {
+        return;
+    }
 
     /* Invoke user cleanup, if present: */
     if( server->config.user_cleanup ) {
@@ -113,9 +118,9 @@ static void idle_timeout_cb(bsat_toq_t* toq, bsat_timeout_t* item)
     ymo_server_t* server = toq->data;
     ymo_conn_t* conn = item->data;
     if( conn ) {
-        ymo_log_trace_uuid("Idle connection timer fired (fd: %i)",
+        SERVER_TRACE_UUID("Idle connection timer fired (fd: %i)",
                 conn->id, NULL);
-        close_and_free_connection(server, conn);
+        close_and_free_connection(server, conn, 1);
     }
     return;
 }
@@ -380,7 +385,7 @@ static ymo_status_t ymo_server_conn_init(
 
     ymo_status_t init_status = YMO_OKAY;
     if( proto->vtable.conn_ready_cb ) {
-        ymo_log_trace_uuid("Invoking %s connect ready callback",
+        SERVER_TRACE_UUID("Invoking %s connect ready callback",
                 conn->id, (const unsigned char*)proto->name);
         init_status = proto->vtable.conn_ready_cb(
                 proto->data, conn, conn->proto_data);
@@ -392,7 +397,7 @@ static ymo_status_t ymo_server_conn_init(
                     proto->data, conn, conn->proto_data);
         }
     } else {
-        ymo_log_trace_uuid("No ready callback for %s",
+        SERVER_TRACE_UUID("No ready callback for %s",
                 conn->id, (const unsigned char*)proto->name);
     }
 
@@ -502,7 +507,7 @@ void ymo_accept_cb(struct ev_loop* loop, struct ev_io* watcher, int revents)
     if( init_status != YMO_OKAY ) {
         SERVER_TRACE("Connection initialization failed: %s (%i)",
                 strerror(init_status), init_status);
-        close_and_free_connection(server, conn);
+        close_and_free_connection(server, conn, 1);
         return;
     }
 
@@ -519,7 +524,7 @@ void ymo_accept_cb(struct ev_loop* loop, struct ev_io* watcher, int revents)
     SERVER_TRACE("%i server (%i) #connections: %zu",
             (int)getpid(), (int)server->config.port, server->no_conn);
 #endif
-    ymo_log_trace_uuid("Session created; Enabling read for socket %i",
+    SERVER_TRACE_UUID("Session created; Enabling read for socket %i",
             conn->id, client_fd);
     /* Start the idle disconnect timer for this conn: */
     ymo_conn_start_idle_timeout(conn, &(server->idle_toq));
@@ -529,6 +534,7 @@ void ymo_accept_cb(struct ev_loop* loop, struct ev_io* watcher, int revents)
 
 void ymo_read_cb(struct ev_loop* loop, struct ev_io* watcher, int revents)
 {
+    int clean = 1;
     if( EV_ERROR & revents ) {
         ymo_log_warning("libev error on read fd: %i", watcher->fd);
         goto read_cb_okay;
@@ -576,7 +582,9 @@ void ymo_read_cb(struct ev_loop* loop, struct ev_io* watcher, int revents)
     char* recv_buf;
     ssize_t len;
 
+#if YMO_ENABLE_TLS
 conn_do_read:
+#endif
 
 #if !(YMO_ENABLE_TLS)
     len = recv(watcher->fd, server->recv_buf,
@@ -621,6 +629,7 @@ conn_ssl_read_ok:
         } else {
             ymo_log_debug("Read error: %s (%i) on fd %i",
                     strerror(errno), errno, watcher->fd);
+            clean = 0;
             goto read_cb_close_and_free;
         }
     }
@@ -628,6 +637,7 @@ conn_ssl_read_ok:
     /* Bail on read error: */
     if( !len ) {
         ymo_log_debug("Client connection closed (fd: %i)", watcher->fd);
+        clean = 0;
         goto read_cb_close_and_free;
     }
 
@@ -635,11 +645,10 @@ conn_ssl_read_ok:
     ymo_status_t status = YMO_OKAY;
     recv_buf = server->recv_buf;
     SERVER_TRACE("Read %li bytes from socket", len);
-    SERVER_TRACE("Read \"%.*s\" from socket", len, recv_buf);
     do {
         ssize_t n = 0;
 
-        ymo_log_trace_uuid(
+        SERVER_TRACE_UUID(
                 "Issuing %li bytes to parser", conn->id, len);
 
         n = conn->proto->vtable.read_cb(
@@ -675,7 +684,7 @@ conn_ssl_read_ok:
     }
 
 read_cb_okay:
-#ifdef CHECK_SSL_PENDING
+#if YMO_ENABLE_TLS && defined(CHECK_SSL_PENDING) && CHECK_SSL_PENDING
     /* HACK: if pending SSL data, put this FD back in the event queue */
     if( conn->ssl_state == CONNECTION_SSL_OPEN && SSL_pending(conn->ssl) ) {
         goto conn_do_read;
@@ -685,7 +694,7 @@ read_cb_okay:
     return;
 
 read_cb_close_and_free:
-    close_and_free_connection(server, conn);
+    close_and_free_connection(server, conn, clean);
     return;
 }
 
@@ -703,7 +712,7 @@ void ymo_write_cb(struct ev_loop* loop, struct ev_io* watcher, int revents)
         ymo_conn_tx_enable(conn, 0);
     } else if( !YMO_IS_BLOCKED(status) ) {
         /* Error or conn close; close the socket: */
-        close_and_free_connection(conn->server, conn);
+        close_and_free_connection(conn->server, conn, 1);
     }
     return;
 }

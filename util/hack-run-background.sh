@@ -27,12 +27,22 @@
 #-------------------------------------------------------------------------------
 
 
-__thisdir="${0%/*}"
-__repodir="${__thisdir%/*}"
+. ${0%/*}/bash/ymo-utils.sh
 
-find "${__repodir}" \
-    \( -iname "*.c" -or -iname "*.h" \) \
-    -exec uncrustify -c ${__repodir}/uncrustify.cfg \
-    --no-backup '{}' \+
+pidfile="$1" ; shift
 
+if [ -z "${pidfile}" ]; then
+    err_bail "USAGE: ${thisname} PIDFILE CMD [ARGS...]"
+fi
+
+cmd="$1"; shift
+
+if [ -z "${cmd}" ]; then
+    err_bail "USAGE: ${thisname} PIDFILE CMD [ARGS...]"
+fi
+
+${cmd} $@ &
+
+printf "%i" "$!" > "${pidfile}"
+exit 0
 

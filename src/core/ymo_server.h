@@ -82,7 +82,7 @@ struct ymo_server {
     SSL_CTX*             ssl_ctx;        /* Optional SSL context */
 #endif /* YMO_ENABLE_TLS */
 #if defined(YIMMO_WSGI) && (YIMMO_WSGI == 1)
-    atomic_int*          accepting;
+    atomic_int* accepting;
 #endif /* YIMMO_WSGI */
 };
 

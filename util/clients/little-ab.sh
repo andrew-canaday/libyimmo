@@ -27,12 +27,10 @@
 #-------------------------------------------------------------------------------
 
 
-__thisdir="${0%/*}"
-__repodir="${__thisdir%/*}"
+__thispath="$0"
+__thiscmd="${__thispath##*/}"
+__thisdir="${__thispath%/*}"
 
-find "${__repodir}" \
-    \( -iname "*.c" -or -iname "*.h" \) \
-    -exec uncrustify -c ${__repodir}/uncrustify.cfg \
-    --no-backup '{}' \+
-
-
+export YMO_NO_CLIENTS=100
+export YMO_NO_CONCURRENT=${YMO_NO_CONCURRENT:-"4"}
+${__thisdir}/run-ab.sh

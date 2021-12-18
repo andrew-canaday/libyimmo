@@ -184,15 +184,15 @@ static int main_proc_teardown(ymo_wsgi_proc_t* w_proc)
 static int worker_proc_init(
         PyThreadState** _py_ts_save, ymo_wsgi_proc_t* w_proc)
 {
-    #if YMO_WSGI_REUSEPORT
+#if YMO_WSGI_REUSEPORT
     errno = 0;
     w_proc->http_srv = ymo_wsgi_server_init(
-            w_proc->loop, w_proc->http_port, &w_proc);
+            w_proc->loop, w_proc->port, &w_proc);
     if( !w_proc->http_srv ) {
         ymo_log_fatal("Failed to create HTTP server: %s", strerror(errno));
         return -1;
     }
-    #endif /* YMO_WSGI_REUSEPORT */
+#endif /* YMO_WSGI_REUSEPORT */
 
     /* Initialize python interpretter and load w_proc->module: */
     if( ymo_wsgi_init(w_proc->module, w_proc->app) != YMO_OKAY ) {

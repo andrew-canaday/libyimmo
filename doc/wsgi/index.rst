@@ -153,9 +153,17 @@ Configuration
 The following settings control the ``yimmo-wsgi`` runtime:
 
 - ``YIMMO_LOG_LEVEL``: Log level. For more info, see :ref:`Logging <WSGI Logging>`
+- ``YIMMO_WSGI_PORT``: The port number to bind to.
 - ``YIMMO_WSGI_NO_PROC``: Number of ``yimmo-wsgi`` processes to run.
 - ``YIMMO_WSGI_NO_THREADS``: Number of ``yimmo-wsgi`` worker thread, **per_process**.
 - ``YIMMO_WSGI_USE_KQUEUE``: Set to ``1`` on BSD-like systems to use ``kqueue`` (defaults to ``0``, wich falls back to using ``select()``).
+
+
+TLS
+...
+
+If TLS is enabled, you can pass the server certificate and private key *paths*
+using, ``YIMMO_TLS_CERT_PATH`` and ``YIMMO_TLS_KEY_PATH``.
 
 .. _WSGI Logging:
 

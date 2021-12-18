@@ -106,9 +106,8 @@ ymo_status_t ymo_ws_session_send_no_check(
         ymo_bucket_t* payload)
 {
     size_t hdr_len = 0;
-    char* hdr_data = gen_ws_msg_hdr(
-            &hdr_len, flags,
-            ymo_bucket_len_all(payload));
+    size_t msg_len = ymo_bucket_len_all(payload);
+    char* hdr_data = gen_ws_msg_hdr(&hdr_len, flags, msg_len);
     if( !hdr_data ) {
         return errno;
     }
@@ -143,7 +142,27 @@ ymo_status_t ymo_ws_session_send(
             return EINVAL;
     }
 
-    return ymo_ws_session_send_no_check(session, flags, payload);
+    /* Most likely scenario: */
+    if( session->state == WS_SESSION_CONNECTED ) {
+        return ymo_ws_session_send_no_check(session, flags, payload);
+    }
+
+    /* Else, tell them why it failed: */
+    ymo_status_t err_status;
+    switch( session->state ) {
+        case WS_SESSION_CLOSE_RECEIVED:
+        case WS_SESSION_EXPECT_CLOSE:
+            err_status = EADDRNOTAVAIL;
+            break;
+        case WS_SESSION_CLOSED:
+            err_status = EPIPE;
+            break;
+        case WS_SESSION_ERROR:
+            err_status = ECONNABORTED;
+            break;
+    }
+
+    return err_status;
 }
 
 

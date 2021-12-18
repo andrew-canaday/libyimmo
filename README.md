@@ -64,7 +64,7 @@ docker run \
 
 > **NOTES**:
 >
->  - The port number (`8081`) and max HTTP POST body (`4096`) are hardcoded (_sorry! This'll be fixed in the next push!_)
+>  - The max HTTP POST body (`4096`) is hardcoded (_sorry! On the TODO list._)
 >  - TLS support is _disabled in the image at compile time_.
 >  - See [the WSGI docs](http://blog.yimmo.org/yimmo/wsgi/index.html) for more info.
 >  - Docker image is currently built for `x86` on Ubuntu
@@ -74,11 +74,15 @@ docker run \
 
 This project is licensed under version 3 of the GNU GPL (see [LICENSE](./LICENSE)).
 
-> :information_source: **NOTE**:
+> :information_source: **NOTES**:
 >
-> _Some_ auxiliary files may be licensed under more
-> permissive licenses (e.g. the [example](./example) sources are licensed under the
-> MIT/expat license).
+> **Many auxiliary files are licensed under more permissive licenses**, e.g.:
+>  - scripts, Dockerfiles, and silly things like that (MIT)
+>  - example code (MIT)
+>
+> Licenses *should* be declared pretty explicitly, but I'm sure I missed some
+> (also on the TODO list...along with some *specific* GPL exemption
+> declarations — this should all be in place for the `0.1.0` release).
 >
 > Except where otherwise explicitly stated, the files contained herein are
 > subject to the terms defined by the GNU General Public License v3, as
@@ -88,6 +92,7 @@ This project is licensed under version 3 of the GNU GPL (see [LICENSE](./LICENSE
 
  - [Yimmo Docs](http://blog.yimmo.org/yimmo/index.html)
  - [WSGI](http://blog.yimmo.org/yimmo/wsgi/index.html)
+ - [Yimmo CI Tests](./ci)
 
 ## Features
 

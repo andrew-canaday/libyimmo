@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-#===============================================================================
 #
 # NOTICE: THIS AUXILIARY FILE IS LICENSED USING THE MIT LICENSE.
 #
@@ -24,15 +23,27 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 # IN THE SOFTWARE.
 #
-#-------------------------------------------------------------------------------
+
+export TERM="${TERM:-"xterm"}"
+
+. ${0%/*}/../../util/bash/ymo-utils.sh
+json_path="$1" ; shift
+
+hr '='
+log_info "Autobahn WebSocket Server Test Suite Results"
+
+cat "${json_path}" | jq --color-output '.'
 
 
-__thisdir="${0%/*}"
-__repodir="${__thisdir%/*}"
+hr '-'
+log_info "Autobahn WebSocket Server Test Suite Summary"
+log_info "PASSED: $( cat "${json_path}" \
+        | jq -r '[ .ymo_test_server | to_entries | .[] | select(.value.behavior == "OK") ] | length'
+    )"
 
-find "${__repodir}" \
-    \( -iname "*.c" -or -iname "*.h" \) \
-    -exec uncrustify -c ${__repodir}/uncrustify.cfg \
-    --no-backup '{}' \+
+log_info "FAILED: $( cat "${json_path}" \
+    | jq -r '[ .ymo_test_server | to_entries | .[] | select(.value.behavior == "FAILED") ] | length'
+    )"
 
 
+hr '.'

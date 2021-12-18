@@ -67,7 +67,7 @@ TESTS!!!!
 - |/| Core unit tests (*very basics* done)
 - |_| WS unit tests
 - |x| (MQTT unit tests)
-- |_| automatic live/integration tests — e.g. HTTP request/response validation against a running server, autobahn, etc.
+- |/| automatic live/integration tests — e.g. HTTP request/response validation against a running server, autobahn, etc.
 - |_| How to test client/server in CI (GH Actions, atm)? Docker compose?
 
 DOCS

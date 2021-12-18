@@ -1,0 +1,121 @@
+name: Create Release on Tag
+on:
+  push:
+    tags:
+      - 0.*
+
+jobs:
+  create_release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+    env:
+      YIMMO_VERSION: ${{ github.ref_name }}
+      LD_LIBRARY_PATH: /usr/local/lib
+    steps:
+      #------------------------------------
+      # Setup:
+      #------------------------------------
+      - name: Set up base system
+        run: |
+          sudo apt update
+          sudo apt-get -qq install -y libev-dev
+          mkdir -p ./build/bsat
+          mkdir -p ./build/yimmo
+
+
+      #------------------------------------
+      # Dependencies:
+      #------------------------------------
+      - name: Checkout libbsat
+        uses: actions/checkout@v2
+        with:
+          repository: 'andrew-canaday/libbsat'
+          path: 'libbsat'
+
+      - name: Generate BSAT Configuration
+        run: ./autogen.sh
+        working-directory: ./libbsat
+
+      - name: Install libbsat
+        run: |
+          ../../libbsat/configure \
+            --enable-silent-rules \
+            --silent
+          sudo make install
+          sudo ldconfig -v
+        working-directory: ./build/bsat
+
+
+      #--------------------------------------------------------------------
+      # Create distrubution tar.gz:
+      #
+      # TODO:
+      # - signing
+      #--------------------------------------------------------------------
+      - name: Checkout libyimmo
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          repository: ${{ github.repository }}
+          ref: ${{ github.ref_name }}
+          path: 'libyimmo'
+
+      - name: Generate Configuration
+        env:
+          YIMMO_VERSION: ${{ github.ref_name }}
+        run: |
+          export YIMMO_VERSION
+          ./autogen.sh
+        working-directory: ./libyimmo
+
+      - name: Check distrubtion and create dist .tar.gz
+        run: |
+          ../../libyimmo/configure \
+            --silent \
+            --enable-silent-rules \
+            --enable-wsgi
+          make distcheck && make dist
+        working-directory: ./build/yimmo
+
+
+      #--------------------------------------------------------------------
+      # Cut the Release and add the artifacts.
+      #--------------------------------------------------------------------
+      - name: Cut release and add release assets
+        run: |
+          ../../libyimmo/util/cut-gh-release.sh \
+            "${{ secrets.GITHUB_TOKEN }}" \
+            "${{ github.repository }}" \
+            "${{ github.ref_name }}" \
+            "${{ github.sha }}" \
+            "libyimmo"
+        working-directory: ./build/yimmo
+
+  #--------------------------------------------------------------------
+  # Cut the Release and add the artifacts.
+  #
+  # TODO: Use reusable workflow!
+  #--------------------------------------------------------------------
+  docker_build_default_wsgi:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Log in to Docker Hub
+        uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+      - name: Build Docker Image
+        id: docker_build
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          tags: andrewcanaday/yimmo-wsgi:${{ github.ref_name }}
+          file: ./docker/Dockerfile
+          target: yimmo-wsgi
+

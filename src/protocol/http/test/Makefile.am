@@ -47,6 +47,9 @@ LDADD=\
 	$(top_builddir)/src/core/libyimmo.la
 
 AM_DEFAULT_SOURCE_EXT=.c
+check_HEADERS=\
+	ymo_http_test.h
+
 check_PROGRAMS=\
 	test_hdr_table \
 	test_http_response \

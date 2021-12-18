@@ -1,30 +1,31 @@
 name: Configure, Make, and Check (Defaults + WSGI Build)
-on:
-  push:
-    branches:
-      - main
-      - develop
+on: [push]
 jobs:
-  build_and_test_default_w_wsgi:
+  configure_make_check:
     runs-on: ubuntu-latest
     defaults:
       run:
         shell: bash
+    env:
+      LD_LIBRARY_PATH: /usr/local/lib
     steps:
       #------------------------------------
       # Setup:
       #------------------------------------
-      - name: Create build dirs
+      - name: Set up base system
         run: |
+          sudo apt update
+          sudo apt-get -qq install -y \
+            libev-dev \
+            apache2-utils
           mkdir -p ./build/bsat
           mkdir -p ./build/yimmo
+
 
       #------------------------------------
       # Dependencies:
       #------------------------------------
-      - run: sudo apt-get install -y libev-dev
-
-      - name: Checkout libbsate
+      - name: Checkout libbsat
         uses: actions/checkout@v2
         with:
           repository: 'andrew-canaday/libbsat'
@@ -34,14 +35,15 @@ jobs:
         run: ./autogen.sh
         working-directory: ./libbsat
 
-      - name: install libbsat
+      - name: Install libbsat
         run: |
-          ../../libbsat/configure
-          make
-          make check
-          make dist
+          ../../libbsat/configure \
+            --enable-silent-rules \
+            --silent
           sudo make install
+          sudo ldconfig -v || echo "FYI: ldconfig failed"
         working-directory: ./build/bsat
+
 
       #--------------------------------------------------------------------
       # Checkout, configure, make, run tests, and make dist for libyimmo:
@@ -49,7 +51,7 @@ jobs:
       - name: Checkout libyimmo
         uses: actions/checkout@v2
         with:
-          repository: 'andrew-canaday/libyimmo'
+          repository: ${{ github.repository }}
           path: 'libyimmo'
 
       - name: Generate Configuration
@@ -57,7 +59,11 @@ jobs:
         working-directory: ./libyimmo
 
       - name: Configure
-        run: ../../libyimmo/configure --enable-examples --enable-wsgi
+        run: |
+          ../../libyimmo/configure \
+          --enable-examples \
+          --enable-wsgi \
+          --enable-silent-rules
         working-directory: ./build/yimmo
 
       - name: Compile
@@ -71,6 +77,12 @@ jobs:
           LD_LIBRARY_PATH: /usr/local/lib
         working-directory: ./build/yimmo
 
-      - name: Dist Tarball
-        run: make dist
+      #--------------------------------------------------------------------
+      # Check distribution
+      #--------------------------------------------------------------------
+      - name: Run Distribution Checks
+        run: |
+          make distcheck || find . -ipath "*test*" -and -iname "*.log" -exec cat '{}' \;
+          make dist
         working-directory: ./build/yimmo
+

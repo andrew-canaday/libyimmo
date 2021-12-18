@@ -26,13 +26,19 @@
 #
 #-------------------------------------------------------------------------------
 
+. /yimmo/util/bash/ymo-utils.sh
 
-__thisdir="${0%/*}"
-__repodir="${__thisdir%/*}"
+hr '='
+log_info "Yimmo WebSockets Tests"
+hr '-'
 
-find "${__repodir}" \
-    \( -iname "*.c" -or -iname "*.h" \) \
-    -exec uncrustify -c ${__repodir}/uncrustify.cfg \
-    --no-backup '{}' \+
+/yimmo/util/wait-for-svc.sh \
+    'yimmo-ws-server' 8081 '/status' \
+    60 5
 
+log_info
+/opt/pypy/bin/wstest \
+    -m fuzzingclient \
+    -s /config/fuzzingclient.json
 
+log_info 'Done'

@@ -55,10 +55,13 @@ ymo_status_t ymo_net_send_buckets(int fd, ymo_bucket_t** head_p)
     /* Add all our buckets to the iovec: */
     while( current && i < YMO_BUCKET_MAX_IOVEC )
     {
-        out_vec[i].iov_base = (void*)(current->data + current->bytes_sent);
-        out_vec[i].iov_len = current->len - current->bytes_sent;
-        to_send += out_vec[i].iov_len;
-        ++i;
+        /* Skip empty buckets: */
+        if( current->len ) {
+            out_vec[i].iov_base = (void*)(current->data + current->bytes_sent);
+            out_vec[i].iov_len = current->len - current->bytes_sent;
+            to_send += out_vec[i].iov_len;
+            ++i;
+        }
 
         current = current->next;
     }

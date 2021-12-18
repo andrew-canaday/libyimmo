@@ -29,7 +29,6 @@
 
 /** Default TCP accept waitlist length. */
 #define HTTP_DEFAULT_LISTEN_BACKLOG 100
-#include "ymo_config.h"
 
 #include "ymo_log.h"
 #include "ymo_http.h"

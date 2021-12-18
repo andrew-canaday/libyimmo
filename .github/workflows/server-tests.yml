@@ -1,0 +1,103 @@
+name: Server Tests
+on: [push]
+jobs:
+  run_server_tests:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    env:
+      LD_LIBRARY_PATH: /usr/local/lib
+    steps:
+      - name: Checkout libyimmo
+        uses: actions/checkout@v2
+        with:
+          repository: ${{ github.repository }}
+          path: 'libyimmo'
+
+      #------------------------------------
+      # Setup:
+      #------------------------------------
+      - name: Set up base system
+        run: |
+          sudo apt update
+          sudo apt-get -qq install -y \
+            libev-dev \
+            apache2-utils \
+            jq
+
+          # Sorry. Very hacky:
+          sudo pip3 install -r ./ci/http/requirements.txt
+        working-directory: ./libyimmo
+
+
+      #--------------------------------------------------------------------
+      # Run Server Tests
+      #--------------------------------------------------------------------
+      - name: Build Test Image
+        run: |
+          docker build \
+            --target yimmo-test \
+            -t yimmo-ci-test:local \
+            -f ./docker/Dockerfile \
+            --target yimmo-test-http \
+            .
+        working-directory: ./libyimmo
+
+      - name: Start HTTP Server
+        run: |
+          docker run \
+            --detach \
+            --name yimmo-http-server \
+            -e YIMMO_LOG_LEVEL=WARNING \
+            -e YIMMO_WSGI_NO_PROC=2 \
+            -e YIMMO_WSGI_NO_THREADS=2 \
+            -p 8081:8081 \
+            yimmo-ci-test:local
+
+          # HACK: wait for the server to come up:
+          # (Probably: use docker compose...)
+          ./util/wait-for-svc.sh \
+            '127.0.0.1' 8081 'status' \
+            30 1
+        working-directory: ./libyimmo
+
+      - name: Run HTTP 1.0 Tests
+        run: |
+          # Run tests against the server:
+          ./ci/http/test_http_1_0_basic.sh
+        working-directory: ./libyimmo
+
+      - name: Run HTTP 1.1 Tests
+        run: |
+          pytest -v --disable-warnings ./ci/http
+        working-directory: ./libyimmo
+
+      - name: Run Apache Bench
+        run: |
+          # Hit it with some load (hacky / not a load test!):
+          YMO_NO_CLIENTS=5000 \
+          YMO_TEST_URL='http://127.0.0.1:8081/echo/headers' \
+          ./util/clients/run-ab.sh
+        working-directory: ./libyimmo
+
+      - name: Stop HTTP Server
+        run: |
+          # Shut down the test server:
+          docker stop yimmo-http-server
+          docker rm yimmo-http-server
+        working-directory: ./libyimmo
+
+      #--------------------------------------------------------------------
+      # WebSockets: Run Autobahn Tests
+      # (TODO: move to separate workflow!)
+      #--------------------------------------------------------------------
+      - name: Run Autobahn Test Suite
+        run: |
+          mkdir -p ./reports
+          docker compose up --abort-on-container-exit
+          docker compose down
+          ./autobahn-json-summary.sh ./reports/servers/index.json
+
+        working-directory: ./libyimmo/ci/ws
+

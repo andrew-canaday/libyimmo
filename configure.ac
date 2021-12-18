@@ -19,16 +19,16 @@
 ##
 ##==============================================================================
 
-FLAMBORP="asdf"
-
 ##-----------------------------
 ##           Init:
 ##-----------------------------
 YMO_BOX([Init])
 # NOTE: This is the PACKAGE version (SemVer), NOT the ABI version (libtool):
 AC_INIT(
-    [libyimmo], [0.0.4],
-    [andrew.canaday@gmail.com],[libyimmo],
+    [libyimmo],
+    m4_esyscmd([printf "${YIMMO_VERSION:-"0.1.0"}"]),
+    [andrew.canaday@gmail.com],
+    m4_esyscmd([printf "${YIMMO_TARNAME:-"libyimmo"}"]),
     [https://github.com/andrew-canaday/libyimmo])
 AC_CONFIG_AUX_DIR([./build-aux])
 AC_CONFIG_MACRO_DIR([m4])
@@ -52,6 +52,8 @@ m4_pushdef([AC_MSG_RESULT], [{
         printf "${ymo_color_r}" >&AS_MESSAGE_FD
     }dnl
 ])
+
+AM_INIT_AUTOMAKE([-Wall foreign])
 
 ##-----------------------------
 ##         Metadata:
@@ -78,11 +80,11 @@ AC_SUBST([PACKAGE_SUMMARY],["Lightweight socket server framework"])
 # - when it would be a "major level" release: bump current; age = revision = 0
 #
 # For more info, see:
-# - https://www.gnu.org/software/coretool/manual/html_node/Updating-version-info.html
+# - https://www.gnu.org/software/libtool/manual/html_node/Updating-version-info.html
 # - https://autotools.io/coretool/version.html
-AC_SUBST([YMO_ABI_CURRENT],[0],[Yimmo libtool ABI current])
-AC_SUBST([YMO_ABI_AGE],[0],[Yimmo libtool ABI age])
-AC_SUBST([YMO_ABI_REVISION],[4],[Yimmo libtool ABI revision])
+AC_SUBST([YMO_ABI_CURRENT],[1],[Yimmo libtool ABI current])
+AC_SUBST([YMO_ABI_REVISION],[0],[Yimmo libtool ABI revision])
+AC_SUBST([YMO_ABI_AGE],[1],[Yimmo libtool ABI age])
 AC_SUBST([YMO_LIB_VERSION],["$YMO_ABI_CURRENT:$YMO_ABI_REVISION:$YMO_ABI_AGE"])
 
 ## Package Version:
@@ -279,8 +281,6 @@ AC_CONFIG_FILES([
     wsgi/Makefile
     benchmarks/Makefile
     src/protocol/Makefile
-    tests/Makefile
-    tests/http/Makefile
     ])
 
 ## libyimmo core output files:

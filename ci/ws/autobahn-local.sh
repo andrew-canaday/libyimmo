@@ -26,13 +26,28 @@
 #
 #-------------------------------------------------------------------------------
 
+thisdir="$( cd ${0%/*} ; echo "${PWD}" )"
 
-__thisdir="${0%/*}"
-__repodir="${__thisdir%/*}"
+AB_CONFIG_DIR="${AB_CONFIG_DIR:-"$( cd ${thisdir} ; echo ${PWD} )/config"}"
+AB_REPORTS_DIR="${AB_REPORTS_DIR:-"${PWD}/reports"}"
+AB_NAME="${AB_NAME:-"yimmo-autobahn-test"}"
 
-find "${__repodir}" \
-    \( -iname "*.c" -or -iname "*.h" \) \
-    -exec uncrustify -c ${__repodir}/uncrustify.cfg \
-    --no-backup '{}' \+
+mkdir -p "${AB_REPORTS_DIR}"
 
-
+# Sorry, again:
+if [ "x$1" == "xstop" ]; then
+    docker stop "${AB_NAME}"
+else
+    docker run -t ${AB_DOCKER_OPTS} \
+        --rm \
+        --name "${AB_NAME}" \
+        --entrypoint "${AB_ENTRYPOINT:-"/opt/pypy/bin/wstest"}" \
+        --add-host=host.docker.internal:host-gateway \
+        -v "${AB_CONFIG_DIR}:/config" \
+        -v "${AB_REPORTS_DIR}:/reports" \
+        -p 9001:9001 \
+        --name autobahn-tests \
+        crossbario/autobahn-testsuite \
+            -m fuzzingclient \
+            -s "${FUZZINGCLIENT_CONFIG:-"/config/fuzzingclient.local.json"}"
+fi

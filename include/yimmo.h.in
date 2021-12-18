@@ -195,6 +195,7 @@ typedef struct ymo_server_config {
     in_port_t                   port;           /* listen port */
     ymo_server_config_flags_t   flags;          /* server settings */
     int                         listen_backlog; /* TCP listen backlog */
+    int                         use_tls;        /* 1: enabled; 0; disabled */
     const char*                 cert_path;      /* Optional TLS cert */
     const char*                 key_path;       /* Optional TLS private key*/
 } ymo_server_config_t;

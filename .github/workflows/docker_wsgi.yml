@@ -1,9 +1,12 @@
-name: Yimmo-WSGI Docker Image
+name: Publish Yimmo-WSGI Docker Image
 on:
   push:
     branches:
       - main
+    tags:
+      - 0.*
 jobs:
+  # TODO: Make reusable workflow:
   docker_build_default_wsgi:
     runs-on: ubuntu-latest
     defaults:
@@ -22,5 +25,6 @@ jobs:
         with:
           push: true
           tags: andrewcanaday/yimmo-wsgi:0-alpha
-          file: ./docker/Dockerfile.wsgi
+          file: ./docker/Dockerfile
+          target: yimmo-wsgi
 

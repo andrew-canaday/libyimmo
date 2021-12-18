@@ -1,0 +1,15 @@
+{
+  "options": {
+    "connections": 1000,
+    "batchsize": 500,
+    "batchdelay": 5,
+    "retrydelay": 10
+  },
+  "servers": [
+    {
+      "name": "yimmo-ws",
+      "uri": "ws://host.docker.internal:8081",
+      "desc": "Yimmo WebSocket Echo Server"
+    }
+  ]
+}

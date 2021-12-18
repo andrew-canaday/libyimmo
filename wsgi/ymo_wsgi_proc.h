@@ -63,6 +63,7 @@ struct ymo_wsgi_proc {
     long    no_wsgi_proc;
     long    no_wsgi_threads;
     int     restart_count;
+    long    port;
 
     /* Process Type: */
     int  is_main;
@@ -80,9 +81,6 @@ struct ymo_wsgi_proc {
     ymo_wsgi_worker_t* w_threads;
 
     /* All processes: */
-#if YMO_WSGI_REUSEPORT
-    in_port_t       http_port;
-#endif /* YMO_WSGI_REUSEPORT */
     ymo_server_t*   http_srv;
     struct ev_loop* loop;
     const char*     module;

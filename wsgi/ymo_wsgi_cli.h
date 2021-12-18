@@ -31,8 +31,10 @@
 #ifndef YMO_WSGI_GREETING_H
 #define YMO_WSGI_GREETING_H
 
+#include "ymo_wsgi_proc.h"
+
 /** TEMP: issue a greeting at yimmo-wsgi startup. */
-void issue_startup_msg();
+void issue_startup_msg(ymo_wsgi_proc_t* w_proc);
 
 #endif /* YMO_WSGI_GREETING_H */
 

@@ -27,12 +27,29 @@
 #-------------------------------------------------------------------------------
 
 
-__thisdir="${0%/*}"
-__repodir="${__thisdir%/*}"
+. ${0%/*}/bash/ymo-utils.sh
 
-find "${__repodir}" \
-    \( -iname "*.c" -or -iname "*.h" \) \
-    -exec uncrustify -c ${__repodir}/uncrustify.cfg \
-    --no-backup '{}' \+
+WSVC_HOST="${1}" ; shift
+WSVC_PORT="${1}" ; shift
+WSVC_PATH="${1}" ; shift
+WSVC_NO_ITER="${1}" ; shift
+WSVC_DELAY="${1}" ; shift
 
+WSVC_URL="http://${WSVC_HOST}:${WSVC_PORT}/${WSVC_PATH}"
+
+log_info "Waiting on service to come up on \"${WSVC_URL}\""
+for i in $( seq ${WSVC_NO_ITER} ); do
+    log_info "Check $i / ${WSVC_NO_ITER}"
+    curl -s -f \
+        http://${WSVC_HOST}:${WSVC_PORT}/${WSVC_PATH} \
+            -o "Got response:\n%{json}\n\n" \
+        >&2 \
+        && exit 0
+
+    log_info "Service not up. Waiting ${WSVC_DELAY}s"
+    sleep "${WSVC_DELAY}"
+done
+
+log_info "Service failed to come up after ${WSVC_NO_ITER} tries. Failing."
+exit 1
 

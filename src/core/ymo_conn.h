@@ -47,13 +47,8 @@
  * Types
  *---------------------------------------------------------------*/
 
-YMO_ENUM8_TYPEDEF(conn_state) {
-    CONNECTION_STATE_NO_CONNECTION,
-    CONNECTION_STATE_OPEN,
-    CONNECTION_STATE_CLOSED,
-    CONNECTION_STATE_CLOSING,
-} YMO_ENUM8_AS(conn_state_t);
-
+#if YMO_ENABLE_TLS
+/* TODO: I think we can use the state SSL provides. */
 YMO_ENUM8_TYPEDEF(conn_ssl_state) {
     CONNECTION_SSL_NONE,
     CONNECTION_SSL_HANDSHAKE,
@@ -62,24 +57,43 @@ YMO_ENUM8_TYPEDEF(conn_ssl_state) {
     CONNECTION_SSL_CLOSED,
     CONNECTION_SSL_ERROR,
 } YMO_ENUM8_AS(conn_ssl_state_t);
+#endif /* YMO_ENABLE_TLS */
+
+/**
+ * .. :c:enum:: `ymo_conn_state_t`
+ *
+ *    :CONNECTION_OPEN: Connection is established.
+ *    :CONNECTION_CLOSING: Shutdown has been invoked. Waiting for clean close.
+ *    :CONNECTION_CLOSED: File descriptor has been closed.
+ *    :CONNECTION_ERROR: Connection is in an error state and being automatically terminated.
+ *
+ */
+
+YMO_ENUM8_TYPEDEF(ymo_conn_state) {
+    CONNECTION_OPEN,
+    CONNECTION_CLOSING,
+    CONNECTION_CLOSED,
+    CONNECTION_ERROR,
+} YMO_ENUM8_AS(ymo_conn_state_t);
 
 /** Internal structure used to manage a yimmo conn.
  */
 struct ymo_conn {
-    ymo_server_t*        server;       /* Pointer to managing server */
-    ymo_proto_t*         proto;        /* Current protocol managing this connection */
-    void*                proto_data;   /* Protocol-specific connection data */
-    void*                user;         /* User-code per-connection data */
-    bsat_toq_t*          toq;          /* HACK HACK: fix cancel for now. */
-    bsat_timeout_t       idle_timeout; /* Used to disconnect idle sessions */
-    uuid_t               id;           /* Unique ID */
-    int                  fd;           /* The underlying file descriptor */
-    int                  ev_flags;     /* Used to store EV_READ/EV_WRITE flags */
-    struct ev_io         w_read;       /* Per-connection read watcher */
-    struct ev_io         w_write;      /* Per-connection write watcher */
+    ymo_server_t*     server;          /* Pointer to managing server */
+    ymo_proto_t*      proto;           /* Current protocol managing this connection */
+    void*             proto_data;      /* Protocol-specific connection data */
+    void*             user;            /* User-code per-connection data */
+    bsat_toq_t*       toq;             /* HACK HACK: fix cancel for now. */
+    bsat_timeout_t    idle_timeout;    /* Used to disconnect idle sessions */
+    uuid_t            id;              /* Unique ID */
+    int               fd;              /* The underlying file descriptor */
+    int               ev_flags;        /* Used to store EV_READ/EV_WRITE flags */
+    struct ev_io      w_read;          /* Per-connection read watcher */
+    struct ev_io      w_write;         /* Per-connection write watcher */
+    ymo_conn_state_t  state;           /* Connection state */
 #if YMO_ENABLE_TLS
-    SSL*                 ssl;          /* Optional SSL connection info */
-    conn_ssl_state_t     ssl_state;    /* Track SSL state */
+    SSL*              ssl;             /* Optional SSL connection info */
+    conn_ssl_state_t  ssl_state;       /* Track SSL state */
 #endif /* YMO_ENABLE_TLS */
 #if defined(YMO_CONN_LOCK) && (YMO_CONN_LOCK == 1)
     pthread_mutexattr_t  lattr;        /* Per-connection mutex attributes */
@@ -150,8 +164,12 @@ void ymo_conn_tx_now(ymo_conn_t* conn);
 
 
 /** Close a conn object.
+ *
+ * :param conn: The connection to close.
+ * :param clean: if ``1`` perform a clean close using ``shutdown``. If ``0``, just close the file descriptor.
+ * :returns: the connection state after invocation.
  */
-void ymo_conn_close(ymo_conn_t* conn);
+ymo_conn_state_t ymo_conn_close(ymo_conn_t* conn, int clean);
 
 
 /** Free a conn object.

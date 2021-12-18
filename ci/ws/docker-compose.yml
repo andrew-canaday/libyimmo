@@ -1,4 +1,3 @@
-#!/usr/bin/env bash
 #===============================================================================
 #
 # NOTICE: THIS AUXILIARY FILE IS LICENSED USING THE MIT LICENSE.
@@ -25,14 +24,20 @@
 # IN THE SOFTWARE.
 #
 #-------------------------------------------------------------------------------
+version: "3.9"
+services:
+  yimmo-ws-server:
+    image: yimmo-ci-test:local
+    ports:
+      - "8081:8081"
+    entrypoint: ["/usr/local/bin/yimmo-example-ws"]
 
-
-__thisdir="${0%/*}"
-__repodir="${__thisdir%/*}"
-
-find "${__repodir}" \
-    \( -iname "*.c" -or -iname "*.h" \) \
-    -exec uncrustify -c ${__repodir}/uncrustify.cfg \
-    --no-backup '{}' \+
-
+  autobahn-ws-client:
+    image: crossbario/autobahn-testsuite
+    volumes:
+      - ../../:/yimmo
+      - ./config:/config
+      - ./reports:/reports
+    entrypoint: ["/bin/bash", "/yimmo/ci/ws/autobahn-entrypoint.sh"]
+    tty: true
 

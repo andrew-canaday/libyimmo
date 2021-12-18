@@ -37,6 +37,9 @@
 #define PTR32_FLOOR(p) (((uintptr_t)p) & ~PTR32_ALIGN)
 #define PTR32_CEIL(p) ((((uintptr_t)p) + PTR32_ALIGN) & ~PTR32_ALIGN)
 
+#define YMO_WS_FLAGS_RESERVED(f) \
+    (f & (YMO_WS_FLAG_RSV1 | YMO_WS_FLAG_RSV2 | YMO_WS_FLAG_RSV3) )
+
 
 /*---------------------------------------------------------------*
  *  Yimmo WS Parse Functions:
@@ -46,7 +49,24 @@ ssize_t
 ymo_ws_parse_op(ymo_ws_session_t* session, char* buffer, size_t len)
 {
     session->frame_in.flags.packed = *buffer;
+
+    /* Fail on reserved bits in frame: */
+#if YMO_WS_RFC6455_STRICT
+    if( YMO_WS_FLAGS_RESERVED(session->frame_in.flags.packed) ) {
+        ymo_log_debug("Message uses reserved flag bits: 0x%x",
+                session->frame_in.flags.packed);
+        errno = EBADMSG;
+        return -1;
+    }
+#endif /* YMO_WS_RFC6455_STRICT */
+
     switch( session->frame_in.flags.op_code ) {
+        /* --- YMO_WS_OP_CLOSE: ---
+         * (a close is always a close)
+         */
+        case YMO_WS_OP_CLOSE:
+            break;
+
         /* --- WS_MSG_CONTINUATION: --- */
         case YMO_WS_OP_CONTINUATION:
             if( session->msg_state != WS_MSG_CONTINUE ) {
@@ -62,8 +82,6 @@ ymo_ws_parse_op(ymo_ws_session_t* session, char* buffer, size_t len)
         case YMO_WS_OP_TEXT:
         /* fallthrough */
         case YMO_WS_OP_BINARY:
-        /* fallthrough */
-        case YMO_WS_OP_CLOSE:
         /* fallthrough */
         case YMO_WS_OP_PING:
         /* fallthrough */
@@ -110,6 +128,7 @@ ymo_ws_parse_len(ymo_ws_session_t* session, char* buffer, size_t len)
     if( msg_len <= 125 ) {
         session->frame_in.len = msg_len;
         session->frame_in.parse_state = WS_PARSE_MASKING_KEY;
+        goto skip_op_check;
     }
     /* 126 ==> 2 bytes follow for length: */
     else if( msg_len == 126 ) {
@@ -121,6 +140,17 @@ ymo_ws_parse_len(ymo_ws_session_t* session, char* buffer, size_t len)
         session->frame_in.len_idx = 4;
         session->frame_in.parse_state = WS_PARSE_LEN_EXTENDED;
     }
+
+    /* Control frames cannot have an extended length: */
+    if( (session->frame_in.flags.packed & 0x08) ) {
+        ymo_log_debug(
+                "Got op 0x%x with extended length.",
+                session->frame_in.flags.op_code);
+        errno = EBADMSG;
+        return -1;
+    }
+
+skip_op_check:
     return 1;
 }
 
@@ -172,7 +202,25 @@ ymo_ws_parse_masking_key(ymo_ws_session_t* session, char* buffer, size_t len)
                     session->frame_in.masking_key[1],
                     session->frame_in.masking_key[2],
                     session->frame_in.masking_key[3]);
-            session->frame_in.parse_state = WS_PARSE_PAYLOAD;
+
+            /* The spec says the length *can* be zero, so...if the
+             * frame header said the payload length is zero, we
+             * can skip the payload parsing:
+             */
+            if( session->frame_in.len ) {
+                session->frame_in.parse_state = WS_PARSE_PAYLOAD;
+            } else {
+                /* HACK: add a zero-length bucket so the callback is
+                 * still invoked:
+                 *
+                 * (NOTE: are we sure recv_head is empty?)
+                 */
+                session->recv_head = ymo_bucket_create(
+                        NULL, NULL,
+                        NULL, 0,
+                        NULL, 0);
+                session->frame_in.parse_state = WS_PARSE_COMPLETE;
+            }
             goto masking_parse_done;
         }
 
@@ -210,7 +258,11 @@ ymo_ws_parse_payload(ymo_ws_session_t* session, char* buffer, size_t len)
     size_t parse_remain = parse_len;
     char* parse_end = buffer + parse_len;
     buff_ptr_t current = {.c = buffer};
+
     /* Unmask: */
+    /* Follow up from 2021:
+     * Haven't we already rejected the message if it wasn't masked?
+     */
     if( session->frame_in.masked ) {
 
         /* Do the initial round of bytes before the alignment boundary: */

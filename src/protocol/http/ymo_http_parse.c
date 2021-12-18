@@ -40,7 +40,7 @@
  *---------------------------------------------------------------*/
 #define STD_HTTP_VERSION_STR_LEN 8
 
-#define YMO_HTTP_TRACE_PARSE 1
+#define YMO_HTTP_TRACE_PARSE 0
 #if defined(YMO_HTTP_TRACE_PARSE) && YMO_HTTP_TRACE_PARSE == 1
 #define HTTP_PARSE_TRACE(fmt, ...) ymo_log_trace(fmt, __VA_ARGS__);
 

@@ -35,6 +35,7 @@
 
 #include "ymo_wsgi_mod.h"
 #include "ymo_wsgi_cli.h"
+#include "ymo_wsgi_proc.h"
 
 #ifndef __STDC_NO_ATOMICS__
 #include <stdatomic.h>
@@ -80,7 +81,7 @@ typedef struct backend_info {
 /*---------------------------------*
  *         Functions:
  *---------------------------------*/
-void issue_startup_msg()
+void issue_startup_msg(ymo_wsgi_proc_t* w_proc)
 {
     puts(GREETING_START);
     printf("Lib version: %i.%i.%i\n",
@@ -152,7 +153,7 @@ void issue_startup_msg()
 #endif /* YMO_WSGI_PRINT_EXTRA_INFO */
 
     /* Server Info: */
-    printf("Http Port: %i\n", DEFAULT_HTTP_PORT);
+    printf("Http Port: %i\n", w_proc->port);
     printf("PID: %i\n", (int)getpid());
     puts(GREETING_END);
     return;

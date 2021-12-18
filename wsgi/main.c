@@ -94,7 +94,7 @@ int main(int argc, char** argv)
     w_proc.module = getenv("YIMMO_WSGI_MODULE");
     w_proc.app = getenv("YIMMO_WSGI_APP");
 
-    if( !w_proc.module || !w_proc.app) {
+    if( !w_proc.module || !w_proc.app ) {
         /* If we didn't get app and module through env, check command line */
         if( argc < 3 ) {
             fprintf(stderr, "Usage: ymo_wsgi MODULE FUNC\n"
@@ -124,7 +124,8 @@ int main(int argc, char** argv)
     script_name = w_proc.module;
 
     /* Say hello */
-    issue_startup_msg();
+    issue_startup_msg(&w_proc);
+    config_from_env(&w_proc);
     ymo_log_notice("WSGI app: %s", w_proc.app);
 
     /* libev w_proc.loop init: */
@@ -139,7 +140,6 @@ int main(int argc, char** argv)
     if( init_http_server(&w_proc) ) {
         return -1;
     }
-    config_from_env(&w_proc);
 
     if( w_proc.no_wsgi_proc > 1 ) {
         /* TODO: check result */
@@ -160,6 +160,10 @@ int main(int argc, char** argv)
 
 static void config_from_env(ymo_wsgi_proc_t* w_proc)
 {
+    /* Get the port from the env: */
+    long default_port = DEFAULT_HTTP_PORT;
+    ymo_env_as_long("YIMMO_WSGI_PORT", &w_proc->port, &default_port);
+
     /* Get process configuration from env: */
     w_proc->no_wsgi_proc = YIMMO_WSGI_NO_PROC;
     ymo_env_as_long("YIMMO_WSGI_NO_PROC", &w_proc->no_wsgi_proc, NULL);
@@ -201,11 +205,9 @@ static struct ev_loop* get_ev_default_loop(void)
 
 static int init_http_server(ymo_wsgi_proc_t* w_proc)
 {
-#if YMO_WSGI_REUSEPORT
-    w_proc->http_port = DEFAULT_HTTP_PORT;
-#else
-    in_port_t http_port = DEFAULT_HTTP_PORT;
-    w_proc->http_srv = ymo_wsgi_server_init(w_proc->loop, http_port, w_proc);
+#if !YMO_WSGI_REUSEPORT
+    w_proc->http_srv = ymo_wsgi_server_init(
+            w_proc->loop, w_proc->port, w_proc);
 
     if( !w_proc->http_srv ) {
         ymo_log_fatal("Failed to create HTTP server: %s", strerror(errno));

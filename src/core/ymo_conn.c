@@ -143,8 +143,7 @@ ymo_status_t ymo_conn_send_buckets(
         return ymo_net_send_buckets(conn->fd, head_p);
     }
 
-    ymo_bucket_t* head = *head_p;
-    ymo_bucket_t* cur = head;
+    ymo_bucket_t* cur = *head_p;
     size_t bytes_sent = 0;
 
     do {
@@ -157,7 +156,6 @@ ymo_status_t ymo_conn_send_buckets(
             cur->bytes_sent += bytes_sent;
 
             if( cur->bytes_sent < cur->len ) {
-                *head_p = cur;
                 status = EAGAIN;
                 break;
             }
@@ -206,13 +204,20 @@ void ymo_conn_tx_now(ymo_conn_t* conn)
     return;
 }
 
-void ymo_conn_close(ymo_conn_t* conn)
+ymo_conn_state_t ymo_conn_close(ymo_conn_t* conn, int clean)
 {
-    ymo_conn_cancel_idle_timeout(conn);
-    ymo_conn_rx_enable(conn, 0);
-    ymo_conn_tx_enable(conn, 0);
-    close(conn->fd);
-    return;
+    if( clean && conn->state == CONNECTION_OPEN ) {
+        shutdown(conn->fd, SHUT_WR);
+        ymo_conn_rx_enable(conn, 1);
+        conn->state = CONNECTION_CLOSING;
+    } else {
+        conn->state = CONNECTION_CLOSED;
+        ymo_conn_cancel_idle_timeout(conn);
+        ymo_conn_rx_enable(conn, 0);
+        ymo_conn_tx_enable(conn, 0);
+        close(conn->fd);
+    }
+    return conn->state;
 }
 
 void ymo_conn_free(ymo_conn_t* conn)

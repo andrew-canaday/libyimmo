@@ -1,6 +1,34 @@
 #!/usr/bin/env bash
+#===============================================================================
+#
+# NOTICE: THIS AUXILIARY FILE IS LICENSED USING THE MIT LICENSE.
+#
+# Copyright (c) 2021 Andrew T. Canaday
+# This file is licensed under the MIT license.
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to
+# deal in the Software without restriction, including without limitation the
+# rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+# sell copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+# IN THE SOFTWARE.
+#
+#-------------------------------------------------------------------------------
 
-. ${0%/*}/bash/util.sh
+
+. ${0%/*}/../../util/bash/ymo-utils.sh
+. ${0%/*}/../../util/bash/ymo-curl-test.sh
 
 YMO_HTTP_TEST_URL_ROOT="${1:-"http://127.0.0.1:8081"}"
 TESTS_BUILDDIR="${PWD}"
@@ -10,6 +38,9 @@ TESTS_SRCDIR="$( cd ${0%/*} ; echo ${PWD} )"
 
 CTEST_LOG=${TESTS_BUILDDIR}/${0##*/}.trs
 CTEST_ERR_LOG=${TESTS_BUILDDIR}/${0##*/}.err
+
+> "${CTEST_LOG}"
+> "${CTEST_ERR_LOG}"
 
 log_info "Results file: ${CTEST_LOG}"
 log_info "Error log: ${CTEST_ERR_LOG}"
@@ -23,13 +54,13 @@ test_basic_status() {
 }
 
 test_conn_close() {
-    EXPECT_STATUS="200" \
+    EXPECT_STATUS="200OK200" \
         ctest -0 "${YMO_HTTP_TEST_URL_ROOT}/status" \
         -0 "${YMO_HTTP_TEST_URL_ROOT}/status"
 }
 
 test_keep_alive() {
-    EXPECT_STATUS="200" \
+    EXPECT_STATUS="200OK200" \
         ctest -0 -H 'Connection: keep-alive' "${YMO_HTTP_TEST_URL_ROOT}/status" \
         -0 -H 'Connection: close' "${YMO_HTTP_TEST_URL_ROOT}/status"
 }
@@ -68,8 +99,9 @@ run_tests() {
 
     c_tests=($( grep -o '^test_\w\w*' "${0}" ))
 
-    local c_test test_num
+    local c_test test_num result
 
+    result=0
     echo "1..${#c_tests[@]}"
 
     test_num=1
@@ -81,10 +113,21 @@ run_tests() {
         else
             echo "not ok ${test_num} - ${c_test}"
             printf "    %s\n" "$( tail -n 1 ${CTEST_ERR_LOG} )"
+            result=1
         fi
 
         test_num=$(( test_num + 1 ))
     done
+
+    return $result
 }
 
-run_tests
+if ! run_tests ; then
+    log_error "${0##*/} failed:"
+    printf "\033[00;31;m" >&2
+    cat "${CTEST_ERR_LOG}" >&2
+    printf "\033[00;m" >&2
+    exit 1
+fi
+
+exit 0

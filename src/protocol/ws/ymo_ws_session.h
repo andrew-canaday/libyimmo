@@ -41,6 +41,14 @@
  * Types:
  *---------------------------------------------------------------*/
 
+YMO_ENUM8_TYPEDEF(ws_session_state) {
+    WS_SESSION_CONNECTED,
+    WS_SESSION_CLOSE_RECEIVED,
+    WS_SESSION_EXPECT_CLOSE,
+    WS_SESSION_CLOSED,
+    WS_SESSION_ERROR,
+} YMO_ENUM8_AS(ws_session_state_t);
+
 YMO_ENUM8_TYPEDEF(ws_parse_state) {
     WS_PARSE_OP,
     WS_PARSE_LEN,
@@ -107,14 +115,11 @@ struct ymo_ws_session {
     ymo_bucket_t*        send_head;
     ymo_bucket_t*        send_tail;
 
-    /* TODO: need state for in + out? (combine in/out/closing into uint8_t?) */
-    ws_msg_state_t  msg_state;
+    ws_session_state_t   state;
+    ws_msg_state_t       msg_state;
 
-    /* TODO: convert to ws_session_state enum? */
-    uint8_t  closing;
-
-    /* Buffered messages (if no recv callback is defined, we buffer the
-     * whole message, up to WS_MSG_LEN_MAX bytes and deliver that):
+    /* Buffered messages (if buffering is enabled), we buffer the
+     * whole message — up to WS_MSG_LEN_MAX bytes — and deliver that):
      */
     char*   msg;
     char*   msg_end;

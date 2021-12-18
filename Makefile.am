@@ -26,6 +26,5 @@ SUBDIRS=\
 	examples \
 	wsgi \
 	benchmarks \
-	tests \
 	doc
 
