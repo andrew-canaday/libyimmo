@@ -46,6 +46,17 @@
 #include "ymo_ws_parse.h"
 #include "ymo_ws_session.h"
 
+/*======================================================================
+ * !!! TODO:
+ *
+ * Recent hacking has made a pretty gross read out of a bunch of
+ * this stuff!!
+ *
+ * Clean it up!
+ *
+ * (WIP!)
+ *----------------------------------------------------------------------*/
+
 #define YMO_WS_SHOULD_CLOSE_ON_WRITE(s) \
     ( (s->state == WS_SESSION_CLOSED) || \
       (s->state == WS_SESSION_CLOSE_RECEIVED) || \
@@ -231,8 +242,7 @@ static ymo_status_t ws_buffer_msg(
     return r_msg;
 }
 
-static ymo_status_t
-issue_ws_callbacks(
+static ymo_status_t issue_ws_callbacks(
         ymo_ws_recv_cb_t recv_cb,
         ymo_ws_session_t* session)
 {
@@ -318,8 +328,7 @@ static ssize_t ws_err_close(
         const char* cause,         /* <-- TEMP! Don't dig it... */
         ymo_status_t err_val,
         ymo_ws_session_t* session,
-        uint16_t reason,
-        ssize_t r_val)
+        uint16_t reason)
 {
     ymo_log_debug("Please close due to: %s (%s)",
             strerror(err_val), cause);
@@ -336,7 +345,6 @@ static ssize_t ws_err_close(
      */
     errno = EAGAIN;
     return -1;
-    return r_val;
 }
 
 
@@ -388,6 +396,56 @@ static inline int is_reason_valid(uint16_t reason)
 }
 
 
+static ssize_t ws_handle_close(
+        ymo_ws_session_t* session, size_t len)
+{
+    /* If we weren't expecting a close, send one back: */
+    if( session->state != WS_SESSION_EXPECT_CLOSE ) {
+        uint16_t reason;
+        if( !ws_get_reason(session, &reason) ) {
+            ymo_log_debug(
+                    "Client initiatied close with 0x%x / reason: %hu",
+                    YMO_WS_OP_CLOSE, reason);
+
+            if( !is_reason_valid(reason) ) {
+                return ws_err_close("Invalid reason code on close",
+                        EBADMSG, session, 1002);
+            }
+        } else {
+            ymo_log_debug(
+                    "Client initiatied close with 0x%x", YMO_WS_OP_CLOSE);
+        }
+
+        ymo_status_t cb_status = issue_ws_callbacks(ws_echo_cb, session);
+        session->state = WS_SESSION_CLOSE_RECEIVED;
+
+        /* Try to send immediately and then let the server
+         * know we're ready to terminate. If we get EAGAIN
+         * on send, the client will be stuck with TIME_WAIT.
+         *
+         * C'est la vie.
+         */
+        ymo_conn_tx_now(session->conn);
+
+        /* Prompt another read to listen for the close sequence: */
+        errno = EAGAIN;
+        return -1;
+    } else {
+        /* If we were expecting a close, call it a day by resetting errno
+         * and consuming the remaining bytes by returning len:
+         */
+        ymo_conn_close(session->conn, 1);
+        errno = 0;
+        return len;
+    }
+
+    /* Else, something's gone awry: */
+    errno = EBADMSG;
+    return -1;
+}
+
+
+
 /* WS Protocol read callback: */
 ssize_t ymo_proto_ws_read(
         void* proto_data,
@@ -409,7 +467,7 @@ ws_parse_entry:
         return len;
     }
 
-    /* If we're closing: ignore everything else? */
+    /* If we're in an error state: ignore everything. */
     if( session->state == WS_SESSION_ERROR ) {
         ymo_log_trace("Ignoring %zu bytes due to error state.", len);
         return len;
@@ -440,7 +498,7 @@ ws_parse_entry:
             default:
                 return ws_err_close(
                         "Unknown parser state",
-                        EBADMSG, session, 1002, len_in);
+                        EBADMSG, session, 1002);
                 break;
         }
 
@@ -451,7 +509,7 @@ ws_parse_entry:
         } else {
             return ws_err_close(
                     "Parser error",
-                    errno, session, 1002, len_in);
+                    errno, session, 1002);
         }
     } while( len );
 
@@ -476,51 +534,13 @@ ws_parse_complete:
                         cb_status = issue_ws_callbacks(p_data->recv_cb, session);
                     } else {
                         /* Presumably, we already sent a close? */
-#if 0
-                        return ws_err_close(
-                                "Recieved message on closing connection,"
-                                EPIPE, session, 1002, len_in);
-#endif
                         return len_in;
                     }
                     break;
 
                 /* --- SERVER callback: --- */
                 case YMO_WS_OP_CLOSE:
-                    if( session->state != WS_SESSION_CLOSE_RECEIVED ) {
-                        /* TODO: It's POSSIBLE that a two byte message could
-                         * be in two different buckets (but unlikely).
-                         *
-                         * This is a fast hack:
-                         */
-                        uint16_t reason;
-                        if( !ws_get_reason(session, &reason) ) {
-                            ymo_log_debug(
-                                    "Client initiatied close with 0x%x / reason: %hu",
-                                    YMO_WS_OP_CLOSE, reason);
-
-                            if( !is_reason_valid(reason) ) {
-                                return ws_err_close(
-                                        "Invalid reason code on close",
-                                        EBADMSG, session, 1002, len_in);
-                            }
-                        } else {
-                            ymo_log_debug(
-                                    "Client initiatied close with 0x%x", YMO_WS_OP_CLOSE);
-                        }
-
-                        cb_status = issue_ws_callbacks(ws_echo_cb, session);
-                        session->state = WS_SESSION_CLOSE_RECEIVED;
-
-                        /* Try to send immediately and then let the server
-                         * know we're ready to terminate. On EAGAIN, the
-                         * client will be stuck with TIME_WAIT.
-                         * C'est la vie.
-                         */
-                        ymo_conn_tx_now(session->conn);
-                        return len_in; /* Consume any pending data */
-                        break;
-                    }
+                    return ws_handle_close(session, len_in);
                     break;
                 case YMO_WS_OP_PING:
                     cb_status = issue_ws_callbacks(ws_echo_cb, session);
@@ -534,7 +554,7 @@ ws_parse_complete:
                 default:
                     return ws_err_close(
                             "Unknown op code",
-                            EINVAL, session, 1002, len_in);
+                            EINVAL, session, 1002);
                     break;
             }
 
@@ -544,7 +564,7 @@ ws_parse_complete:
             } else {
                 return ws_err_close(
                         "Callback returned an error",
-                        cb_status, session, 1002, len_in);
+                        cb_status, session, 1002);
             }
         }
     }

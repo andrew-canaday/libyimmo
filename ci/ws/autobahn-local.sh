@@ -28,26 +28,38 @@
 
 thisdir="$( cd ${0%/*} ; echo "${PWD}" )"
 
+. ${thisdir}/../../util/bash/ymo-utils.sh
+
 AB_CONFIG_DIR="${AB_CONFIG_DIR:-"$( cd ${thisdir} ; echo ${PWD} )/config"}"
 AB_REPORTS_DIR="${AB_REPORTS_DIR:-"${PWD}/reports"}"
 AB_NAME="${AB_NAME:-"yimmo-autobahn-test"}"
 
 mkdir -p "${AB_REPORTS_DIR}"
 
-# Sorry, again:
-if [ "x$1" == "xstop" ]; then
-    docker stop "${AB_NAME}"
-else
-    docker run -t ${AB_DOCKER_OPTS} \
-        --rm \
-        --name "${AB_NAME}" \
-        --entrypoint "${AB_ENTRYPOINT:-"/opt/pypy/bin/wstest"}" \
-        --add-host=host.docker.internal:host-gateway \
-        -v "${AB_CONFIG_DIR}:/config" \
-        -v "${AB_REPORTS_DIR}:/reports" \
-        -p 9001:9001 \
-        --name autobahn-tests \
-        crossbario/autobahn-testsuite \
-            -m fuzzingclient \
-            -s "${FUZZINGCLIENT_CONFIG:-"/config/fuzzingclient.local.json"}"
+hr '='
+log_info "Autobahn Tests:"
+docker run -t ${AB_DOCKER_OPTS} \
+    --rm \
+    --name "${AB_NAME}" \
+    --entrypoint "${AB_ENTRYPOINT:-"/opt/pypy/bin/wstest"}" \
+    --add-host=host.docker.internal:host-gateway \
+    -v "${AB_CONFIG_DIR}:/config" \
+    -v "${AB_REPORTS_DIR}:/reports" \
+    -p 9001:9001 \
+    --name autobahn-tests \
+    crossbario/autobahn-testsuite \
+        -m fuzzingclient \
+        -s "${FUZZINGCLIENT_CONFIG:-"/config/fuzzingclient.local.json"}"
+
+hr '-'
+log_info 'Results'
+${thisdir}/autobahn-json-summary.sh "${AB_REPORTS_DIR}/servers/index.json"
+
+# TODO: remove duration before diffing...
+if [ "x${AB_DO_DIFF}" == "xyes" ]; then
+    hr '-'
+    log_info 'Diff:'
+    diff ${thisdir}/results/yimmo-ws-results.json "${AB_REPORTS_DIR}/servers/index.json"
 fi
+hr '.'
+

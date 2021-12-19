@@ -169,7 +169,6 @@ ymo_status_t ymo_conn_send_buckets(
                 status = EAGAIN;
                 break;
             } else {
-                conn->ssl_state = CONNECTION_SSL_ERROR;
                 ymo_log_debug(
                         "SSL write for connection on fd %i "
                         "failed error code %i: (%s)",
@@ -206,12 +205,12 @@ void ymo_conn_tx_now(ymo_conn_t* conn)
 
 ymo_conn_state_t ymo_conn_close(ymo_conn_t* conn, int clean)
 {
-    if( clean && conn->state == CONNECTION_OPEN ) {
+    if( clean && conn->state == YMO_CONN_OPEN ) {
         shutdown(conn->fd, SHUT_WR);
         ymo_conn_rx_enable(conn, 1);
-        conn->state = CONNECTION_CLOSING;
+        conn->state = YMO_CONN_CLOSING;
     } else {
-        conn->state = CONNECTION_CLOSED;
+        conn->state = YMO_CONN_CLOSED;
         ymo_conn_cancel_idle_timeout(conn);
         ymo_conn_rx_enable(conn, 0);
         ymo_conn_tx_enable(conn, 0);

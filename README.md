@@ -205,20 +205,23 @@ is a two-byte "OK" status endpoint... The RSS stays under `3,870` for the
 duration of the test, though).
 
 ```
+Server Hostname:        127.0.0.1
+Server Port:            8081
+
 Document Path:          /status
 Document Length:        2 bytes
 
 Concurrency Level:      32
-Time taken for tests:   8.533 seconds
+Time taken for tests:   8.441 seconds
 Complete requests:      2000000
 Failed requests:        0
 Keep-Alive requests:    2000000
 Total transferred:      178000000 bytes
 HTML transferred:       4000000 bytes
-Requests per second:    234394.84 [#/sec] (mean)
-Time per request:       0.137 [ms] (mean)
+Requests per second:    236938.75 [#/sec] (mean)
+Time per request:       0.135 [ms] (mean)
 Time per request:       0.004 [ms] (mean, across all concurrent requests)
-Transfer rate:          20372.21 [Kbytes/sec] received
+Transfer rate:          20593.31 [Kbytes/sec] received
 
 Connection Times (ms)
               min  mean[+/-sd] median   max

@@ -33,6 +33,7 @@ yimmo_core_HEADERS=\
 	ymo_server.h \
 	ymo_tap.h \
 	ymo_test_proto.h \
+	ymo_tls.h \
 	ymo_trie.h
 
 

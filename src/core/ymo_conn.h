@@ -47,33 +47,24 @@
  * Types
  *---------------------------------------------------------------*/
 
-#if YMO_ENABLE_TLS
-/* TODO: I think we can use the state SSL provides. */
-YMO_ENUM8_TYPEDEF(conn_ssl_state) {
-    CONNECTION_SSL_NONE,
-    CONNECTION_SSL_HANDSHAKE,
-    CONNECTION_SSL_OPEN,
-    CONNECTION_SSL_CLOSING,
-    CONNECTION_SSL_CLOSED,
-    CONNECTION_SSL_ERROR,
-} YMO_ENUM8_AS(conn_ssl_state_t);
-#endif /* YMO_ENABLE_TLS */
-
 /**
  * .. :c:enum:: `ymo_conn_state_t`
  *
- *    :CONNECTION_OPEN: Connection is established.
- *    :CONNECTION_CLOSING: Shutdown has been invoked. Waiting for clean close.
- *    :CONNECTION_CLOSED: File descriptor has been closed.
- *    :CONNECTION_ERROR: Connection is in an error state and being automatically terminated.
+ *    :YMO_CONN_OPEN: Connection is established.
+ *    :YMO_CONN_CLOSING: Shutdown has been invoked. Waiting for clean close.
+ *    :YMO_CONN_CLOSED: File descriptor has been closed.
+ *    :YMO_CONN_ERROR: Connection is in an error state and being automatically terminated.
  *
  */
 
 YMO_ENUM8_TYPEDEF(ymo_conn_state) {
-    CONNECTION_OPEN,
-    CONNECTION_CLOSING,
-    CONNECTION_CLOSED,
-    CONNECTION_ERROR,
+    YMO_CONN_OPEN,
+    YMO_CONN_TLS_HANDSHAKE,
+    YMO_CONN_TLS_ESTABLISHED,
+    YMO_CONN_TLS_CLOSING,
+    YMO_CONN_TLS_CLOSED,
+    YMO_CONN_CLOSING,
+    YMO_CONN_CLOSED,
 } YMO_ENUM8_AS(ymo_conn_state_t);
 
 /** Internal structure used to manage a yimmo conn.
@@ -93,7 +84,6 @@ struct ymo_conn {
     ymo_conn_state_t  state;           /* Connection state */
 #if YMO_ENABLE_TLS
     SSL*              ssl;             /* Optional SSL connection info */
-    conn_ssl_state_t  ssl_state;       /* Track SSL state */
 #endif /* YMO_ENABLE_TLS */
 #if defined(YMO_CONN_LOCK) && (YMO_CONN_LOCK == 1)
     pthread_mutexattr_t  lattr;        /* Per-connection mutex attributes */
