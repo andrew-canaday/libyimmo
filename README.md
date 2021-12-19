@@ -5,23 +5,21 @@
 [![Publish Yimmo-WSGI Docker Image](https://github.com/andrew-canaday/libyimmo/actions/workflows/docker_wsgi.yml/badge.svg)](https://github.com/andrew-canaday/libyimmo/actions/workflows/docker_wsgi.yml)
 [![Create Release on Tag](https://github.com/andrew-canaday/libyimmo/actions/workflows/create_release_on_tag.yml/badge.svg)](https://github.com/andrew-canaday/libyimmo/actions/workflows/create_release_on_tag.yml)
 
+# Disclaimer
+
 > :warning: **WARNING**: _This is my long running, spare time, for fun,
 > project._ Most of it works pretty well (it's [pretty _fast!_](#gisty-benchmarks)), but it also
 > bears the marks of being my on-again/off-again, personal C-refresher/protocol
 > exploration playground...
 >
-> To be clear: I wouldn't use this in production until after some test coverage
-> and usability things have been addressed.
-> (_**I use [gunicorn](https://gunicorn.org/) for my production WSGI workloads and
-> [libwebsockets](https://corewebsockets.org/) for websockets.** Check 'em out!_)
->
-> There's a bit of cleanup work in flight, and _things are likely to change a
-> bit as the refactor proceeds!_
+> :raised_hands: _**I use [gunicorn](https://gunicorn.org/) for my production WSGI workloads and
+> [libwebsockets](https://corewebsockets.org/) for websockets.** Check 'em out!_
 >
 > <hr />
 >
-> :hand: **I'm not accepting PR's, at the moment**, due to the
-> above and some procedural things to resolve re: code contributions.
+> :hand: **I'm not accepting PR's, at the moment** — there's a bit of
+> refactor in flight and some procedural things to resolve re:
+> code contributions.
 >
 > _Please feel free to have a peek! It's **GPL'd**, so you are free to fork
 > it and hack around!_
@@ -47,30 +45,7 @@ pattern which uses [libev](http://software.schmorp.de/pkg/coreev.html) for I/O r
 >
 > - [HTTP](./examples/doc/HTTP.md) — minimal libyimmo_http web server
 > - [WebSockets](./examples/doc/WS.md) — minimal libyimmo_ws socket server
-> - [WSGI](http://blog.yimmo.org/yimmo/wsgi/index.html)
-
-### (Docker Quickstart)
-
-Don't want to build it? Try the WSGI image:
-
-```bash
-# This will start the WSGI server on port 8081:
-docker run \
-    -v ${PWD}/wsgi/demo:/opt/yimmo/demo \
-    -p 8081:8081 \
-    -e PYTHONPATH="/opt/yimmo/demo" \
-    -e YIMMO_WSGI_MODULE="demo_app" \
-    -e YIMMO_WSGI_APP="app" \
-    andrewcanaday/yimmo-wsgi:0-alpha
-```
-
-> **NOTES**:
->
->  - The max HTTP POST body (`4096`) is hardcoded (_sorry! On the TODO list._)
->  - TLS support is _disabled in the image at compile time_.
->  - See [the WSGI docs](http://blog.yimmo.org/yimmo/wsgi/index.html) for more info.
->  - Docker image is currently built for `x86` on Ubuntu
->  - Apple M1 users: the docker image *will run*, but you'll get _way better performance_ building and installing natively (arm64 build on the TODO list).
+> - [WSGI](http://blog.yimmo.org/yimmo/wsgi/index.html) (or try the [docker image](https://hub.docker.com/repository/docker/andrewcanaday/yimmo-wsgi))
 
 ## License
 
