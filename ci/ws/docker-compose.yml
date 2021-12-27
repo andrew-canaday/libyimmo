@@ -30,7 +30,7 @@ services:
     image: "${IMAGE_NAME:-yimmo-ci-test:local}"
     ports:
       - "8081:8081"
-    entrypoint: ["/usr/local/bin/yimmo-example-ws"]
+    entrypoint: ["/opt/build/yimmo/ci/ws/yimmo-ws-echo"]
 
   autobahn-ws-client:
     image: crossbario/autobahn-testsuite

@@ -40,16 +40,12 @@ static ymo_status_t test_ws_connect_cb(ymo_ws_session_t* session)
 {
     ymo_log_info("New WebSocket session: %p!", (void*)session);
 
-#if defined(WS_EXAMPLE_ISSUE_HELLO) && WS_EXAMPLE_ISSUE_HELLO
     /* Encapsulate a string literal in a bucket: */
     ymo_bucket_t* my_msg = YMO_BUCKET_FROM_REF("Hello!", 6);
 
     /* Send a text-type message from with the FIN bit set: */
     return ymo_ws_session_send(
             session, YMO_WS_FLAG_FIN | YMO_WS_OP_TEXT, my_msg);
-#else
-    return YMO_OKAY;
-#endif /* WS_EXAMPLE_ISSUE_HELLO */
 }
 ```
 
@@ -71,7 +67,6 @@ static ymo_status_t test_ws_recv_cb(
         const char*       data,
         size_t len)
 {
-#if EXAMPLE_PRINT_MSG
     if( data && len ) {
         if( flags & YMO_WS_OP_TEXT ) {
             ymo_log_info("Recv from %p: \"%.*s\"",
@@ -82,7 +77,6 @@ static ymo_status_t test_ws_recv_cb(
                 "Got a message with a zero length payload "
                 "(allowed by RFC-6455!)");
     }
-#endif
 
     return ymo_ws_session_send(
             session, flags, YMO_BUCKET_FROM_CPY(data, len));

@@ -301,6 +301,7 @@ AC_CONFIG_FILES([
     wsgi/Makefile
     benchmarks/Makefile
     src/protocol/Makefile
+    ci/ws/Makefile
     ])
 
 ## libyimmo core output files:

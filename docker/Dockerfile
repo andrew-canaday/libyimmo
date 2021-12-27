@@ -78,7 +78,7 @@ ENTRYPOINT ["/usr/local/bin/yimmo-wsgi", "demo_app:app"]
 # WS:
 FROM yimmo-test AS yimmo-test-ws
 
-ENTRYPOINT ["/usr/local/bin/yimmo-example-ws"]
+ENTRYPOINT ["/opt/build/yimmo/ci/ws/yimmo-ws-echo"]
 
 
 #-------------------------------------------------------------------------------

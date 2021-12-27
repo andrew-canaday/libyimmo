@@ -71,7 +71,6 @@ docker compose up --abort-on-container-exit
 ### Local Test
 
 
- 1. During configuration: pass the `--enable-examples` flag.
- 2. In your build directory: `make && ./examples/yimmo-example-ws`
- 3. In this directory: `./autobahn-local.sh`
+ 1. In your build directory: `make && ./ci/ws/yimmo-ws-echo`
+ 2. In this directory: `./autobahn-local.sh`
 
