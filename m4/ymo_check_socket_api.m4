@@ -86,8 +86,8 @@ AC_DEFUN([YMO_CHECK_SOCKET_API],
           $ioctl_h_include
           ])
 
+  YMO_BOX([Checking socket API: Features])
   # Gather/scatter IO API:
-  YMO_BOX([Checking socket API: Gather/Scatter IO])
   AC_CHECK_DECLS([sendmsg],[],
           [YMO_ERROR([libyimmo build requires "$as_decl_name" definition])],
           [#include <sys/socket.h>])
@@ -95,6 +95,14 @@ AC_DEFUN([YMO_CHECK_SOCKET_API],
   AS_IF([test "x$ac_cv_have_decl_sendmsg" != "xyes"],[
       YMO_ERROR([libyimmo requires the sendmsg syscall])
   ])
+
+  # Sendfile support
+  AC_CHECK_DECLS([sendfile],[],[],
+          [
+          #include <sys/types.h>
+          #include <sys/socket.h>
+          #include <sys/uio.h>
+          ])
 
   ## (This is probably way-overkill):
   AC_CHECK_MEMBERS([

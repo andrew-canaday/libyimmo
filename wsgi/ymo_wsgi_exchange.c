@@ -65,6 +65,7 @@ ymo_wsgi_exchange_t* ymo_wsgi_exchange_create(ymo_wsgi_session_t* session)
     return exchange;
 }
 
+
 void ymo_wsgi_exchange_free(
         ymo_wsgi_session_t* session, ymo_wsgi_exchange_t* exchange)
 {
@@ -76,6 +77,7 @@ void ymo_wsgi_exchange_free(
     }
 }
 
+
 size_t ymo_wsgi_exchange_incref(ymo_wsgi_exchange_t* exchange)
 {
 #if YMO_WSGI_EXCHANGE_ATOMIC
@@ -86,6 +88,7 @@ size_t ymo_wsgi_exchange_incref(ymo_wsgi_exchange_t* exchange)
     YMO_WSGI_TRACE("Exchange %p refcnt: %zu", (void*)exchange, refcnt);
     return refcnt;
 }
+
 
 size_t ymo_wsgi_exchange_decref(ymo_wsgi_exchange_t* exchange)
 {

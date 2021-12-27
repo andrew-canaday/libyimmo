@@ -211,5 +211,3 @@ ymo_status_t ymo_proto_mqtt_write(
     return status;
 }
 
-
-

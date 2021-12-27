@@ -42,6 +42,7 @@ YMO_FUNC_UNUSED static inline ymo_http_hdr_id_t ymo_http_hdr_hash_227_23(const c
     return h & YMO_HDR_TABLE_MASK;
 }
 
+
 YMO_FUNC_UNUSED static inline ymo_http_hdr_id_t ymo_http_hdr_hash_313_53(const char* str_in, size_t* len)
 {
     const char* hdr_start = str_in;
@@ -57,6 +58,7 @@ YMO_FUNC_UNUSED static inline ymo_http_hdr_id_t ymo_http_hdr_hash_313_53(const c
     return h & YMO_HDR_TABLE_MASK;
 }
 
+
 YMO_FUNC_UNUSED static inline ymo_http_hdr_id_t ymo_http_hdr_hash_311_127(const char* str_in, size_t* len)
 {
     const char* hdr_start = str_in;
@@ -71,5 +73,6 @@ YMO_FUNC_UNUSED static inline ymo_http_hdr_id_t ymo_http_hdr_hash_311_127(const 
     }
     return h & YMO_HDR_TABLE_MASK;
 }
+
 
 #endif /* YMO_HDR_HASH_H */

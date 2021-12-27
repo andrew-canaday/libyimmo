@@ -124,8 +124,6 @@ YMO_OPTION([HDR_HASH_ALLOW_WEAK],[0],
 ##-----------------------------
 ##    Server Options:
 ##-----------------------------
-YMO_OPTION([ENABLE_TLS],[0],
-    [Enable the use of TLS on server ports])
 YMO_OPTION([SERVER_IDLE_TIMEOUT],[5],
     [Default client idle disconnect period in seconds])
 YMO_OPTION_DEPRECATED([SERVER_RECV_BUF_SIZE],[8192],
@@ -174,6 +172,23 @@ AC_ARG_ENABLE([examples],
         [--enable-examples],
         [Build example programs]))
 
+##--- TLS: ---
+## Add flag to explicitly build tls code, by default. If absent, tls
+## programs are compiled as an automake "EXTRA" target:
+AC_ARG_ENABLE([tls],
+    AS_HELP_STRING(
+        [--enable-tls],
+        [Enable TLS (at the moment, this means OpenSSL)]))
+
+AM_CONDITIONAL([ENABLE_TLS],[test "x$enable_tls" = "xyes"])
+AS_IF([test "x$enable_tls" = "xyes"],[
+		YMO_ENABLED([TLS support])
+		AC_DEFINE([YMO_ENABLE_TLS],[1],[Build yimmo tls module])
+	],[
+		YMO_DISABLED([TLS support])
+	   	AC_DEFINE([YMO_ENABLE_TLS],[0],[Do not build the yimmo tls module])
+	])
+
 ##--- WSGI: ---
 ## Add flag to explicitly build wsgi code, by default. If absent, wsgi
 ## programs are compiled as an automake "EXTRA" target:
@@ -184,8 +199,10 @@ AC_ARG_ENABLE([wsgi],
 
 AM_CONDITIONAL([BUILD_WSGI],[test "x$enable_wsgi" = "xyes"])
 AS_IF([test "x$enable_wsgi" = "xyes"],[
+		YMO_ENABLED([yimmo-wsgi build])
 		AC_DEFINE([YIMMO_WSGI],[1],[Build yimmo wsgi module])
 	],[
+		YMO_DISABLED([yimmo-wsgi build])
 	   	AC_DEFINE([YIMMO_WSGI],[0],[Do not build the yimmo wsgi module])
 	])
 
@@ -198,9 +215,11 @@ AC_ARG_ENABLE([py-websockets],
         [Build py-websockets programs]))
 
 AM_CONDITIONAL([BUILD_PY_WEBSOCKETS],[test "x$enable_py_websockets" = "xyes"])
-AS_IF([test "x$enable_py_websockets" = "xyes"],[
+AS_IF([test "x$enable_py_websockets" = "xyes"],
+		YMO_ENABLED([yimmo-wsgi WebSockets])
 		AC_DEFINE([YIMMO_PY_WEBSOCKETS],[1],[Do build optional websockets support into yimmo-wsgi])
 	],[
+		YMO_DISABLED([yimmo-wsgi WebSockets])
 	   	AC_DEFINE([YIMMO_PY_WEBSOCKETS],[0],[Do not build optional websockets support into yimmo-wsgi])
 	])
 
@@ -230,6 +249,7 @@ AS_IF([test "x$enable_maintainer_debug" = "xyes"], [
         -Wno-error=missing-field-initializers \
         -Wno-error=implicit-fallthrough \
         -Werror=implicit \
+	-Werror=incompatible-pointer-types \
         -DYMO_LOG_LEVEL_MAX=6 -DYMO_LOG_LEVEL_DEFAULT=5"
     ])
 AM_CONDITIONAL([MAINTAINER_DEBUG],[test "x$enable_maintainer_debug" = "xyes"])

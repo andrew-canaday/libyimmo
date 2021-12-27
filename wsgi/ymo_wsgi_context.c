@@ -87,7 +87,7 @@ PyObject* yimmo_Context_start_response(
          *       we just (for the moment) tell the app that headers have
          *       been sent by re-raising...
          */
-        /* TODO: do we need to do anything here, or is it sufficient to
+        /* UNKNOWN: do we need to do anything here, or is it sufficient to
          * return NULL?
          * PyObject* exc_info = args[2];
          */
@@ -437,7 +437,7 @@ hdr_skip_underscore:
 
 
     /* Update environ:
-     * TODO: error checking for all *_New and _*From* calls!
+     * TODO: error checking for all *_New and _*From* calls
      */
     YMO_DECREF_PYDICT_SETITEM(pEnviron, pEnvironKeyRequestMethod,
             PyUnicode_FromString(request->method));
@@ -469,6 +469,7 @@ ymo_wsgi_exchange_t* ymo_wsgi_ctx_exchange(yimmo_context_t* ctx)
 {
     return ctx->exchange;
 }
+
 
 #pragma GCC diagnostic pop
 

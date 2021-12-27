@@ -109,12 +109,14 @@ static PyObject* yimmo_WebSocket_send(
     Py_RETURN_NONE;
 }
 
+
 static PyObject* yimmo_WebSocket_close(
         yimmo_context_t* self, PyObject* const* args, Py_ssize_t nargs)
 {
     /* No-op */
     Py_RETURN_NONE;
 }
+
 
 PyMethodDef yimmo_WebSocketType_methods[] = {
     {"send", (PyCFunction) yimmo_WebSocket_send, METH_FASTCALL,
@@ -279,5 +281,4 @@ void ymo_wsgi_ws_close_cb(ymo_ws_session_t* session, void* user_data)
     PyGILState_Release(gstate);
     return;
 }
-
 

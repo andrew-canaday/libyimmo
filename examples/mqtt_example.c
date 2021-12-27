@@ -131,5 +131,3 @@ static void sigint_handler(struct ev_loop* loop, ev_signal* w, int revents)
     return;
 }
 
-
-

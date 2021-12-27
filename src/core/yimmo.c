@@ -48,6 +48,7 @@ ymo_log_level_t ymo_log_get_level(void)
     return ymo_global_ll;
 }
 
+
 const char* ymo_log_get_level_name(ymo_log_level_t level)
 {
     const char* name = "USER";
@@ -77,6 +78,7 @@ ymo_log_level_t ymo_log_set_level_by_name(const char* level_name)
     return ymo_global_ll;
 }
 
+
 void ymo_log(ymo_log_level_t level, const char* fmt, ...)
 {
     va_list args;
@@ -90,6 +92,7 @@ void ymo_log(ymo_log_level_t level, const char* fmt, ...)
     return;
 }
 
+
 void ymo_log_msg(ymo_log_level_t level, const char* msg)
 {
     if( level <= ymo_global_ll ) {
@@ -97,6 +100,7 @@ void ymo_log_msg(ymo_log_level_t level, const char* msg)
     }
     return;
 }
+
 
 void ymo_log_init(void)
 {

@@ -85,10 +85,36 @@ AC_DEFUN([YMO_BOX],[
 # -------------------------------------------------------------------
 AC_DEFUN([YMO_NOTICE],[
         AS_IF([test "x$ymo_configure_has_color" == "x1"],[
-            ymo_color_l="\\033@<:@01;04;35;m"
+            ymo_color_l="\\033@<:@01;35;m"
             ymo_color_r="\\033@<:@00;m"
         ])
         printf "${ymo_color_l}NOTICE: %s${ymo_color_r}\\n" "$1" >&AS_MESSAGE_FD
+])
+
+
+# -------------------------------------------------------------------
+# YMO_ENABLED([MSG])
+# -------------------------------------------------------------------
+AC_DEFUN([YMO_ENABLED],[
+        AS_IF([test "x$ymo_configure_has_color" == "x1"],[
+            ymo_color_s="\\033@<:@00;01;m"
+            ymo_color_l="\\033@<:@01;32;m"
+            ymo_color_r="\\033@<:@00;m"
+        ])
+        printf "${ymo_color_s}%-24.24s ${ymo_color_l}enabled${ymo_color_r}\\n" "$1:" >&AS_MESSAGE_FD
+])
+
+
+# -------------------------------------------------------------------
+# YMO_DISABLED([MSG])
+# -------------------------------------------------------------------
+AC_DEFUN([YMO_DISABLED],[
+        AS_IF([test "x$ymo_configure_has_color" == "x1"],[
+            ymo_color_s="\\033@<:@00;01;m"
+            ymo_color_l="\\033@<:@00;02;33;m"
+            ymo_color_r="\\033@<:@00;m"
+        ])
+        printf "${ymo_color_s}%-24.24s ${ymo_color_l}disabled${ymo_color_r}\\n" "$1:" >&AS_MESSAGE_FD
 ])
 
 

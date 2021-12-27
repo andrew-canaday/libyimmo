@@ -174,18 +174,20 @@ static inline ssize_t ymo_server_ssl_read(
     return -1;
 }
 
+
 #else /* !YMO_ENABLE_TLS */
 #define CONN_SSL(conn) (NULL)
 
 static inline ssize_t ymo_server_ssl_read(
         ymo_server_t* server, ymo_conn_t* conn)
 {
-      ymo_log_fatal(
-              "SSL enabled on FD %i in non-TLS libyimmo build.",
-              conn->fd);
-      errno = EPROTONOSUPPORT;
-      return -1;
+    ymo_log_fatal(
+            "SSL enabled on FD %i in non-TLS libyimmo build.",
+            conn->fd);
+    errno = EPROTONOSUPPORT;
+    return -1;
 }
+
 
 #define ymo_init_ssl_ctx(s) (YMO_OKAY)
 #define ymo_init_ssl(s, c, fd) (YMO_OKAY)

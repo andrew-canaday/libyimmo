@@ -119,6 +119,7 @@ static ymo_test_server_t* test_server_create(ymo_proto_t* proto)
     return test_server;
 }
 
+
 /**
  * Utility to create a simple :c:type:`ymo_conn_t` for unit tests:
  *
@@ -149,5 +150,6 @@ static ymo_test_conn_t* test_conn_create(ymo_test_server_t* test_server)
 
     return test_conn;
 }
+
 
 #endif /* YMO_PROTO_TEST_H */

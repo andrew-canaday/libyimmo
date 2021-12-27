@@ -25,7 +25,7 @@
 
 /** Default TCP accept waitlist length. */
 #ifndef HTTP_DEFAULT_LISTEN_BACKLOG
-#define HTTP_DEFAULT_LISTEN_BACKLOG 100
+#define HTTP_DEFAULT_LISTEN_BACKLOG 512
 #endif /* HTTP_DEFAULT_LISTEN_BACKLOG */
 
 ymo_server_t* ymo_http_simple_init(
@@ -88,5 +88,4 @@ ymo_server_t* ymo_http_simple_init(
 http_bail:
     return NULL;
 }
-
 

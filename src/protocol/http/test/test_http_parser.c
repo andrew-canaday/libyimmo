@@ -133,6 +133,7 @@ static int setup_suite(void)
     return 0;
 }
 
+
 static int setup_test(void)
 {
     /* Reset the request info between each test: */
@@ -141,6 +142,7 @@ static int setup_test(void)
     return 0;
 }
 
+
 static int cleanup(void)
 {
     ymo_proto_http_cleanup(test_server->proto_data, test_server->server);
@@ -148,6 +150,7 @@ static int cleanup(void)
     YMO_FREE(test_server);
     return 0;
 }
+
 
 YMO_TAP_RUN(&setup_suite, &setup_test, &cleanup,
         YMO_TAP_TEST_FN(request_basic_1_0),

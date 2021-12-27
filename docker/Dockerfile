@@ -3,6 +3,9 @@
 # Dependencies:
 #-------------------------------------------------------------------------------
 FROM ubuntu:latest AS yimmo-deps
+ARG OCI_IMAGE_SOURCE=none
+
+LABEL org.opencontainers.image.source=$OCI_IMAGE_SOURCE
 
 # Avoid interactive prompts for TZ:
 ENV TZ=US/Eastern
@@ -15,8 +18,6 @@ ENV PYTHONPATH=/opt/src/libyimmo/wsgi/demo
 RUN mkdir -p /opt/src/ \
 	&& mkdir -p /opt/build/bsat \
 	&& mkdir -p /opt/build/yimmo
-
-ADD . /opt/src/libyimmo
 
 RUN apt update
 RUN apt-get -qq install -y \
@@ -38,6 +39,7 @@ RUN apt-get -qq install -y \
 
 RUN pip3 install flask
 
+ADD . /opt/src/libyimmo
 RUN cd /opt/src && git clone https://github.com/andrew-canaday/libbsat
 RUN cd /opt/src/libbsat && ./autogen.sh
 RUN cd /opt/src/libyimmo && ./autogen.sh
@@ -54,8 +56,11 @@ RUN cd /opt/build/bsat \
 #-------------------------------------------------------------------------------
 FROM yimmo-deps AS yimmo-test
 
+ENV YIMMO_SERVER_IDLE_TIMEOUT=2.0
 RUN cd /opt/build/yimmo \
-	&& /opt/src/libyimmo/configure --enable-examples --enable-wsgi \
+	&& /opt/src/libyimmo/configure \
+		--enable-examples --enable-wsgi \
+		CFLAGS="-DYMO_LOG_LEVEL_MAX=6 -DYMO_LOG_LEVEL_DEFAULT=3" \
 	&& make \
 	&& make check \
 	&& make install
@@ -68,7 +73,7 @@ RUN cd /opt/build/yimmo \
 # HTTP:
 FROM yimmo-test AS yimmo-test-http
 
-ENTRYPOINT ["/usr/local/bin/yimmo-wsgi", "demo_app", "app"]
+ENTRYPOINT ["/usr/local/bin/yimmo-wsgi", "demo_app:app"]
 
 # WS:
 FROM yimmo-test AS yimmo-test-ws

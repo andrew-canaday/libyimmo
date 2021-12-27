@@ -49,6 +49,7 @@ ymo_http_session_create(ymo_conn_t* conn)
     return http_session;
 }
 
+
 void
 ymo_http_session_free(ymo_http_session_t* http_session)
 {
@@ -68,6 +69,7 @@ ymo_http_session_free(ymo_http_session_t* http_session)
     return;
 }
 
+
 ymo_status_t
 ymo_http_session_add_new_http_request(ymo_http_session_t* http_session)
 {
@@ -82,6 +84,7 @@ ymo_http_session_add_new_http_request(ymo_http_session_t* http_session)
     http_session->exchange = exchange;
     return YMO_OKAY;
 }
+
 
 ymo_status_t
 ymo_http_session_free_request(ymo_http_session_t* http_session)
@@ -98,6 +101,7 @@ ymo_http_session_free_request(ymo_http_session_t* http_session)
     }
     return EINVAL;
 }
+
 
 ymo_status_t ymo_http_session_add_response(
         ymo_http_session_t* http_session, ymo_http_response_t* response_in)
@@ -117,11 +121,13 @@ ymo_status_t ymo_http_session_add_response(
     return YMO_OKAY;
 }
 
+
 ymo_http_response_t* ymo_http_session_next_response(
         ymo_http_session_t* http_session)
 {
     return http_session->response;
 }
+
 
 ymo_status_t ymo_http_session_complete_response(
         ymo_http_session_t* http_session)
@@ -140,6 +146,7 @@ ymo_status_t ymo_http_session_complete_response(
     return EINVAL;
 }
 
+
 ymo_status_t ymo_http_session_is_read_ready(ymo_http_session_t* http_session)
 {
     ymo_status_t status = YMO_OKAY;
@@ -150,15 +157,15 @@ ymo_status_t ymo_http_session_is_read_ready(ymo_http_session_t* http_session)
     return status;
 }
 
+
 void ymo_http_session_set_userdata(ymo_http_session_t* session, void* data)
 {
     session->user_data = data;
 }
 
+
 void* ymo_http_session_get_userdata(const ymo_http_session_t* session)
 {
     return session->user_data;
 }
-
-
 

@@ -83,8 +83,8 @@ struct ymo_wsgi_proc {
     /* All processes: */
     ymo_server_t*   http_srv;
     struct ev_loop* loop;
-    const char*     module;
-    const char*     app;
+    char*           module;
+    char*           app;
 };
 
 

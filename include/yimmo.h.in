@@ -44,6 +44,14 @@
 #include <ev.h>
 #include "ymo_attrs.h"
 
+#ifndef YMO_SOURCE
+#  ifdef __FILE_NAME__
+#    define YMO_SOURCE __FILE_NAME__
+#  else
+#    define YMO_SOURCE __FILE__
+#  endif /* __FILE_NAME__ */
+#endif /* YMO_SOURCE */
+
 /**---------------------------------------------------------------
  * Version
  *---------------------------------------------------------------*/
@@ -115,8 +123,55 @@ typedef int ymo_status_t;
  *
  * **Spoiler**: this is defined to be ``0`` and we use errno.h code values for
  * error conditions.
+ *
+ * **Definition:**
  */
 #define YMO_OKAY 0
+
+
+/**
+ * Convenience macro for setting error condition from functions
+ * that return a ``size_t``. The following are functionally
+ * equivalent:
+ *
+ * .. code-block:: c
+ *
+ *    ssize_t my_blocking_function()
+ *    {
+ *       errno = EAGAIN;
+ *       return -1;
+ *    }
+ *
+ *
+ *    ssize_t my_blocking_function()
+ *    {
+ *       return YMO_ERROR_SSIZE_T(EAGAIN);
+ *    }
+ *
+ */
+#define YMO_ERROR_SSIZE_T(x) (errno=x, -1)
+
+/**
+ * Convenience macro for setting error condition from functions
+ * that return a pointer. The following are functionally
+ * equivalent:
+ *
+ * .. code-block:: c
+ *
+ *    void* my_blocking_function()
+ *    {
+ *       errno = EAGAIN;
+ *       return NULL;
+ *    }
+ *
+ *
+ *    void* my_blocking_function()
+ *    {
+ *       return YMO_ERROR_PTR(EAGAIN);
+ *    }
+ *
+ */
+#define YMO_ERROR_PTR(x) (errno=x, NULL)
 
 /** Opaque struct used to represent a single server.
  *
@@ -383,7 +438,19 @@ ymo_status_t ymo_server_init(ymo_server_t* server);
  */
 ymo_status_t ymo_server_init_socket(ymo_server_t* server, int fd);
 
+/**
+ * Invoke *before forking* if forked processes will share a
+ * common listen socket.
+ */
+ymo_status_t ymo_server_pre_fork(ymo_server_t* server);
+
 /** Create and start the ev_io watchers for the listen fd we invoke accept() on.
+ *
+ * .. warning::
+ *
+ *    If you intend to **fork** and the forked processes will share a common
+ *    listen fd, you *must call* :c:func:`ymo_server_pre_fork` *before
+ *    starting the server!*
  *
  * :param server: the server to start
  * :returns: YMO_OKAY on success; appropriate errno on failure

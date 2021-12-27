@@ -149,6 +149,7 @@ ymo_wsgi_worker_t* ymo_wsgi_proc_assign_worker(ymo_wsgi_proc_t* w_proc, size_t s
     return &(w_proc->w_threads[worker_id]);
 }
 
+
 /*---------------------------------*
  *       Main Init/Shutdown:
  *---------------------------------*/
@@ -195,7 +196,7 @@ static int worker_proc_init(
 #endif /* YMO_WSGI_REUSEPORT */
 
     /* Initialize python interpretter and load w_proc->module: */
-    if( ymo_wsgi_init(w_proc->module, w_proc->app) != YMO_OKAY ) {
+    if( ymo_wsgi_init(w_proc) != YMO_OKAY ) {
         return -1;
     }
 
@@ -239,15 +240,25 @@ static int worker_proc_teardown(
 }
 
 
+/* TODO: We might have one of the queue locks. */
 ymo_status_t ymo_wsgi_stop_workers(int no_wsgi_threads, ymo_wsgi_worker_t* workers)
 {
     for( int thread_id = 0; thread_id < no_wsgi_threads; thread_id++ ) {
         ymo_log_notice("Stopping worker thread %i/%i",
                 thread_id+1, no_wsgi_threads);
         workers[thread_id].running = 0;
-        ymo_wsgi_worker_lock_in(&workers[thread_id]);
+
+#if 0
+        if( !pthread_mutex_trylock(&workers[thread_id]->lock_in) ) {
+            ymo_wsgi_worker_notify(&workers[thread_id]);
+            ymo_wsgi_worker_unlock_in(&workers[thread_id]);
+        }
+#endif
         ymo_wsgi_worker_notify(&workers[thread_id]);
-        ymo_wsgi_worker_unlock_in(&workers[thread_id]);
+        sleep(1);
+        pthread_cancel(workers[thread_id].thread);
+        ymo_log_notice("Worker thread %i/%i notified.",
+                thread_id+1, no_wsgi_threads);
     }
     return YMO_OKAY;
 }
@@ -273,6 +284,15 @@ static void ymo_wsgi_main_shutdown(ymo_wsgi_proc_t* w_proc, int my_pid)
                 "%i sending SIGTERM to %i", my_pid, (int)w_proc->children[i]);
         kill(w_proc->children[i], SIGTERM);
     }
+
+    /* HACK: (TEMP) Okay, and then wait a few seconds and then kill them all: */
+    sleep(5);
+    for( int i = 0; i < w_proc->no_wsgi_proc; i++ ) {
+        ymo_log_notice(
+                "%i sending SIGTERM to %i", my_pid, (int)w_proc->children[i]);
+        kill(w_proc->children[i], SIGKILL);
+    }
+
     ev_break(w_proc->loop, EVBREAK_ALL);
 }
 

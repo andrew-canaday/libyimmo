@@ -54,6 +54,7 @@
 #include <stdatomic.h>
 #endif /* YIMMO_WSGI */
 
+#include <pthread.h>
 #include <ev.h>
 #include <bsat.h>
 
@@ -62,6 +63,7 @@
 #endif /* YMO_ENABLE_TLS */
 
 #include "yimmo.h"
+#include "ymo_conn.h"
 #include "ymo_proto.h"
 
 /**---------------------------------------------------------------
@@ -71,6 +73,7 @@
 /** Internal structure used to manage a yimmo server. */
 struct ymo_server {
     struct ev_io         w_accept;                           /* EV IO watcher for events on accept socket */
+    ymo_ev_io_cb_t       cb_accept;                          /* Actual callback to use for accept. */
     char                 recv_buf[YMO_SERVER_RECV_BUF_SIZE]; /* TODO: configure @ runtime */
     bsat_toq_t           idle_toq;                           /* Used for idle disconnect timeouts */
     ymo_proto_t*         proto;                              /* Primary protocol for this server */
@@ -81,9 +84,7 @@ struct ymo_server {
 #if YMO_ENABLE_TLS
     SSL_CTX*             ssl_ctx;        /* Optional SSL context */
 #endif /* YMO_ENABLE_TLS */
-#if defined(YIMMO_WSGI) && (YIMMO_WSGI == 1)
-    atomic_int* accepting;
-#endif /* YIMMO_WSGI */
+    pthread_mutex_t*     accept_mutex;
 };
 
 /**---------------------------------------------------------------
@@ -95,6 +96,18 @@ struct ymo_server {
  * notification is received from libev on the server *listen* socket.
  */
 void ymo_accept_cb(struct ev_loop* loop, struct ev_io* watcher, int revents);
+
+/**
+ * This is the libev accept callback used for multi-process accepts (in
+ * which the listen FD is bound prior to fork).
+ *
+ * It is invoked whenever a readiness notification is received from libev on the
+ * server *listen* socket.
+ *
+ * See :c:func:`ymo_server_pre_fork` for more info.
+ */
+void ymo_multiproc_accept_cb(
+        struct ev_loop* loop, struct ev_io* watcher, int revents);
 
 /**
  * This is the libev read callback. It is invoked whenever a readiness

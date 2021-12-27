@@ -27,7 +27,15 @@
 #include <string.h>
 #include <assert.h>
 
+#if HAVE_DECL_SENDFILE
+/* TODO: have most of these already: */
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/uio.h>
+#endif /* HAVE_DECL_SENDFILE */
+
 #include "yimmo.h"
+#include "ymo_util.h"
 #include "ymo_log.h"
 #include "ymo_net.h"
 #include "ymo_conn.h"
@@ -40,11 +48,31 @@
 #define YMO_NET_TRACE(fmt, ...)
 #endif /* YMO_TRACE_NET */
 
+
+#if YMO_BUCKET_FROM_FILE == YMO_BUCKET_SENDFILE
+#define YMO_NET_SENDFILE_MAX 1024
+static ymo_status_t ymo_net_bucket_sendfile(int fd, ymo_bucket_t** head_p);
+#endif /* YMO_BUCKET_FROM_FILE */
+
+
 ymo_status_t ymo_net_send_buckets(int fd, ymo_bucket_t** head_p)
 {
-    size_t i = 0;
-    size_t to_send = 0;
-    ymo_bucket_t* current = *head_p;
+    size_t i;
+    size_t to_send;
+    ymo_bucket_t* current;
+
+do_send:
+    i = 0;
+    to_send = 0;
+    current = *head_p;
+#if YMO_BUCKET_FROM_FILE == YMO_BUCKET_SENDFILE
+    /* HACK: for now, we just check the FIRST bucket in the chain for an
+     *       fd (see note below on how this works).
+     */
+    if( current && current->fd >= 0 ) {
+        return ymo_net_bucket_sendfile(fd, head_p);
+    }
+#endif /* YMO_BUCKET_SENDFILE */
 
     struct msghdr out_msg;
     struct iovec out_vec[YMO_BUCKET_MAX_IOVEC];
@@ -55,6 +83,19 @@ ymo_status_t ymo_net_send_buckets(int fd, ymo_bucket_t** head_p)
     /* Add all our buckets to the iovec: */
     while( current && i < YMO_BUCKET_MAX_IOVEC )
     {
+#if YMO_BUCKET_FROM_FILE == YMO_BUCKET_SENDFILE
+        /* HACK: *just for now*, we do sendmsg/sendfile separately (rather than
+         *       user headers/footers)...
+         *
+         *       So, we sendfile for the first bucket in a chain and break
+         *       on a bucket mid-chain (so it'll be first on next
+         *       invocation).
+         */
+        if( current->fd >= 0 ) {
+            break;
+        }
+#endif /* YMO_BUCKET_SENDFILE */
+
         /* Skip empty buckets: */
         if( current->len ) {
             out_vec[i].iov_base = (void*)(current->data + current->bytes_sent);
@@ -76,6 +117,7 @@ ymo_status_t ymo_net_send_buckets(int fd, ymo_bucket_t** head_p)
         YMO_NET_TRACE("%i: Sent %lu bytes", fd, bytes_sent);
     } else {
         YMO_NET_TRACE("%i: No bytes sent; Zero iovecs", fd);
+        return EBADMSG;
     }
 
     /* Bail on send error: */
@@ -105,31 +147,6 @@ ymo_status_t ymo_net_send_buckets(int fd, ymo_bucket_t** head_p)
                     fd, i, remain, current->len);
             bytes_sent -= remain;
 
-#if defined (YMO_BUCKET_CTRL_ENABLED) && (YMO_BUCKET_CTRL_ENABLED == 1)
-            /* TODO: should this get removed? */
-            switch( current->ctrl_code ) {
-                case YMO_BUCKET_CTRL_CONTINUE:
-                    break;
-                case YMO_BUCKET_CTRL_CALL:
-                {
-                    ymo_bucket_cb_info_t* bucket_cb = (ymo_bucket_cb_info_t*)current->ctrl_data;
-                    if( bucket_cb ) {
-                        ymo_status_t cb_status = (*bucket_cb->ctrl_cb)(bucket_cb->ctrl_data);
-                        YMO_DELETE(ymo_bucket_cb_info_t, bucket_cb);
-                        if( cb_status != YMO_OKAY ) {
-                            ymo_log_error("Bucket ctrl CALL for fd: %i", fd);
-                            // TODO: goto err_bail
-                            return cb_status;
-                        }
-                    } else {
-                        // TODO: goto err_bail
-                        return EINVAL;
-                    }
-                }
-                break;
-            }
-#endif /* defined (YMO_BUCKET_CTRL_ENABLED) && (YMO_BUCKET_CTRL_ENABLED == 1) */
-
             next = current->next;
             ymo_bucket_free(current);
             current = next;
@@ -138,11 +155,10 @@ ymo_status_t ymo_net_send_buckets(int fd, ymo_bucket_t** head_p)
     }
 
     *head_p = current;
-    if( current ) {
+    if( current && current->len ) {
         YMO_NET_TRACE("%i: %lu/%lu bytes remain in next bucket",
                 fd, (current->len - current->bytes_sent), current->len);
-        YMO_NET_TRACE("More buckets to send for %i", fd);
-        return YMO_WOULDBLOCK;
+        goto do_send;
     } else {
         YMO_NET_TRACE("%i: Head is NULL. No more buckets to send", fd);
         return YMO_OKAY;
@@ -150,4 +166,51 @@ ymo_status_t ymo_net_send_buckets(int fd, ymo_bucket_t** head_p)
 }
 
 
+#if YMO_BUCKET_FROM_FILE == YMO_BUCKET_SENDFILE
+static ymo_status_t ymo_net_bucket_sendfile(int fd, ymo_bucket_t** head_p)
+{
+    ymo_bucket_t* f_bucket = *head_p;
+
+    off_t len_remain = (f_bucket->len - f_bucket->bytes_sent);
+    off_t send_len = YMO_MIN(len_remain,YMO_NET_SENDFILE_MAX);
+    off_t len = send_len;
+    errno = 0;
+    int rc = sendfile(
+            f_bucket->fd, fd,
+            f_bucket->bytes_sent, &len,
+            NULL, 0);
+
+    if( rc == -1 ) {
+        int s_err = errno;
+        ymo_log_debug("Failed to send fd %i to socket: %i (%s)",
+                f_bucket->fd, fd, strerror(s_err));
+        return s_err;
+    }
+
+    if( !len ) {
+        len = send_len;
+    }
+
+    if( len < len_remain ) {
+        YMO_NET_TRACE("Sent %zu bytes to %i", (size_t)len, fd);
+        f_bucket->bytes_sent += len;
+        return YMO_WOULDBLOCK;
+    }
+
+    YMO_NET_TRACE("Sent %zu bytes to %i. File sent!", (size_t)len, fd);
+    ymo_bucket_t* next = f_bucket->next;
+    ymo_bucket_free(f_bucket);
+
+    *head_p = next;
+
+    if( next ) {
+        YMO_NET_TRACE("%i: %lu/%lu bytes remain in next bucket",
+                fd, (next->len - next->bytes_sent), next->len);
+        return YMO_WOULDBLOCK;
+    }
+    return YMO_OKAY;
+}
+
+
+#endif /* YMO_BUCKET_SENDFILE */
 

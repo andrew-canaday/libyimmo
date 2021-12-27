@@ -32,15 +32,18 @@ void* ymo_malloc(size_t n) __attribute__((YMO_FUNC_MALLOC_P weak))
     return malloc(n);
 }
 
+
 void* ymo_calloc(size_t c, size_t n) __attribute__((YMO_FUNC_MALLOC_P weak))
 {
     return calloc(c,n);
 }
 
+
 void ymo_free(void* p) __attribute__((YMO_FUNC_MALLOC_P weak))
 {
     free(p);
 }
+
 
 #endif /* YMO_ALLOC_WEAK */
 

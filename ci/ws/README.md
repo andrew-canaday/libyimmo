@@ -59,20 +59,12 @@ WebSockets are tested using the [Autobahn Test Suite](https://github.com/crossba
 
 ### Docker Compose
 
-Build a test image:
-
-```bash
-docker build \
-  --target yimmo-test \
-  -t yimmo-ci-test:local \
-  -f ./docker/Dockerfile \
-  --target yimmo-test-ws \
-  ../../
-```
+Build a test image by invoking [`build-yimmo-test-image.sh`](../build-yimmo-test-image.sh).
 
 Run the test using docker compose:
 
 ```bash
+# In this directory:
 docker compose up --abort-on-container-exit
 ```
 

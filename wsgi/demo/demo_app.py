@@ -68,6 +68,21 @@ def get_source():
 
 
 #---------------------------------------------------
+# HACK HACK: toss together some endpoints with
+#            payload data.
+#
+# NOTE: This is no-good for benchmarking!
+#       (All in mem / no disk IO, etc).
+#---------------------------------------------------
+PAYLOAD_10K = 'A' * 1024 * 10
+@app.route('/payload/10k')
+def payload_10k():
+    return Response(PAYLOAD_10K, headers={
+        'Content-Type': 'text/plain'
+        })
+
+
+#---------------------------------------------------
 # WebSockets endpoints/code:
 #---------------------------------------------------
 @app.route('/websocket')

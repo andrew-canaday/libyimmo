@@ -114,6 +114,8 @@ char ymo_toupper(char c)
     unsigned char m = (((0x60 - c) ^ (0x7a - c)) >> 2) & 0x20;
     return c ^ m;
 }
+
+
 #endif /* YMO_TOLOWER_NO_INLINE */
 
 
@@ -346,6 +348,4 @@ char* ymo_base64_encoded(const unsigned char* src, size_t len)
     }
     return dst;
 }
-
-
 

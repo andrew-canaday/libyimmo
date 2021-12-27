@@ -57,6 +57,7 @@ ymo_http_exchange_t* ymo_http_exchange_create(void)
     return exchange;
 }
 
+
 void ymo_http_exchange_reset(ymo_http_exchange_t* exchange)
 {
     /*------------------------------------------*
@@ -88,10 +89,12 @@ void ymo_http_exchange_reset(ymo_http_exchange_t* exchange)
     return;
 }
 
+
 ymo_http_flags_t ymo_http_request_flags(const ymo_http_exchange_t* exchange)
 {
     return exchange->request.flags;
 }
+
 
 void ymo_http_exchange_free(ymo_http_exchange_t* exchange)
 {
@@ -109,6 +112,4 @@ void ymo_http_exchange_free(ymo_http_exchange_t* exchange)
     YMO_DELETE(ymo_http_exchange_t, exchange);
     return;
 }
-
-
 

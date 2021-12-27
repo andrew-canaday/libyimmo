@@ -29,66 +29,34 @@
 #ifndef YMO_BUCKET_H
 #define YMO_BUCKET_H
 
+#define YMO_BUCKET_FSTREAM   0  /* TODO: switch to unbuffered IO */
+#define YMO_BUCKET_MMAP      1
+#define YMO_BUCKET_SENDFILE  2
+#define YMO_BUCKET_FROM_FILE YMO_BUCKET_FSTREAM
+
 #include "ymo_config.h"
 #include <stddef.h>
 #include "yimmo.h"
 
-/**---------------------------------------------------------------
- * Macros
- *---------------------------------------------------------------*/
-
-/** Bucket-type struct header.
- *
- * :param data: - Pointer to the payload data
- * :param len:  - Payload length
- * :param next: - Next item in chain
- */
-#define YMO_BUCKET_HEAD(t) \
-    const char* data; \
-    size_t len; \
-    t* next;
-
-#if defined (YMO_BUCKET_CTRL_ENABLED) && (YMO_BUCKET_CTRL_ENABLED == 1)
-YMO_ENUM8_TYPEDEF(ymo_bucket_code) {
-    YMO_BUCKET_CTRL_CONTINUE,
-    YMO_BUCKET_CTRL_CALL,
-} YMO_ENUM8_AS(ymo_bucket_code_t);
 
 /**---------------------------------------------------------------
- * Types
+ * Data Structures
  *---------------------------------------------------------------*/
 
-/* TODO: this should probably take the bucket data, as well...
- */
-typedef ymo_status_t (*ymo_bucket_cb_t)(void* data);
-
-typedef struct ymo_bucket_cb_info {
-    ymo_bucket_cb_t  ctrl_cb;
-    void*            ctrl_data;
-} ymo_bucket_cb_info_t;
-#endif /* defined (YMO_BUCKET_CTRL_ENABLED) && (YMO_BUCKET_CTRL_ENABLED == 1) */
-
-/** Internal data structure used to buffer writes.
- * TODO: Add cleanup callback function?
- */
+/** Internal data structure used to buffer writes. */
 struct ymo_bucket {
-    YMO_BUCKET_HEAD(ymo_bucket_t)
-    char* buf;                      /* Optional pointer to managed memory */
+    const char*         data;       /* Pointer to the payload data. */
+    size_t              len;        /* Payload length */
+    char*               buf;        /* Optional pointer to managed memory */
     size_t              buf_len;    /* Length of the managed memory */
     size_t              bytes_sent; /* Total number of bytes sent */
-    ymo_bucket_free_fn  dealloc;    /* Deallocation function */
-#if defined (YMO_BUCKET_CTRL_ENABLED) && (YMO_BUCKET_CTRL_ENABLED == 1)
-    ymo_bucket_code_t   ctrl_code;  /* Bucket out-of-band control code */
-    void*               ctrl_data;  /* Optional out-of-band control data */
-#endif /* defined (YMO_BUCKET_CTRL_ENABLED) && (YMO_BUCKET_CTRL_ENABLED == 1) */
+#if YMO_BUCKET_FROM_FILE == YMO_BUCKET_SENDFILE
+    int                 fd;         /* TODO: HAVE_DECL_SENDFILE? */
+#endif /* YMO_BUCKET_SENDFILE */
+    ymo_bucket_t*       next;       /* Next bucket in the chain */
+    ymo_bucket_free_fn  cleanup_cb; /* Cleanup callback */
 };
 
-
-#if defined (YMO_BUCKET_CTRL_ENABLED) && (YMO_BUCKET_CTRL_ENABLED == 1)
-/* Set the special "code" flags on a bucket, for internal use. */
-void ymo_bucket_set_ctrl_code(
-        ymo_bucket_t* bucket, ymo_bucket_code_t code, void* data);
-#endif /* defined (YMO_BUCKET_CTRL_ENABLED) && (YMO_BUCKET_CTRL_ENABLED == 1) */
 
 #endif /* YMO_BUCKET_H */
 

@@ -34,6 +34,7 @@ ymo_mqtt_session_t* ymo_mqtt_session_create(ymo_conn_t* conn)
     return session;
 }
 
+
 void ymo_mqtt_session_msg_free(ymo_mqtt_session_t* session)
 {
     if( session->msg_in.var_hdr ) {
@@ -43,6 +44,7 @@ void ymo_mqtt_session_msg_free(ymo_mqtt_session_t* session)
     session->msg_in.var_hdr = session->msg_in.payload = NULL;
     return;
 }
+
 
 void ymo_mqtt_session_free(ymo_mqtt_session_t* session)
 {
@@ -108,6 +110,4 @@ void ymo_mqtt_session_send(
     ymo_conn_tx_enable(session->conn, 1);
     return;
 }
-
-
 

@@ -36,6 +36,7 @@
 
 #include "yimmo.h"
 
+#include "ymo_wsgi_proc.h"
 #include "ymo_wsgi_util.h"
 
 /**---------------------------------
@@ -83,7 +84,7 @@ extern PyObject* pAttrStartResponse;
  * - multi proc mode: start watching child processes
  * - single proc mode: start python interpretter
  */
-ymo_status_t ymo_wsgi_init(const char* mod_name, const char* app_name);
+ymo_status_t ymo_wsgi_init(ymo_wsgi_proc_t* w_proc);
 
 /** Stop the WSGI server.
  */

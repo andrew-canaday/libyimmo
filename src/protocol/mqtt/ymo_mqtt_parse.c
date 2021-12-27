@@ -114,6 +114,7 @@ static inline void mqtt_parse_len_init(ymo_mqtt_session_t* session)
     return;
 }
 
+
 /* Transition: MQTT_PARSE_FIXED_LENGTH -> MQTT_PARSE_VARHDR_PAYLOAD
  * Reset session fields used in variable header parsing. */
 static inline ymo_status_t mqtt_parse_varhdr_init(ymo_mqtt_session_t* session)
@@ -398,8 +399,4 @@ ssize_t ymo_mqtt_parse_varhdr_payload(
     }
     return to_copy;
 }
-
-
-
-
 

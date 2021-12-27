@@ -44,6 +44,7 @@ ymo_blalloc_t* ymo_blalloc_create(size_t n)
     return block;
 }
 
+
 void* ymo_blalloc(ymo_blalloc_t* block, size_t t_align, size_t t_size)
 {
     blit_t* obj_start = (blit_t*)YMO_TYPE_CEIL(t_align, block->current);
@@ -58,6 +59,7 @@ void* ymo_blalloc(ymo_blalloc_t* block, size_t t_align, size_t t_size)
     return NULL;
 }
 
+
 char* ymo_blalloc_strdup(ymo_blalloc_t* block, const char* s)
 {
     size_t len = strlen(s);
@@ -68,11 +70,13 @@ char* ymo_blalloc_strdup(ymo_blalloc_t* block, const char* s)
     return buffer;
 }
 
+
 void ymo_blalloc_reset(ymo_blalloc_t* block)
 {
     block->current = block->val;
     block->remain = block->end - block->val;
 }
+
 
 void ymo_blalloc_free(ymo_blalloc_t* block)
 {
@@ -80,6 +84,4 @@ void ymo_blalloc_free(ymo_blalloc_t* block)
         YMO_DELETE(ymo_blalloc_t, block);
     }
 }
-
-
 

@@ -308,6 +308,7 @@ static int test_add_and_get(void)
     YMO_TAP_PASS(__func__);
 }
 
+
 static int test_insert_and_get(void)
 {
     ymo_http_hdr_table_t* table = ymo_http_hdr_table_create();
@@ -321,6 +322,7 @@ static int test_insert_and_get(void)
     ymo_http_hdr_table_free(table);
     YMO_TAP_PASS(__func__);
 }
+
 
 static int test_multiple(void)
 {
@@ -336,6 +338,7 @@ static int test_multiple(void)
     YMO_TAP_PASS(__func__);
 }
 
+
 static int test_clear(void)
 {
     ymo_http_hdr_table_t* table = ymo_http_hdr_table_create();
@@ -346,6 +349,7 @@ static int test_clear(void)
     ymo_http_hdr_table_free(table);
     YMO_TAP_PASS(__func__);
 }
+
 
 static int test_iteration(void)
 {
@@ -398,6 +402,7 @@ static int test_iteration(void)
     YMO_TAP_PASS(__func__);
 }
 
+
 /* Mostly for illustration / reminder purposes: */
 static int test_collisions()
 {
@@ -428,6 +433,7 @@ static int test_collisions()
     ymo_assert(no_collisions == 0);
     YMO_TAP_PASS(__func__);
 }
+
 
 YMO_TAP_RUN(YMO_TAP_NO_INIT(),
         YMO_TAP_TEST_FN(test_add_and_get),

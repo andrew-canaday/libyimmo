@@ -1,6 +1,6 @@
 # libyimmo
 
-[![Configure, Make, and Check (Defaults + WSGI Build)](https://github.com/andrew-canaday/libyimmo/actions/workflows/configure_make_check.yml/badge.svg)](https://github.com/andrew-canaday/libyimmo/actions/workflows/configure_make_check.yml)
+[![Configure, Make, and Check](https://github.com/andrew-canaday/libyimmo/actions/workflows/configure_make_check.yml/badge.svg)](https://github.com/andrew-canaday/libyimmo/actions/workflows/configure_make_check.yml)
 [![Server Tests](https://github.com/andrew-canaday/libyimmo/actions/workflows/server-tests.yml/badge.svg)](https://github.com/andrew-canaday/libyimmo/actions/workflows/server-tests.yml)
 [![Publish Yimmo-WSGI Docker Image](https://github.com/andrew-canaday/libyimmo/actions/workflows/docker_wsgi.yml/badge.svg)](https://github.com/andrew-canaday/libyimmo/actions/workflows/docker_wsgi.yml)
 [![Create Release on Tag](https://github.com/andrew-canaday/libyimmo/actions/workflows/create_release_on_tag.yml/badge.svg)](https://github.com/andrew-canaday/libyimmo/actions/workflows/create_release_on_tag.yml)
@@ -145,27 +145,27 @@ mkdir -p ./build && cd ./build
 - `YIMMO_WSGI_NO_THREADS=1`
 
 ```
-Document Path:          /10k
+Document Path:          /payload/10k
 Document Length:        10240 bytes
 
-Concurrency Level:      32
-Time taken for tests:   5.533 seconds
+Concurrency Level:      64
+Time taken for tests:   4.703 seconds
 Complete requests:      250000
 Failed requests:        0
 Keep-Alive requests:    250000
-Total transferred:      2586500000 bytes
+Total transferred:      2583000000 bytes
 HTML transferred:       2560000000 bytes
-Requests per second:    45182.78 [#/sec] (mean)
-Time per request:       0.708 [ms] (mean)
-Time per request:       0.022 [ms] (mean, across all concurrent requests)
-Transfer rate:          456504.87 [Kbytes/sec] received
+Requests per second:    53158.19 [#/sec] (mean)
+Time per request:       1.204 [ms] (mean)
+Time per request:       0.019 [ms] (mean, across all concurrent requests)
+Transfer rate:          536357.85 [Kbytes/sec] received
 
 Connection Times (ms)
               min  mean[+/-sd] median   max
-Connect:        0    0   0.0      0       1
-Processing:     0    1   0.5      1      30
-Waiting:        0    1   0.5      1      30
-Total:          0    1   0.5      1      30
+Connect:        0    0   0.0      0       2
+Processing:     0    1   0.8      1      33
+Waiting:        0    1   0.8      1      33
+Total:          0    1   0.8      1      33
 ```
 
 ### Apache Bench, 2M clients, ..2 byte status payload.. (C Example Server)
@@ -180,29 +180,27 @@ is a two-byte "OK" status endpoint... The RSS stays under `3,870` for the
 duration of the test, though).
 
 ```
-Server Hostname:        127.0.0.1
-Server Port:            8081
-
 Document Path:          /status
-Document Length:        2 bytes
+Document Length:        0 bytes
 
-Concurrency Level:      32
-Time taken for tests:   8.441 seconds
+Concurrency Level:      200
+Time taken for tests:   8.027 seconds
 Complete requests:      2000000
-Failed requests:        0
-Keep-Alive requests:    2000000
-Total transferred:      178000000 bytes
-HTML transferred:       4000000 bytes
-Requests per second:    236938.75 [#/sec] (mean)
-Time per request:       0.135 [ms] (mean)
+Failed requests:        1999999
+   (Connect: 0, Receive: 36, Length: 1999963, Exceptions: 0)
+Keep-Alive requests:    1999964
+Total transferred:      179996760 bytes
+HTML transferred:       3999928 bytes
+Requests per second:    249151.64 [#/sec] (mean)
+Time per request:       0.803 [ms] (mean)
 Time per request:       0.004 [ms] (mean, across all concurrent requests)
-Transfer rate:          20593.31 [Kbytes/sec] received
+Transfer rate:          21897.70 [Kbytes/sec] received
 
 Connection Times (ms)
               min  mean[+/-sd] median   max
-Connect:        0    0   0.0      0       1
-Processing:     0    0   0.0      0       1
-Waiting:        0    0   0.0      0       1
-Total:          0    0   0.0      0       2
+Connect:        0    0   0.1      0       6
+Processing:     0    1   0.2      1       7
+Waiting:        0    1   0.2      1       7
+Total:          0    1   0.2      1      12
 ```
 

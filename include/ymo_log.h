@@ -40,10 +40,10 @@
 #include <stdarg.h>
 #include <stdbool.h>
 #include <unistd.h>
-#include <errno.h>
 #include <netinet/in.h>
 #include <uuid/uuid.h>
-#include <ev.h>
+
+#include "yimmo.h"
 
 /** Yimmo log levels.
  *
@@ -220,13 +220,13 @@ ymo_log_level_t ymo_log_set_level_by_name(const char* level_name);
     { \
         char id_str[37]; \
         uuid_unparse(id, id_str); \
-        ymo_log(YMO_LOG_TRACE, "%s:%i (%s): "fmt, \
-        __func__, __LINE__, id_str, __VA_ARGS__); \
+        ymo_log(YMO_LOG_TRACE, "%s:%s:%i (%s): "fmt, \
+        YMO_SOURCE, __func__, __LINE__, id_str, __VA_ARGS__); \
     } while( 0 )
 
 /** Compile-time TRACE log function/convenience macro */
 #define ymo_log_trace(fmt, ...) \
-    ymo_log(YMO_LOG_TRACE, "%s:%i: "fmt, __func__, __LINE__, __VA_ARGS__)
+    ymo_log(YMO_LOG_TRACE, "%s:%s:%i: "fmt, YMO_SOURCE, __func__, __LINE__, __VA_ARGS__)
 
 #else
 #define ymo_log_trace_uuid(fmt, id, ...) ((void)0)

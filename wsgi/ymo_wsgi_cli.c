@@ -153,7 +153,7 @@ void issue_startup_msg(ymo_wsgi_proc_t* w_proc)
 #endif /* YMO_WSGI_PRINT_EXTRA_INFO */
 
     /* Server Info: */
-    printf("Http Port: %i\n", w_proc->port);
+    printf("Http Port: %li\n", w_proc->port);
     printf("PID: %i\n", (int)getpid());
     puts(GREETING_END);
     return;

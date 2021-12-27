@@ -24,10 +24,10 @@
 # IN THE SOFTWARE.
 #
 #-------------------------------------------------------------------------------
-version: "3.9"
+version: "3.3"
 services:
   yimmo-ws-server:
-    image: yimmo-ci-test:local
+    image: "${IMAGE_NAME:-yimmo-ci-test:local}"
     ports:
       - "8081:8081"
     entrypoint: ["/usr/local/bin/yimmo-example-ws"]

@@ -54,10 +54,12 @@ ymo_status_t ymo_wsgi_worker_add_exchange(
     return ymo_queue_append(&worker->queue_in, exchange);
 }
 
+
 int ymo_wsgi_worker_notify(ymo_wsgi_worker_t* worker)
 {
     return pthread_cond_signal(&(worker->ready_in));
 }
+
 
 static void ymo_wsgi_worker_reset(ymo_wsgi_worker_t* worker)
 {
@@ -122,6 +124,7 @@ worker_init_bail:
     return status;
 }
 
+
 ymo_status_t ymo_wsgi_worker_start(ymo_wsgi_worker_t* worker)
 {
     ymo_status_t status = YMO_OKAY;
@@ -153,10 +156,12 @@ worker_start_bail:
     return status;
 }
 
+
 int ymo_wsgi_worker_join(ymo_wsgi_worker_t* worker)
 {
     return pthread_join(worker->thread, NULL);
 }
+
 
 /*---------------------------------*
  *   Thread Worker Functions:
@@ -186,6 +191,7 @@ ymo_status_t ymo_wsgi_worker_response_body_append(
     Py_END_ALLOW_THREADS
     return YMO_OKAY;
 }
+
 
 static ymo_status_t ymo_wsgi_worker_issue_request(
         PyObject* pArgs,
@@ -344,7 +350,4 @@ worker_gil_release:
 
     return NULL;
 }
-
-
-
 

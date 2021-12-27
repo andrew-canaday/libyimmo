@@ -63,6 +63,7 @@ YMO_ENUM8_TYPEDEF(ymo_conn_state) {
     YMO_CONN_TLS_ESTABLISHED,
     YMO_CONN_TLS_CLOSING,
     YMO_CONN_TLS_CLOSED,
+    YMO_CONN_SHUTDOWN,
     YMO_CONN_CLOSING,
     YMO_CONN_CLOSED,
 } YMO_ENUM8_AS(ymo_conn_state_t);
@@ -78,7 +79,6 @@ struct ymo_conn {
     bsat_timeout_t    idle_timeout;    /* Used to disconnect idle sessions */
     uuid_t            id;              /* Unique ID */
     int               fd;              /* The underlying file descriptor */
-    int               ev_flags;        /* Used to store EV_READ/EV_WRITE flags */
     struct ev_io      w_read;          /* Per-connection read watcher */
     struct ev_io      w_write;         /* Per-connection write watcher */
     ymo_conn_state_t  state;           /* Connection state */
@@ -151,6 +151,11 @@ void ymo_conn_tx_enable(ymo_conn_t* conn, int flag);
 /** Trigger the write callback right now, as if ev_run had invoked it.
  */
 void ymo_conn_tx_now(ymo_conn_t* conn);
+
+
+/** Trigger the read callback right now, as if ev_run had invoked it.
+ */
+void ymo_conn_rx_now(ymo_conn_t* conn);
 
 
 /** Close a conn object.

@@ -1055,10 +1055,16 @@ div.code-block-caption > span.caption-text {
 	color: #744;
 }
 
+
+section > dl.c > dd div.code-block-caption {
+	margin-left: -0.25em;
+	padding-left: 0;
+}
+
 section > section > section > section div.code-block-caption > span.caption-text,
 div.file-title div.code-block-caption > span.caption-text,
 dl.c > dd div.code-block-caption > span.caption-text {
-	font-size: 1.2em;
+	font-size: 1.1em;
 }
 
 

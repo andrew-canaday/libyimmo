@@ -29,6 +29,7 @@
 #include <Python.h>
 #include <ev.h>
 #include <stdio.h>
+#include <libgen.h>
 
 #include "ymo_log.h"
 #include "ymo_env.h"
@@ -47,6 +48,7 @@
 /*---------------------------------*
  *           Prototypes:
  *---------------------------------*/
+static int get_module_app(ymo_wsgi_proc_t* w_proc, int argc, char** argv);
 static void config_from_env(ymo_wsgi_proc_t* w_proc);
 static struct ev_loop* get_ev_default_loop(void);
 static int init_http_server(ymo_wsgi_proc_t* proc);
@@ -73,7 +75,6 @@ static ymo_wsgi_proc_t w_proc = {
     .restart_count = 0
 };
 
-static char ymo_wsgi_app_string[256];
 
 /*---------------------------------*
  *             Main:
@@ -90,38 +91,18 @@ int main(int argc, char** argv)
     w_proc.proc_name_len = strlen(w_proc.proc_name);
     w_proc.proc_name_buflen = w_proc.proc_name_len+1;
 
-    /* TODO: a little hacky here. Let's tidy it to use module:<stmt>... */
     w_proc.module = getenv("YIMMO_WSGI_MODULE");
     w_proc.app = getenv("YIMMO_WSGI_APP");
 
     if( !w_proc.module || !w_proc.app ) {
-        /* If we didn't get app and module through env, check command line */
-        if( argc < 3 ) {
-            fprintf(stderr, "Usage: ymo_wsgi MODULE FUNC\n"
-                    "(Or set YIMMO_WSGI_MODULE and YIMMO_WSGI_APP)\n");
-            return 1;
+        errno = 0;
+        if( get_module_app(&w_proc, argc, argv) ) {
+            fprintf(stderr, "Unable to load module: %s", strerror(errno));
+            return -1;
         }
-
-        /* First arg is module: */
-        w_proc.module = argv[1];
-
-        /* Everything thereafter is app: */
-        memset(ymo_wsgi_app_string, 0, sizeof(ymo_wsgi_app_string));
-        char* c = ymo_wsgi_app_string;
-        for( int i = 2; i < argc; i++ )
-        {
-            for( size_t n = 0; n < strlen(argv[i]); n++ )
-            {
-                *c++ = argv[i][n];
-            }
-        }
-        *c++ = '\0';
-        w_proc.app = ymo_wsgi_app_string;
     }
 
-
-    /* TODO: trim this down to basename: */
-    script_name = w_proc.module;
+    script_name = basename(w_proc.module);
 
     /* Say hello */
     issue_startup_msg(&w_proc);
@@ -142,8 +123,12 @@ int main(int argc, char** argv)
     }
 
     if( w_proc.no_wsgi_proc > 1 ) {
-        /* TODO: check result */
         w_proc.children = calloc(w_proc.no_wsgi_proc, sizeof(pid_t));
+        if( !w_proc.children ) {
+            ymo_log_fatal("Failed to allocate memory for WSGI workers: %s",
+                    strerror(errno));
+            return -1;
+        }
     } else {
         w_proc.is_worker = 1;
         return ymo_wsgi_proc_main(&w_proc);
@@ -157,6 +142,7 @@ int main(int argc, char** argv)
 
     return ymo_wsgi_proc_main(&w_proc);
 }
+
 
 static void config_from_env(ymo_wsgi_proc_t* w_proc)
 {
@@ -216,3 +202,48 @@ static int init_http_server(ymo_wsgi_proc_t* w_proc)
 #endif /* YMO_WSGI_REUSEPORT */
     return 0;
 }
+
+
+int get_module_app(ymo_wsgi_proc_t* w_proc, int argc, char** argv)
+{
+    size_t buf_len = 0;
+
+    for( int i = 1; i < argc; i++ )
+    {
+        buf_len += strlen(argv[i]);
+    }
+
+    char* module = malloc(buf_len+1);
+
+    if( !module ) {
+        errno = ENOMEM;
+        return -1;
+    }
+
+    module[0] = '\0';
+    char* dst = module;
+    for( int i = 1; i < argc; i++ )
+    {
+        size_t len = strlen(argv[i]);
+        strcat(dst, argv[i]);
+        dst += len;
+    }
+
+    char* app = strchr(module, ':');
+    if( app == NULL ) {
+        free(module);
+        errno = EINVAL;
+        return -1;
+    }
+
+    *app++ = '\0';
+    w_proc->module = module;
+    w_proc->app = app;
+
+    if( strlen(w_proc->module) == 0 || strlen(w_proc->app) == 0 ) {
+        errno = EINVAL;
+        return -1;
+    }
+    return 0;
+}
+

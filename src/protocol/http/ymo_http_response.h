@@ -58,7 +58,7 @@ struct ymo_http_response {
     struct ymo_http_response* next;
     ymo_http_hdr_table_t      headers;
     size_t                    content_len;
-    char                      content_len_str[8];
+    char                      content_len_str[21];
     size_t                    status_len;
     char                      status_str[STATUS_STR_BUFF_SIZE];
     ymo_bucket_t*             body_head;

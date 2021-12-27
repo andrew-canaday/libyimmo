@@ -43,16 +43,20 @@ SUBDIRS=\
 lib_LTLIBRARIES=\
 	libyimmo.la
 
+# TODO: pthreads should be conditional
 libyimmo_la_CFLAGS=\
 	-I@top_srcdir@/src \
 	-I@top_builddir@/include \
 	-I@top_srcdir@/include \
-	@BSAT_CFLAGS@
+	@BSAT_CFLAGS@ \
+	@PTHREAD_CFLAGS@
 
+# TODO: pthreads should be conditional
 libyimmo_la_LDFLAGS=\
 	-version-info @YMO_LIB_VERSION@ \
 	@BSAT_LIBS@ \
-	@LIBS@
+	@LIBS@ \
+	@PTHREAD_LIBS@
 
 libyimmo_la_SOURCES=\
 	ymo_alloc.c \

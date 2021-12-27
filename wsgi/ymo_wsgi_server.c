@@ -28,7 +28,7 @@
 #include <Python.h>
 
 /** Default TCP accept waitlist length. */
-#define HTTP_DEFAULT_LISTEN_BACKLOG 100
+#define HTTP_DEFAULT_LISTEN_BACKLOG 256
 
 #include "ymo_log.h"
 #include "ymo_http.h"
@@ -108,6 +108,7 @@ ymo_status_t ymo_wsgi_server_header_cb(
     return status;
 }
 
+
 ymo_server_t* ymo_wsgi_server_init(
         struct ev_loop* loop, in_port_t http_port, ymo_wsgi_proc_t* proc)
 {
@@ -164,6 +165,17 @@ ymo_server_t* ymo_wsgi_server_init(
     /* Set up the yimmo http_srv: */
     http_srv = ymo_server_create(&http_cfg, http_proto);
     if( http_srv ) {
+        /* If we're going to fork, give libyimmo a heads up: */
+        if( 1 /* TODO: proc->no_wsgi_proc */ ) {
+            ymo_status_t mp_ok = ymo_server_pre_fork(http_srv);
+            if( mp_ok ) {
+                errno = mp_ok;
+                ymo_log(YMO_LOG_ERROR, strerror(mp_ok));
+                ymo_server_free(http_srv);
+                return NULL;
+            }
+        }
+
         if( (n = ymo_server_init(http_srv)) ) {
             ymo_log(YMO_LOG_ERROR, strerror(n));
             ymo_server_free(http_srv);
@@ -227,6 +239,7 @@ response_cb_done:
     ymo_wsgi_worker_unlock_out(worker);
 }
 
+
 void ymo_wsgi_server_async(struct ev_loop* loop, ev_async* w, int revents)
 {
     ymo_wsgi_server_queue_responses(loop, w->data);
@@ -255,6 +268,8 @@ void ymo_wsgi_server_idle(struct ev_loop* loop, ev_idle* w, int revents)
     ymo_wsgi_server_queue_responses(loop, w->data);
     ev_idle_stop(loop, w);
 }
+
+
 #endif /* YMO_WSGI_USE_IDLE_WATCHER */
 
 

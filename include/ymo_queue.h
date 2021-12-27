@@ -78,6 +78,7 @@ static inline void ymo_queue_init(ymo_queue_t* queue)
     memset(queue, 0, sizeof(ymo_queue_t));
 }
 
+
 /** Create a new ymo queue with a node pool. */
 ymo_queue_t* ymo_queue_create_pool(size_t n);
 

@@ -32,6 +32,11 @@
 #include "ymo_ws.h"
 #include "ymo_proto_ws.h"
 
+
+/* HACK HACK HACK */
+#define YMO_WS_FRAME_MAX 32768
+
+
 /** Session
  * =========
  *
@@ -91,6 +96,9 @@ typedef struct ymo_ws_frame {
     uint8_t               masked;
     ymo_ws_frame_flags_t  flags;
 
+    /* HACK HACK HACK */
+    char  buffer[YMO_WS_FRAME_MAX];
+
     /* The following have mutually exclusive lifecycles: */
     union {
         uint8_t  mask_mod;
@@ -99,10 +107,12 @@ typedef struct ymo_ws_frame {
 
 } ymo_ws_frame_t;
 
-YMO_ENUM8_TYPEDEF(ws_msg_state) {
-    WS_MSG_START,
-    WS_MSG_CONTINUE,
-} YMO_ENUM8_AS(ws_msg_state_t);
+#define UTF8_WIDTH_1 0
+#define UTF8_WIDTH_2 1
+#define UTF8_WIDTH_3 2
+#define UTF8_WIDTH_4 3
+
+typedef uint8_t ws_msg_type_t;
 
 /** Internal structure used to manage a yimmo ws session. */
 struct ymo_ws_session {
@@ -116,7 +126,20 @@ struct ymo_ws_session {
     ymo_bucket_t*        send_tail;
 
     ws_session_state_t   state;
-    ws_msg_state_t       msg_state;
+    ws_msg_type_t        msg_type;
+
+    /* Experimentation: */
+    union {
+        uint8_t  utf8_state;
+        struct {
+            uint8_t  point_remain    : 2;
+            uint8_t  code_width      : 2;
+            uint8_t  check_surrogate : 1;
+            uint8_t  check_overlong  : 1;
+            uint8_t  check_max       : 1;
+        };
+    };
+
 
     /* Buffered messages (if buffering is enabled), we buffer the
      * whole message — up to WS_MSG_LEN_MAX bytes — and deliver that):

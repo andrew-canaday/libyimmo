@@ -45,6 +45,7 @@ const char* ymo_http_hdr_hash_override_method(void)
     return YMO_HTTP_HDR_HASH_OVERRIDE_METHOD;
 }
 
+
 /*---------------------------------------------------------------------------*
  * WEAK override:
  *--------------------------------------------------------------------------*/
@@ -57,11 +58,13 @@ __attribute__((YMO_FUNC_PURE_P weak)) ymo_http_hdr_id_t ymo_http_hdr_hash_init(v
     return 5;
 }
 
+
 __attribute__((YMO_FUNC_PURE_P weak)) ymo_http_hdr_id_t ymo_http_hdr_hash_ch(
         ymo_http_hdr_id_t h, char c)
 {
     return (h*283) + (c & 0xdf);
 }
+
 
 __attribute__((YMO_FUNC_PURE_P weak)) ymo_http_hdr_id_t ymo_http_hdr_hash(
         const char* str_in, size_t* len)
@@ -78,6 +81,8 @@ __attribute__((YMO_FUNC_PURE_P weak)) ymo_http_hdr_id_t ymo_http_hdr_hash(
     }
     return h & YMO_HDR_TABLE_MASK;
 }
+
+
 #endif /* HAVE_FUNC_ATTRIBUTE_WEAK */
 
 /* TODO: allow override for this too / optional strcmp, at least! */
@@ -93,6 +98,7 @@ ymo_http_hdr_table_t* ymo_http_hdr_table_create()
     return table;
 }
 
+
 void ymo_http_hdr_table_init(ymo_http_hdr_table_t* table)
 {
 #if YMO_HDR_TABLE_POOL_SIZE
@@ -103,6 +109,7 @@ void ymo_http_hdr_table_init(ymo_http_hdr_table_t* table)
 #endif /* YMO_HDR_TABLE_POOL_SIZE */
     return;
 }
+
 
 static inline ymo_http_hdr_table_node_t* ymo_http_hdr_table_node_create(
         ymo_http_hdr_table_t* table)
@@ -123,6 +130,7 @@ static inline ymo_http_hdr_table_node_t* ymo_http_hdr_table_node_create(
 #endif /* YMO_HDR_TABLE_POOL_SIZE */
     return node;
 }
+
 
 static void ymo_http_hdr_table_node_free(
         ymo_http_hdr_table_t* table, ymo_http_hdr_table_node_t* node)
@@ -145,11 +153,13 @@ static void ymo_http_hdr_table_node_free(
     return;
 }
 
+
 void ymo_http_hdr_table_free(ymo_http_hdr_table_t* table)
 {
     ymo_http_hdr_table_clear(table);
     YMO_DELETE(ymo_http_hdr_table_t, table);
 }
+
 
 static ymo_http_hdr_id_t table_insert_first(
         ymo_http_hdr_table_t* table,
@@ -272,6 +282,7 @@ add_nomem:
     return 0;
 }
 
+
 ymo_http_hdr_id_t ymo_http_hdr_table_add_precompute(
         ymo_http_hdr_table_t* table,
         ymo_http_hdr_id_t h_id,
@@ -320,12 +331,14 @@ add_nomem:
     return 0;
 }
 
+
 const char* ymo_http_hdr_table_get(
         const ymo_http_hdr_table_t* table, const char* hdr)
 {
     ymo_http_hdr_id_t h_id = YMO_HDR_HASH_FN(hdr, NULL);
     return ymo_http_hdr_table_get_id(table, h_id);
 }
+
 
 const char* ymo_http_hdr_table_get_id(
         const ymo_http_hdr_table_t* table, ymo_http_hdr_id_t h_id)
@@ -347,6 +360,7 @@ const char* ymo_http_hdr_table_get_id(
     }
     return data;
 }
+
 
 void ymo_http_hdr_table_clear(ymo_http_hdr_table_t* table)
 {
@@ -418,7 +432,4 @@ found_next:
     /* If we make it here, the header table is empty. */
     return cur;
 }
-
-
-
 

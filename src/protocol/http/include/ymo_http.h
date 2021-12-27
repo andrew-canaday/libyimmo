@@ -453,7 +453,7 @@ struct ymo_http_request {
 
 /** Get the header table for a response object. */
 ymo_http_hdr_table_t* ymo_http_response_get_headers(
-        const ymo_http_response_t* response);
+        ymo_http_response_t* response);
 
 /** Get the value of the header given by ``hdr_name``.
  *

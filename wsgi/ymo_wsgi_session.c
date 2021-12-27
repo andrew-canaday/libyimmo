@@ -77,11 +77,13 @@ ymo_status_t ymo_wsgi_session_init(void* server_data, ymo_http_session_t* http_s
     return YMO_OKAY;
 }
 
+
 static void ymo_wsgi_session_free(ymo_wsgi_session_t* session)
 {
     YMO_WSGI_TRACE("Freeing ymo_wsgi_session: %p", (void*)session);
     YMO_DELETE(ymo_wsgi_session_t, session);
 }
+
 
 void ymo_wsgi_session_cleanup(
         void* server_data, ymo_http_session_t* http_session, void* data)
@@ -109,16 +111,19 @@ void ymo_wsgi_session_cleanup(
     return;
 }
 
+
 ymo_wsgi_worker_t* ymo_wsgi_session_worker(ymo_wsgi_session_t* session)
 {
     YMO_WSGI_TRACE("Worker for session %p: %zu", (void*)session, session->worker);
     return session->worker;
 }
 
+
 int ymo_wsgi_session_lock(ymo_wsgi_session_t* session)
 {
     return pthread_mutex_lock(&(session->lock));
 }
+
 
 int ymo_wsgi_session_trylock(ymo_wsgi_session_t* session)
 {
@@ -128,10 +133,12 @@ int ymo_wsgi_session_trylock(ymo_wsgi_session_t* session)
     return pthread_mutex_trylock(&(session->lock));
 }
 
+
 int ymo_wsgi_session_unlock(ymo_wsgi_session_t* session)
 {
     return pthread_mutex_unlock(&(session->lock));
 }
+
 
 size_t ymo_wsgi_session_incref(ymo_wsgi_session_t* session)
 {
@@ -139,6 +146,7 @@ size_t ymo_wsgi_session_incref(ymo_wsgi_session_t* session)
     YMO_WSGI_TRACE("WSGI session %p refcnt: %zu", (void*)session, refcnt);
     return refcnt;
 }
+
 
 size_t ymo_wsgi_session_decref(ymo_wsgi_session_t* session)
 {
@@ -150,11 +158,13 @@ size_t ymo_wsgi_session_decref(ymo_wsgi_session_t* session)
     return refcnt;
 }
 
+
 void ymo_wsgi_session_close(ymo_wsgi_session_t* session)
 {
     atomic_fetch_add(&(session->closed), 1);
     return;
 }
+
 
 int ymo_wsgi_session_is_closed(ymo_wsgi_session_t* session)
 {
@@ -199,6 +209,7 @@ ymo_wsgi_exchange_t* ymo_wsgi_session_create_exchange(
     return exchange;
 }
 
+
 void ymo_wsgi_session_exchange_done(ymo_wsgi_session_t* session)
 {
     if( !session->head ) {
@@ -209,6 +220,4 @@ void ymo_wsgi_session_exchange_done(ymo_wsgi_session_t* session)
     ymo_wsgi_exchange_decref(session->head);
     session->head = next;
 }
-
-
 

@@ -96,12 +96,14 @@ static void init_r_info(void)
     return;
 }
 
+
 static void reset_r_info(void)
 {
     ymo_http_hdr_table_clear(&r_info.headers);
     init_r_info();
     return;
 }
+
 
 /* Return an HTTP protocol object that has no data and only
  * registers a HTTP complete callback handler:
@@ -115,6 +117,7 @@ static ymo_proto_t* get_proto_http(ymo_http_cb_t http_cb)
     return ymo_proto_http_create(
             NULL, http_cb, NULL, NULL, NULL, NULL);
 }
+
 
 static ssize_t make_request(const char* r_data)
 {
@@ -158,6 +161,7 @@ static ssize_t make_request(const char* r_data)
     YMO_FREE(test_conn);
     return r_val;
 }
+
 
 #endif /* YMO_HTTP_TEST_H */
 

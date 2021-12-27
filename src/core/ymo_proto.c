@@ -36,5 +36,3 @@ const char* ymo_proto_name(ymo_proto_t* proto)
     return proto->name;
 }
 
-
-

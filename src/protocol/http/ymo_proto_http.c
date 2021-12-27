@@ -126,7 +126,6 @@ static ymo_status_t buffer_body_cb(
 }
 
 
-
 ymo_proto_t* ymo_proto_http_create(
         ymo_http_session_init_cb_t session_init,
         ymo_http_cb_t http_callback,
@@ -229,6 +228,7 @@ ymo_http_upgrade_status_t ymo_http2_not_available_upgrade_cb(
     return YMO_HTTP_UPGRADE_IGNORE;
 }
 
+
 ymo_http_upgrade_handler_t* ymo_http2_no_upgrade_handler()
 {
     ymo_http_upgrade_handler_t* upgrade_handler = YMO_NEW(ymo_http_upgrade_handler_t);
@@ -238,6 +238,7 @@ ymo_http_upgrade_handler_t* ymo_http2_no_upgrade_handler()
     }
     return upgrade_handler;
 }
+
 
 /*---------------------------------------------------------------*
  *  HTTP Request Handler:
@@ -389,7 +390,6 @@ void ymo_proto_http_cleanup(ymo_proto_t* proto, ymo_server_t* server)
 {
     return;
 }
-
 
 
 /*---------------------------------------------------------------*

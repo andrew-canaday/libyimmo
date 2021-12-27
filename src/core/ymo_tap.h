@@ -129,6 +129,7 @@ const char* ymo_tap_indent(const char* fmt, ...)
     return (const char*)indent;
 }
 
+
 #define ymo_tap_assert_fail(fmt, ...) \
     do { \
         const char* msg = ymo_tap_indent(fmt, __VA_ARGS__); \
@@ -266,6 +267,7 @@ int ymo_tap_run(
 
     return suite_status;
 }
+
 
 /** .. c:macro::YMO_TAP_RUN(...)
  *

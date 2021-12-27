@@ -163,6 +163,7 @@ static const char* get_http_reason(ymo_http_status_t status)
     return reason;
 }
 
+
 ymo_http_response_t* ymo_http_response_create(ymo_http_session_t* session)
 {
     ymo_http_response_t* response = NULL;
@@ -176,17 +177,20 @@ ymo_http_response_t* ymo_http_response_create(ymo_http_session_t* session)
     return response;
 }
 
+
 ymo_http_hdr_table_t* ymo_http_response_get_headers(
-        const ymo_http_response_t* response)
+        ymo_http_response_t* response)
 {
     return &response->headers;
 }
+
 
 const char* ymo_http_response_get_header(
         const ymo_http_response_t* response, const char* hdr_name)
 {
     return ymo_http_hdr_table_get(&response->headers, hdr_name);
 }
+
 
 ymo_status_t ymo_http_response_add_header(
         ymo_http_response_t* response, const char* header, const char* value)
@@ -195,12 +199,14 @@ ymo_status_t ymo_http_response_add_header(
     return YMO_OKAY;
 }
 
+
 ymo_status_t ymo_http_response_insert_header(
         ymo_http_response_t* response, const char* header, const char* value)
 {
     ymo_http_hdr_table_insert(&response->headers, header, value);
     return YMO_OKAY;
 }
+
 
 void ymo_http_response_body_append(
         ymo_http_response_t* response, ymo_bucket_t* body_data)
@@ -221,6 +227,7 @@ void ymo_http_response_body_append(
     }
     return;
 }
+
 
 void ymo_http_response_set_status(
         ymo_http_response_t* response, ymo_http_status_t status)
@@ -268,6 +275,7 @@ ymo_http_flags_t ymo_http_response_flags(const ymo_http_response_t* response)
     return response->flags;
 }
 
+
 /* TODO: should probably have a set/unset, take a param, or just expose the
  * flags...
  */
@@ -277,11 +285,13 @@ void ymo_http_response_set_flag(
     response->flags |= flag;
 }
 
+
 void ymo_http_response_set_flags(
         ymo_http_response_t* response, ymo_http_flags_t flags)
 {
     response->flags = flags;
 }
+
 
 void ymo_http_response_ready(ymo_http_response_t* response)
 {
@@ -290,10 +300,12 @@ void ymo_http_response_ready(ymo_http_response_t* response)
     return;
 }
 
+
 int ymo_http_response_is_ready(const ymo_http_response_t* response)
 {
     return (response->flags & YMO_HTTP_RESPONSE_READY);
 }
+
 
 void ymo_http_response_finish(ymo_http_response_t* response)
 {
@@ -301,6 +313,7 @@ void ymo_http_response_finish(ymo_http_response_t* response)
     ymo_conn_tx_enable(response->session->conn, 1);
     return;
 }
+
 
 int ymo_http_response_finished(const ymo_http_response_t* response)
 {
@@ -484,6 +497,7 @@ serialize_nomem:
     return NULL;
 }
 
+
 ymo_bucket_t* ymo_http_response_body_get(
         ymo_conn_t* conn, ymo_http_response_t* response)
 {
@@ -527,6 +541,7 @@ ymo_bucket_t* ymo_http_response_body_get(
     return bucket_out;
 }
 
+
 void ymo_http_response_free(ymo_http_response_t* response)
 {
     if( response ) {
@@ -540,6 +555,4 @@ void ymo_http_response_free(ymo_http_response_t* response)
     YMO_DELETE(ymo_http_response_t, response);
     return;
 }
-
-
 

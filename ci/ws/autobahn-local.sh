@@ -40,16 +40,15 @@ hr '='
 log_info "Autobahn Tests:"
 docker run -t ${AB_DOCKER_OPTS} \
     --rm \
-    --name "${AB_NAME}" \
     --entrypoint "${AB_ENTRYPOINT:-"/opt/pypy/bin/wstest"}" \
     --add-host=host.docker.internal:host-gateway \
     -v "${AB_CONFIG_DIR}:/config" \
     -v "${AB_REPORTS_DIR}:/reports" \
-    -p 9001:9001 \
-    --name autobahn-tests \
+    --name "${AB_NAME}" \
     crossbario/autobahn-testsuite \
         -m fuzzingclient \
-        -s "${FUZZINGCLIENT_CONFIG:-"/config/fuzzingclient.local.json"}"
+        -s "${FUZZINGCLIENT_CONFIG:-"/config/fuzzingclient.local.json"}" \
+        || err_bail "Failed to start image."
 
 hr '-'
 log_info 'Results'

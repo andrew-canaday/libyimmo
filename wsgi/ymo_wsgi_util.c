@@ -66,6 +66,7 @@ int ymo_wsgi_signal_mask(int signum, int how)
     return r_sig;
 }
 
+
 int ymo_wsgi_signal_get_mask(sigset_t* signal_mask)
 {
     return pthread_sigmask(0, NULL, signal_mask);
@@ -76,5 +77,4 @@ int ymo_wsgi_signal_set_mask(sigset_t* signal_mask)
 {
     return pthread_sigmask(SIG_SETMASK, signal_mask, NULL);
 }
-
 

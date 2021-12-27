@@ -104,7 +104,7 @@ extern const char YMO_BASE64_TABLE[];
  */
 #define YMO_TYPE_CEIL(s, p) (( ((uintptr_t)p) + YMO_TYPE_ALIGN(s)) & ~YMO_TYPE_ALIGN(s))
 
-
+#define YMO_RESET_ERRNO() (errno = 0)
 
 /**---------------------------------------------------------------
  * Functions
@@ -132,11 +132,14 @@ static inline char ymo_tolower(char c)
     return c ^ m;
 }
 
+
 static char ymo_toupper(char c)
 {
     unsigned char m = (((0x60 - c) ^ (0x7a - c)) >> 2) & 0x20;
     return c ^ m;
 }
+
+
 #endif /* YMO_INLINE_TOLOWER */
 
 /** Fast full-string tolower implementation.

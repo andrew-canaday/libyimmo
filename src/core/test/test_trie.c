@@ -94,12 +94,14 @@ static int add_headers(void)
     YMO_TAP_PASS(__func__);
 }
 
+
 static int create_oitrie(void)
 {
     oitrie = ymo_oitrie_create(trie);
     ymo_assert(oitrie != NULL);
     YMO_TAP_PASS(__func__);
 }
+
 
 static int check_headers(void)
 {
@@ -112,6 +114,7 @@ static int check_headers(void)
     YMO_TAP_PASS(__func__);
 }
 
+
 static int check_missing(void)
 {
     /* Try a name that doesn't exist: */
@@ -120,6 +123,7 @@ static int check_missing(void)
     ymo_assert(r_val == EINVAL);
     YMO_TAP_PASS(__func__);
 }
+
 
 static int check_partial1(void)
 {
@@ -130,6 +134,7 @@ static int check_partial1(void)
     YMO_TAP_PASS(__func__);
 }
 
+
 static int check_partial2(void)
 {
     /* Try a name that's close: */
@@ -138,6 +143,7 @@ static int check_partial2(void)
     ymo_assert(r_val == EINVAL);
     YMO_TAP_PASS(__func__);
 }
+
 
 /*-------------------------------------------------------------*
  * Main:
@@ -154,6 +160,7 @@ static int trie_setup(void)
     }
     return 0;
 }
+
 
 YMO_TAP_RUN(trie_setup, NULL, NULL,
         YMO_TAP_TEST_FN(add_headers),

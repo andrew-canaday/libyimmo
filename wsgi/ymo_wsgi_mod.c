@@ -78,7 +78,7 @@ PyMODINIT_FUNC ymo_wsgi_module_init();
  *           Functions:
  *---------------------------------*/
 
-ymo_status_t ymo_wsgi_init(const char* mod_name, const char* app_name)
+ymo_status_t ymo_wsgi_init(ymo_wsgi_proc_t* w_proc)
 {
     /*------------------------------------------------------------------
      * Startup Python and Initialize the yimmo module:
@@ -116,14 +116,14 @@ ymo_status_t ymo_wsgi_init(const char* mod_name, const char* app_name)
     /*------------------------------------------------------------------
      * Get the WSGI application or bail:
      *------------------------------------------------------------------*/
-    PyObject* pWsgiAppName = PyUnicode_DecodeFSDefault(mod_name);
+    PyObject* pWsgiAppName = PyUnicode_DecodeFSDefault(w_proc->module);
     if( !pWsgiAppName ) {
         goto module_bail;
     }
 
     pWsgiAppModule = PyImport_Import(pWsgiAppName);
     if( !pWsgiAppModule ) {
-        fprintf(stderr, "Unable to import wsgi module: %s\n", mod_name);
+        fprintf(stderr, "Unable to import wsgi module: %s\n", w_proc->module);
         return -1;
     }
 
@@ -142,7 +142,7 @@ ymo_status_t ymo_wsgi_init(const char* mod_name, const char* app_name)
     gstate = PyGILState_Ensure();
     PyObject* pWsgiAppGlobals = PyModule_GetDict(pWsgiAppModule);
     pWsgiAppCallable = PyRun_String(
-            app_name, Py_eval_input,
+            w_proc->app, Py_eval_input,
             pWsgiAppGlobals, pWsgiAppGlobals);
     PyGILState_Release(gstate);
 
@@ -151,7 +151,7 @@ ymo_status_t ymo_wsgi_init(const char* mod_name, const char* app_name)
     }
 
     if( !PyCallable_Check(pWsgiAppCallable) ) {
-        ymo_log_error("WSGI app argument (%s) must be callable!", app_name);
+        ymo_log_error("WSGI app argument (%s) must be callable!", w_proc->app);
         goto module_bail;
     }
 
@@ -191,9 +191,10 @@ ymo_status_t ymo_wsgi_init(const char* mod_name, const char* app_name)
     pCommonEnviron = PyDict_New();
 
     /* PEP 3333: */
-    /* TODO: "SERVER_NAME" / "SERVER_PORT" */
+    YMO_INCREF_PYDICT_SETITEM_STRING(pCommonEnviron, "SERVER_NAME", PyUnicode_FromString("yimmo-wsgi"));
+    YMO_INCREF_PYDICT_SETITEM_STRING(pCommonEnviron, "SERVER_PORT", PyLong_FromLong(w_proc->port));
     YMO_INCREF_PYDICT_SETITEM_STRING(pCommonEnviron, "SERVER_PROTOCOL", pUrlScheme);
-    YMO_INCREF_PYDICT_SETITEM_STRING(pCommonEnviron, "SCRIPT_NAME", PyUnicode_FromString("yimmo-wsgi"));
+    YMO_INCREF_PYDICT_SETITEM_STRING(pCommonEnviron, "SCRIPT_NAME", PyUnicode_FromString(w_proc->module));
 
     YMO_INCREF_PYDICT_SETITEM_STRING(pCommonEnviron, "wsgi.version", pWsgiVersion);
     YMO_INCREF_PYDICT_SETITEM_STRING(pCommonEnviron, "wsgi.errors", pStderr); /* HACK! */
@@ -224,6 +225,7 @@ module_bail:
     ymo_wsgi_shutdown();
     return ENOMEM;
 }
+
 
 int ymo_wsgi_shutdown()
 {
@@ -264,6 +266,7 @@ int ymo_wsgi_shutdown()
     }
     return 0;
 }
+
 
 /*---------------------------------------------------------------------------*
  *                              Module Init:
@@ -329,7 +332,4 @@ ymo_wsgi_module_init()
 #endif /* YIMMO_PY_WEBSOCKETS */
     return m;
 }
-
-
-
 

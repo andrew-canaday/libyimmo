@@ -45,6 +45,7 @@ ymo_trie_t* ymo_trie_create(void)
     return trie;
 }
 
+
 void ymo_trie_free(ymo_trie_t* trie)
 {
     if( trie->root ) {
@@ -54,6 +55,7 @@ void ymo_trie_free(ymo_trie_t* trie)
     YMO_DELETE(ymo_trie_t, trie);
     return;
 }
+
 
 ymo_status_t ymo_trie_add_string(
         ymo_trie_t* trie, const char* str_in)
@@ -78,10 +80,12 @@ ymo_status_t ymo_trie_add_string(
     return 0;
 }
 
+
 ymo_trie_node_t* ymo_trie_node_create(void)
 {
     return YMO_NEW0(ymo_trie_node_t);
 }
+
 
 void ymo_trie_node_free(ymo_trie_node_t* node)
 {
@@ -95,6 +99,7 @@ void ymo_trie_node_free(ymo_trie_node_t* node)
     YMO_DELETE(ymo_trie_node_t, node);
     return;
 }
+
 
 static void trie_node_annotate(
         ymo_trie_t* trie,
@@ -115,6 +120,7 @@ static void trie_node_annotate(
         }
     }
 }
+
 
 static ymo_status_t oitrie_node_create(
         ymo_oitrie_node_t* oitrie, ymo_trie_node_t* node, size_t* max_offset)
@@ -184,6 +190,7 @@ static ymo_status_t oitrie_node_create(
     return status;
 }
 
+
 ymo_oitrie_t* ymo_oitrie_create(ymo_trie_t* trie)
 {
     ymo_log_trace(
@@ -219,12 +226,14 @@ ymo_oitrie_t* ymo_oitrie_create(ymo_trie_t* trie)
     return oitrie;
 }
 
+
 size_t ymo_oitrie_sizeof(const ymo_oitrie_t* oitrie)
 {
     size_t total_bytes = sizeof(ymo_oitrie_t);
     total_bytes += sizeof(ymo_oitrie_node_t) * oitrie->no_nodes;
     return total_bytes;
 }
+
 
 void ymo_oitrie_free(ymo_oitrie_t* oitrie)
 {
@@ -234,6 +243,7 @@ void ymo_oitrie_free(ymo_oitrie_t* oitrie)
     YMO_DELETE(ymo_oitrie_t, oitrie);
     return;
 }
+
 
 ymo_status_t ymo_oitrie_get_id(
         int* hdr_id,
@@ -276,6 +286,4 @@ ymo_status_t ymo_oitrie_get_id(
 
     return EINVAL;
 }
-
-
 

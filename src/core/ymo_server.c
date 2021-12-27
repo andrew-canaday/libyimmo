@@ -54,89 +54,22 @@
 #endif /* YMO_SERVER_TRACE */
 
 
-/*======================================================================
- * !!! TODO:
- *
- * Recent hacking has made a pretty gross read out of a bunch of
- * this stuff!!
- *
- * Clean it up!
- *
- * (WIP!)
- *----------------------------------------------------------------------*/
-
 /*---------------------------------------------------------------*
- *  Static Functions:
+ *  Utility Prototypes:
  *---------------------------------------------------------------*/
+static int ymo_fd_accept(ymo_server_t* server, int revents);
+static void ymo_conn_accept(ymo_server_t* server, int client_fd);
+static ymo_status_t conn_proto_init(
+        ymo_proto_t* proto,
+        ymo_conn_t* conn);
 static inline void close_and_free_connection(
-        ymo_server_t* server, ymo_conn_t* conn, int clean)
-{
-#if YMO_ENABLE_TLS
-    /* If the connection had SSL, let's clean that up now: */
-    if( conn->ssl && conn->state == YMO_CONN_TLS_ESTABLISHED ) {
-        /* TODO: check for error? */
-        SERVER_TRACE("Cleaning up SSL for %i", conn->fd);
-        SSL_shutdown(conn->ssl);
-        SSL_free(conn->ssl);
-    }
-#endif /* YMO_ENABLE_TLS */
-
-    /* If we're mid shutdown sequence, wait on another read sec: */
-    if( ymo_conn_close(conn, clean) == YMO_CONN_CLOSING ) {
-        return;
-    }
-
-    /* Invoke user cleanup, if present: */
-    if( server->config.user_cleanup ) {
-        SERVER_TRACE("Invoking user cleanup with %p", conn->user);
-        server->config.user_cleanup(
-                server, conn, conn->user);
-    }
-
-    /* Invoke proto cleanup, if present: */
-    ymo_proto_t* proto = conn->proto;
-    if( proto && proto->vtable.conn_cleanup_cb ) {
-        SERVER_TRACE("Invoking proto cleanup with %p", conn->proto_data);
-        proto->vtable.conn_cleanup_cb(
-                proto->data, conn, conn->proto_data);
-    }
-
-    ymo_conn_free(conn);
-    server->no_conn--;
-
-    /* If we're doing a graceful shutdown and that was the last connection,
-     * let's bail out now.
-     */
-    if( server->state == YMO_SERVER_STOP_GRACEFUL && server->no_conn == 0 ) {
-        ymo_log_notice("Graceful termination. Conn count == %zu. Breaking.",
-                server->no_conn);
-        ev_break(server->config.loop, EVBREAK_ALL);
-    }
-    return;
-}
-
-static YMO_FUNC_UNUSED void ymo_sigpipe(int x)
-{
-    return;
-}
-
-/* Read timeout callback, used to terminate conns after inactivity. */
-static void idle_timeout_cb(bsat_toq_t* toq, bsat_timeout_t* item)
-{
-    ymo_server_t* server = toq->data;
-    ymo_conn_t* conn = item->data;
-    if( conn ) {
-        SERVER_TRACE_UUID("Idle connection timer fired (fd: %i)",
-                conn->id, NULL);
-        close_and_free_connection(server, conn, 1);
-    }
-    return;
-}
-
+        ymo_server_t* server, ymo_conn_t* conn, int clean);
+static YMO_FUNC_UNUSED void sigpipe_noop_cb(int x);
+static void idle_timeout_cb(bsat_toq_t* toq, bsat_timeout_t* item);
 
 
 /*---------------------------------------------------------------*
- *  Yimmo Server Functions:
+ *  Yimmo Server API:
  *---------------------------------------------------------------*/
 ymo_server_t* ymo_server_create(
         ymo_server_config_t* config,
@@ -160,18 +93,7 @@ ymo_server_t* ymo_server_create(
         goto server_create_free_and_bail;
     }
 
-    /* HACK HACK HACK: overprovision + never free, atm.. */
-    void* shared = mmap(NULL, sizeof(atomic_int)*16,
-            PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_SHARED,
-            -1, 0);
-    if( shared == MAP_FAILED ) {
-        goto server_create_free_and_bail;
-    }
-
-#if YIMMO_WSGI
-    server->accepting = (atomic_int*)YMO_PTR_CEIL(shared);
-    atomic_init(server->accepting, 0);
-#endif /* YIMMO_WSGI */
+    server->cb_accept = ymo_accept_cb;
     return server;
 
 server_create_free_and_bail:
@@ -180,6 +102,7 @@ server_create_free_and_bail:
 server_create_bail:
     return NULL;
 }
+
 
 ymo_status_t ymo_server_init(ymo_server_t* server)
 {
@@ -246,6 +169,7 @@ server_init_close_and_bail:
     return status;
 }
 
+
 ymo_status_t ymo_server_init_socket(ymo_server_t* server, int fd)
 {
     if( listen(fd, server->config.listen_backlog) < 0 ) {
@@ -260,6 +184,43 @@ ymo_status_t ymo_server_init_socket(ymo_server_t* server, int fd)
     server->listen_fd = fd;
     return YMO_OKAY;
 }
+
+
+/* If we're going to fork and share a common listen FD, we
+ * should try to determine if there's contention BEFORE
+ * invoking accept() and checking for EAGAIN.
+ *
+ * Here, we use a quick hack: an atomic counter is used
+ * as a mutex (really, we should use a POSIX trylock —
+ * see todo item for ymo_multiproc_accept_cb).
+ */
+ymo_status_t ymo_server_pre_fork(ymo_server_t* server)
+{
+    if( server->accept_mutex ) {
+        ymo_log_warning("%s",
+                "ymo_server_pre_fork already invoked. "
+                "(This isn't problematic. It's just not necessary)");
+        return YMO_OKAY;
+    }
+
+    /* HACK HACK HACK: overprovision + never free, atm.. */
+    void* shared = mmap(NULL, sizeof(pthread_mutex_t),
+            PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_SHARED,
+            -1, 0);
+    if( shared == MAP_FAILED ) {
+        ymo_log_error("Prefork failed: %s", strerror(errno));
+        return ENOMEM;
+    }
+
+    /* Stick an atomic integer into the shared memory: */
+    server->accept_mutex = shared;
+    pthread_mutex_init(server->accept_mutex, NULL);
+
+    /* Use the multiproc init, moving forward + restart. */
+    server->cb_accept = ymo_multiproc_accept_cb;
+    return YMO_OKAY;
+}
+
 
 ymo_status_t ymo_server_start(ymo_server_t* server, struct ev_loop* loop)
 {
@@ -289,10 +250,10 @@ ymo_status_t ymo_server_start(ymo_server_t* server, struct ev_loop* loop)
             idle_timeout);
     server->idle_toq.data = server;
 
-    ev_io_init(&server->w_accept, ymo_accept_cb, server->listen_fd, EV_READ);
+    ev_io_init(&server->w_accept, server->cb_accept, server->listen_fd, EV_READ);
     server->w_accept.data = server;
 
-    ev_io_start(server->config.loop,&server->w_accept);
+    ev_io_start(server->config.loop, &server->w_accept);
 
     ymo_log_info("%s:%i accept cb start OK...",
             server->proto->name, server->config.port);
@@ -315,6 +276,8 @@ struct ev_loop* ymo_server_loop(ymo_server_t* server)
     return server->config.loop;
 }
 
+
+/* TODO: sendmsg on accept instead of accept. */
 ymo_status_t ymo_server_stop_graceful(ymo_server_t* server)
 {
     int my_pid = (int)getpid();
@@ -336,244 +299,6 @@ ymo_status_t ymo_server_stop_graceful(ymo_server_t* server)
     return YMO_OKAY;
 }
 
-static ymo_status_t ymo_server_conn_init(
-        ymo_proto_t* proto,
-        ymo_conn_t* conn)
-{
-    conn->proto_data = proto->vtable.conn_init_cb(proto->data, conn);
-
-    if( !conn->proto_data ) {
-        SERVER_TRACE("Protocol data create failed: %s (%i)",
-                strerror(errno), errno);
-        return errno;
-    }
-
-    ymo_status_t init_status = YMO_OKAY;
-    if( proto->vtable.conn_ready_cb ) {
-        SERVER_TRACE_UUID("Invoking %s connect ready callback",
-                conn->id, (const unsigned char*)proto->name);
-        init_status = proto->vtable.conn_ready_cb(
-                proto->data, conn, conn->proto_data);
-
-        if( init_status != YMO_OKAY ) {
-            SERVER_TRACE("Protocol ready invocation failed: %s (%i)",
-                    strerror(errno), errno);
-            proto->vtable.conn_cleanup_cb(
-                    proto->data, conn, conn->proto_data);
-        }
-    } else {
-        SERVER_TRACE_UUID("No ready callback for %s",
-                conn->id, (const unsigned char*)proto->name);
-    }
-
-    return init_status;
-}
-
-void ymo_accept_cb(struct ev_loop* loop, struct ev_io* watcher, int revents)
-{
-    ymo_server_t* server = watcher->data;
-
-#if YMO_ENABLE_TLS
-    if( server->ssl_ctx ) {
-        ERR_clear_error();
-    }
-#endif /* YMO_ENABLE_TLS */
-
-    /* HACK HACK HACK: we shouldn't be adjusting server internals for
-     * an external program! (yimmo-wsgi)
-     */
-#if YIMMO_WSGI
-    int expected = 0;
-    /* TODO: WARNING: if the process holding this mutex dies, we're blorked.
-     * There should be some expiration set here...
-     */
-    if( !atomic_compare_exchange_strong(server->accepting, &expected, 1) ) {
-        return;
-    }
-#endif /* YIMMO_WSGI */
-
-    struct sockaddr_in client_addr;
-    socklen_t client_len = sizeof(client_addr);
-    if( EV_ERROR & revents ) {
-        ymo_log_warning("libev error on accept fd: %i", watcher->fd);
-#if YIMMO_WSGI
-        atomic_store(server->accepting, 0);
-#endif /* YIMMO_WSGI */
-        return;
-    }
-
-    int client_fd = accept(
-            watcher->fd, (struct sockaddr*)&client_addr, &client_len);
-#if YIMMO_WSGI
-    atomic_store(server->accepting, 0);
-#endif /* YIMMO_WSGI */
-
-    if( client_fd < 0 ) {
-        if( YMO_IS_BLOCKED(errno) ) {
-            ymo_log_debug("accept would block (%i); try again", client_fd);
-        } else {
-            ymo_log_warning("accept failed: %s (%i)",
-                    strerror(errno), errno);
-        }
-        return;
-    }
-
-    ymo_client_sock_nonblocking(client_fd);
-    ymo_client_sock_nosigpipe(client_fd);
-
-    ymo_conn_t* conn = NULL;
-    conn = ymo_conn_create(
-            server, server->proto, client_fd, ymo_read_cb, ymo_write_cb);
-
-    /* Bail on connection create failure: */
-    if( !conn ) {
-        SERVER_TRACE("Protocol connection create failed: %s (%i)",
-                strerror(errno), errno);
-        close(client_fd);
-        return;
-    }
-
-    if( ymo_init_ssl(server, conn, client_fd) ) {
-        close_and_free_connection(server, conn, 1);
-        return;
-    }
-
-    /* TODO: split this. For TLS, we'll want to invoke ready callback
-     * AFTER the handshake. */
-    ymo_status_t init_status = ymo_server_conn_init(server->proto, conn);
-    if( init_status != YMO_OKAY ) {
-        SERVER_TRACE("Connection initialization failed: %s (%i)",
-                strerror(init_status), init_status);
-        close_and_free_connection(server, conn, 1);
-        return;
-    }
-
-    /* Issue user-level connection initialization callback.
-     * TODO: Remove user-level CONNECTION data? (i.e. use proto instead?)
-     * TODO: Otherwise...double check your API. Can they swap it?
-     */
-    if( server->config.user_init ) {
-        conn->user = server->config.user_init(server, conn);
-    }
-
-    server->no_conn++;
-    SERVER_TRACE_UUID("Session created; Enabling read for socket %i",
-            conn->id, client_fd);
-    /* Start the idle disconnect timer for this conn: */
-    ymo_conn_start_idle_timeout(conn, &(server->idle_toq));
-    ymo_conn_rx_enable(conn, 1);
-    return;
-}
-
-void ymo_read_cb(struct ev_loop* loop, struct ev_io* watcher, int revents)
-{
-    if( EV_ERROR & revents ) {
-        ymo_log_warning("libev error on read fd: %i", watcher->fd);
-        /* TODO: Probably don't ignore this. */
-        return;
-    }
-
-    ymo_conn_t* conn = (ymo_conn_t*)watcher->data;
-    /* Reset the idle disconnect timer: */
-    ymo_server_t* server = conn->server;
-    ymo_conn_reset_idle_timeout(conn, &(server->idle_toq));
-
-    /* Read the payload: */
-    char* recv_buf;
-    ssize_t len;
-
-    if( !CONN_SSL(conn) ) {
-        len = recv(watcher->fd, server->recv_buf,
-                YMO_SERVER_RECV_BUF_SIZE, YMO_RECV_FLAGS);
-    } else {
-        len = ymo_server_ssl_read(server, conn);
-    }
-
-    if( len < 0 ) {
-        if( YMO_IS_BLOCKED(errno) ) {
-            ymo_log_debug("Read would block (%i); returning", watcher->fd);
-            return;
-        } else {
-            ymo_log_debug("Read error: %s (%i) on fd %i",
-                    strerror(errno), errno, watcher->fd);
-            close_and_free_connection(server, conn, 1);
-            return;
-        }
-    }
-
-    /* Shut down the FD now and bail if the client closed the connection. */
-    if( !len ) {
-        ymo_log_debug("Client connection closed (fd: %i)", watcher->fd);
-        close_and_free_connection(server, conn, 0);
-        return;
-    }
-
-    /* Dispatch to appropriate handler: */
-    ymo_status_t status = YMO_OKAY;
-    recv_buf = server->recv_buf;
-    SERVER_TRACE("Read %li bytes from socket", len);
-    do {
-        ssize_t n = 0;
-
-        SERVER_TRACE_UUID(
-                "Issuing %li bytes to parser", conn->id, len);
-
-        /* TODO: check connection state! Don't invoke read callback if
-         * socket is closing or close_cb has been invoked!
-         */
-        n = conn->proto->vtable.read_cb(
-                conn->proto->data, conn, conn->proto_data, recv_buf, len);
-
-        if( n >= 0 ) {
-            recv_buf += n;
-            len -= n;
-        } else {
-            status = errno;
-            SERVER_TRACE("Breaking from read loop: %s", strerror(status));
-            goto read_check_parse_error;
-            break;
-        }
-    } while( len );
-
-    return;
-
-read_check_parse_error:
-    /* Bail on handler error: */
-    if( status != YMO_OKAY && !YMO_IS_BLOCKED(status) ) {
-        ymo_log_debug("Parse error (%s), closing connection (fd: %i)",
-                strerror(status), watcher->fd);
-        close_and_free_connection(server, conn, 1);
-        return;
-    }
-
-#if YMO_ENABLE_TLS && defined(CHECK_SSL_PENDING) && CHECK_SSL_PENDING
-    /* HACK: if pending SSL data, put this FD back in the event queue */
-    if( conn->state == YMO_CONN_TLS_ESTABLISHED && SSL_pending(conn->ssl) ) {
-        /* ev_invoke(conn->server->config.loop, &conn->w_read, EV_READ); */
-    }
-#endif /* CHECK_SSL_PENDING */
-    return;
-}
-
-
-void ymo_write_cb(struct ev_loop* loop, struct ev_io* watcher, int revents)
-{
-    ymo_conn_t* conn = (ymo_conn_t*)watcher->data;
-    ymo_server_t* server = conn->server;
-    ymo_conn_reset_idle_timeout(conn, &(server->idle_toq));
-
-    ymo_status_t status = conn->proto->vtable.write_cb(
-            conn->proto->data, conn, conn->proto_data, conn->fd);
-
-    if( status == YMO_OKAY ) {
-        /* No further data to send; leave the connection open: */
-        ymo_conn_tx_enable(conn, 0);
-    } else if( !YMO_IS_BLOCKED(status) ) {
-        /* Error or conn close; close the socket: */
-        close_and_free_connection(conn->server, conn, 1);
-    }
-    return;
-}
 
 void ymo_server_free(ymo_server_t* server)
 {
@@ -610,11 +335,8 @@ void ymo_server_free(ymo_server_t* server)
 }
 
 
-/*---------------------------------------------------------------*
- *  Yimmo Connection Functions:
- *---------------------------------------------------------------*/
-
-/* TODO: Blehck! This shouldn't be in here... */
+/*------------------------------------------*
+ * TODO: move to ymo_proto.c or ymo_conn.c: */
 ymo_status_t ymo_conn_transition_proto(
         ymo_conn_t* conn, ymo_proto_t* proto_new)
 {
@@ -624,9 +346,382 @@ ymo_status_t ymo_conn_transition_proto(
 
     /* Transition to the new: */
     conn->proto = proto_new;
-    return ymo_server_conn_init(proto_new, conn);
+    return conn_proto_init(proto_new, conn);
 }
 
 
+/*=========================================================================*
+ *
+ * EV Callbacks:
+ *
+ *-------------------------------------------------------------------------*/
 
+/*---------*
+ * ACCEPT:
+ *---------*/
+
+void ymo_accept_cb(struct ev_loop* loop, struct ev_io* watcher, int revents)
+{
+    ymo_server_t* server = watcher->data;
+    int client_fd = ymo_fd_accept(server, revents);
+
+    if( client_fd > 0 ) {
+        ymo_conn_accept(server, client_fd);
+    } else {
+        ymo_log_debug("Accept failed: %s", strerror(errno));
+    }
+    return;
+}
+
+
+void ymo_multiproc_accept_cb(
+        struct ev_loop* loop, struct ev_io* watcher, int revents)
+{
+    ymo_server_t* server = watcher->data;
+
+    if( pthread_mutex_trylock(server->accept_mutex) ) {
+        /* TODO:
+         * - use: EOWNERDEAD and pthread_mutex_consistent, where present
+         * - elsewhere: use counter; if we NEVER accept, exit()
+         */
+        return;
+    }
+
+    int client_fd = ymo_fd_accept(server, revents);
+    int accept_err = errno; /* Stash because pthreads could overwrite */
+    pthread_mutex_unlock(server->accept_mutex);
+
+    if( client_fd > 0 ) {
+        ymo_conn_accept(server, client_fd);
+    } else {
+        ymo_log_debug("Accept failed: %s", strerror(accept_err));
+    }
+
+    return;
+}
+
+
+/*---------*
+ * READ:
+ *---------*/
+void ymo_read_cb(struct ev_loop* loop, struct ev_io* watcher, int revents)
+{
+    if( EV_ERROR & revents ) {
+        ymo_log_warning("libev error on read fd: %i", watcher->fd);
+        /* TODO: Probably don't ignore this. */
+        return;
+    }
+
+    ymo_conn_t* conn = (ymo_conn_t*)watcher->data;
+
+    /* Reset the idle disconnect timer: */
+    ymo_server_t* server = conn->server;
+
+    /* Read the payload: */
+    char* recv_buf;
+    ssize_t len;
+    ymo_status_t status;
+
+do_read:
+    errno = 0;
+    status = YMO_OKAY;
+
+    if( !CONN_SSL(conn) ) {
+        len = recv(watcher->fd, server->recv_buf,
+                YMO_SERVER_RECV_BUF_SIZE, YMO_RECV_FLAGS);
+    } else {
+        len = ymo_server_ssl_read(server, conn);
+    }
+
+    if( len < 0 ) {
+        if( YMO_IS_BLOCKED(errno) ) {
+            SERVER_TRACE("Read would block (conn: %p, fd: %i)",
+                    (void*)conn, conn->id, NULL);
+            return;
+        } else {
+            ymo_log_debug("Read error: %s (%i) on (conn: %p, fd: %i)",
+                    strerror(errno), errno, (void*)conn, conn->fd);
+            close_and_free_connection(server, conn, 0);
+            return;
+        }
+    }
+
+    /* Shut down the FD now and bail if the client closed the connection. */
+    if( !len ) {
+        SERVER_TRACE("Client terminated connection (conn: %p, fd: %i)",
+                (void*)conn, conn->id, NULL);
+        close_and_free_connection(server, conn, 0);
+        return;
+    }
+
+    /* Invoke read callbacks if we're connected. Else, bounce back to "do_read"
+     * until we either get a client close or an error:*/
+    if( conn->state == YMO_CONN_OPEN
+        || conn->state == YMO_CONN_TLS_ESTABLISHED ) {
+        ymo_conn_reset_idle_timeout(conn, &(server->idle_toq));
+
+        /* Dispatch to appropriate handler: */
+        recv_buf = server->recv_buf;
+        SERVER_TRACE("Read %li bytes from socket", len);
+        do {
+            ssize_t n = 0;
+
+            SERVER_TRACE_UUID(
+                    "Issuing %li bytes to parser", conn->id, len);
+
+            n = conn->proto->vtable.read_cb(
+                    conn->proto->data, conn, conn->proto_data, recv_buf, len);
+
+            if( n >= 0 ) {
+                recv_buf += n;
+                len -= n;
+            } else {
+                status = errno;
+                SERVER_TRACE("Breaking from read loop: %s", strerror(status));
+                goto read_check_parse_error;
+                break;
+            }
+
+            if( conn->state == YMO_CONN_SHUTDOWN ) {
+                goto do_read;
+            }
+        } while( len );
+    } else {
+        SERVER_TRACE("Attempt additional read (conn: %p, fd: %i)",
+                (void*)conn, conn->id, NULL);
+        goto do_read;
+    }
+
+#if YMO_ENABLE_TLS && defined(CHECK_SSL_PENDING) && CHECK_SSL_PENDING
+    if( (conn->state == YMO_CONN_TLS_ESTABLISHED
+         || conn->state == YMO_CONN_TLS_CLOSING)
+        && SSL_pending(conn->ssl) ) {
+        goto do_read;
+    }
+#endif /* CHECK_SSL_PENDING */
+    return;
+
+read_check_parse_error:
+    /* Bail on handler error: */
+    if( status != YMO_OKAY && !YMO_IS_BLOCKED(status) ) {
+        ymo_log_debug("Parse error (%s), closing connection (conn: %p, fd: %i)",
+                strerror(status), (void*)conn, conn->fd);
+        close_and_free_connection(server, conn, 0);
+        return;
+    }
+
+    return;
+}
+
+
+/*---------*
+ * WRITE:
+ *------- -*/
+void ymo_write_cb(struct ev_loop* loop, struct ev_io* watcher, int revents)
+{
+    ymo_conn_t* conn = (ymo_conn_t*)watcher->data;
+    ymo_server_t* server = conn->server;
+
+    ymo_status_t status = conn->proto->vtable.write_cb(
+            conn->proto->data, conn, conn->proto_data, conn->fd);
+
+    ymo_conn_reset_idle_timeout(conn, &(server->idle_toq));
+    if( status == YMO_OKAY ) {
+        /* No further data to send; leave the connection open: */
+        ymo_conn_tx_enable(conn, 0);
+    } else if( !YMO_IS_BLOCKED(status) ) {
+        /* Error or conn close; close the socket: */
+        close_and_free_connection(conn->server, conn, 1);
+    }
+    return;
+}
+
+
+/*===============================================================*
+ *
+ *  Utility:
+ *
+ *---------------------------------------------------------------*/
+static int ymo_fd_accept(ymo_server_t* server, int revents)
+{
+#if YMO_ENABLE_TLS
+    if( server->ssl_ctx ) {
+        ERR_clear_error();
+    }
+#endif /* YMO_ENABLE_TLS */
+
+    struct sockaddr_in client_addr;
+    socklen_t client_len = sizeof(client_addr);
+    if( EV_ERROR & revents ) {
+        ymo_log_warning("libev error on accept fd: %i", server->listen_fd);
+        return -1;
+    }
+
+    return accept(
+            server->listen_fd, (struct sockaddr*)&client_addr, &client_len);
+}
+
+
+static void ymo_conn_accept(ymo_server_t* server, int client_fd)
+{
+    if( client_fd < 0 ) {
+        if( YMO_IS_BLOCKED(errno) ) {
+            ymo_log_debug("accept would block (%i); try again", client_fd);
+        } else {
+            ymo_log_warning("accept failed: %s (%i)",
+                    strerror(errno), errno);
+        }
+        return;
+    }
+
+    ymo_client_sock_nonblocking(client_fd);
+    ymo_client_sock_nosigpipe(client_fd);
+
+    ymo_conn_t* conn = NULL;
+    conn = ymo_conn_create(
+            server, server->proto, client_fd, ymo_read_cb, ymo_write_cb);
+
+    /* Bail on connection create failure: */
+    if( !conn ) {
+        SERVER_TRACE("Protocol connection create failed: %s (%i)",
+                strerror(errno), errno);
+        close(client_fd);
+        return;
+    }
+
+    if( ymo_init_ssl(server, conn, client_fd) ) {
+        close_and_free_connection(server, conn, 1);
+        return;
+    }
+
+    /* TODO: split this. For TLS, we'll want to invoke ready callback
+     * AFTER the handshake. */
+    ymo_status_t init_status = conn_proto_init(server->proto, conn);
+    if( init_status != YMO_OKAY ) {
+        SERVER_TRACE("Connection initialization failed: %s (%i)",
+                strerror(init_status), init_status);
+        close_and_free_connection(server, conn, 1);
+        return;
+    }
+
+    /* Issue user-level connection initialization callback.
+     * TODO: Remove user-level CONNECTION data? (i.e. use proto instead?)
+     * TODO: Otherwise...double check your API. Can they swap it?
+     */
+    if( server->config.user_init ) {
+        conn->user = server->config.user_init(server, conn);
+    }
+
+    server->no_conn++;
+    SERVER_TRACE("Number of connections: %zu\n", server->no_conn);
+    SERVER_TRACE_UUID("Session created; Enabling read for socket %i",
+            conn->id, client_fd);
+    /* Start the idle disconnect timer for this conn: */
+    ymo_conn_start_idle_timeout(conn, &(server->idle_toq));
+    ymo_conn_rx_enable(conn, 1);
+}
+
+
+static ymo_status_t conn_proto_init(
+        ymo_proto_t* proto,
+        ymo_conn_t* conn)
+{
+    conn->proto_data = proto->vtable.conn_init_cb(proto->data, conn);
+
+    if( !conn->proto_data ) {
+        SERVER_TRACE("Protocol data create failed: %s (%i)",
+                strerror(errno), errno);
+        return errno;
+    }
+
+    ymo_status_t init_status = YMO_OKAY;
+    if( proto->vtable.conn_ready_cb ) {
+        SERVER_TRACE_UUID("Invoking %s connect ready callback",
+                conn->id, (const unsigned char*)proto->name);
+        init_status = proto->vtable.conn_ready_cb(
+                proto->data, conn, conn->proto_data);
+
+        if( init_status != YMO_OKAY ) {
+            SERVER_TRACE("Protocol ready invocation failed: %s (%i)",
+                    strerror(errno), errno);
+            proto->vtable.conn_cleanup_cb(
+                    proto->data, conn, conn->proto_data);
+        }
+    } else {
+        SERVER_TRACE_UUID("No ready callback for %s",
+                conn->id, (const unsigned char*)proto->name);
+    }
+
+    return init_status;
+}
+
+
+static inline void close_and_free_connection(
+        ymo_server_t* server, ymo_conn_t* conn, int clean)
+{
+#if YMO_ENABLE_TLS
+    /* If the connection had SSL, let's clean that up now: */
+    if( conn->ssl && conn->state == YMO_CONN_TLS_ESTABLISHED ) {
+        /* TODO: check for error? */
+        SERVER_TRACE("Cleaning up SSL for %i", conn->fd);
+        SSL_shutdown(conn->ssl);
+        SSL_free(conn->ssl);
+    }
+#endif /* YMO_ENABLE_TLS */
+
+    /* If we're mid shutdown sequence, wait on another read sec: */
+    if( ymo_conn_close(conn, clean) != YMO_CONN_CLOSED ) {
+        return;
+    }
+
+    /* Invoke user cleanup, if present: */
+    if( server->config.user_cleanup ) {
+        SERVER_TRACE("Invoking user cleanup with %p", conn->user);
+        server->config.user_cleanup(
+                server, conn, conn->user);
+    }
+
+    /* Invoke proto cleanup, if present: */
+    ymo_proto_t* proto = conn->proto;
+    if( proto && proto->vtable.conn_cleanup_cb ) {
+        SERVER_TRACE("Invoking proto cleanup with %p", conn->proto_data);
+        proto->vtable.conn_cleanup_cb(
+                proto->data, conn, conn->proto_data);
+    }
+
+    ymo_conn_free(conn);
+    server->no_conn--;
+    SERVER_TRACE("Number of connections: %zu\n", server->no_conn);
+
+    /* If we're doing a graceful shutdown and that was the last connection,
+     * let's bail out now.
+     */
+    if( server->state == YMO_SERVER_STOP_GRACEFUL && server->no_conn == 0 ) {
+        ymo_log_notice("Graceful termination. Conn count == %zu. Breaking.",
+                server->no_conn);
+        ev_break(server->config.loop, EVBREAK_ALL);
+    }
+    return;
+}
+
+
+/* SIGPIPE handler if unable to block it: */
+static YMO_FUNC_UNUSED void sigpipe_noop_cb(int x)
+{
+    return;
+}
+
+
+/* Read timeout callback, used to terminate conns after inactivity. */
+static void idle_timeout_cb(bsat_toq_t* toq, bsat_timeout_t* item)
+{
+    ymo_server_t* server = toq->data;
+    ymo_conn_t* conn = item->data;
+    if( conn ) {
+        SERVER_TRACE("Idle connection timer fired (conn: %p, fd: %i)",
+                (void*)conn, conn->id, NULL);
+        close_and_free_connection(server, conn, 1);
+    }
+    return;
+}
 

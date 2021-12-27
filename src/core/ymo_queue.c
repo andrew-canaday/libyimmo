@@ -44,6 +44,7 @@ static void delete_node(ymo_queue_node_t* node)
     return;
 }
 
+
 static inline ymo_queue_node_t* create_node(ymo_queue_t* queue)
 {
     ymo_queue_node_t* node = queue->pstack;
@@ -59,6 +60,7 @@ static inline ymo_queue_node_t* create_node(ymo_queue_t* queue)
     return node;
 }
 
+
 ymo_queue_t* ymo_queue_create(void)
 {
     ymo_queue_t* queue = YMO_NEW0(ymo_queue_t);
@@ -68,6 +70,7 @@ ymo_queue_t* ymo_queue_create(void)
 
     return queue;
 }
+
 
 ymo_queue_t* ymo_queue_create_pool(size_t n)
 {
@@ -85,6 +88,7 @@ ymo_queue_t* ymo_queue_create_pool(size_t n)
     ymo_queue_pool_init(queue, pool, n);
     return queue;
 }
+
 
 void ymo_queue_pool_init(
         ymo_queue_t* queue,
@@ -110,6 +114,7 @@ void ymo_queue_pool_init(
     return;
 }
 
+
 void ymo_queue_free(ymo_queue_t* queue)
 {
     ymo_queue_node_t* current = queue->head;
@@ -123,6 +128,7 @@ void ymo_queue_free(ymo_queue_t* queue)
     }
     YMO_DELETE(ymo_queue_t, queue);
 }
+
 
 ymo_status_t ymo_queue_append(ymo_queue_t* queue, void* item)
 {
@@ -146,6 +152,7 @@ ymo_status_t ymo_queue_append(ymo_queue_t* queue, void* item)
     return YMO_OKAY;
 }
 
+
 ymo_status_t ymo_queue_append_queue(ymo_queue_t* dst, ymo_queue_t* src)
 {
     dst->tail->next = src->head;
@@ -155,6 +162,7 @@ ymo_status_t ymo_queue_append_queue(ymo_queue_t* dst, ymo_queue_t* src)
     src->no_items = 0;
     return YMO_OKAY;
 }
+
 
 ymo_status_t ymo_queue_prepend(ymo_queue_t* queue, void* item)
 {
@@ -178,6 +186,7 @@ ymo_status_t ymo_queue_prepend(ymo_queue_t* queue, void* item)
     return YMO_OKAY;
 }
 
+
 void* ymo_queue_popfront(ymo_queue_t* queue)
 {
     void* data = NULL;
@@ -199,6 +208,7 @@ void* ymo_queue_popfront(ymo_queue_t* queue)
 
     return data;
 }
+
 
 void* ymo_queue_popback(ymo_queue_t* queue)
 {
@@ -222,6 +232,7 @@ void* ymo_queue_popback(ymo_queue_t* queue)
     return data;
 }
 
+
 void* ymo_queue_peekfront(ymo_queue_t* queue)
 {
     if( queue->head ) {
@@ -231,6 +242,7 @@ void* ymo_queue_peekfront(ymo_queue_t* queue)
     }
 }
 
+
 void* ymo_queue_peekback(ymo_queue_t* queue)
 {
     if( queue->tail ) {
@@ -239,6 +251,7 @@ void* ymo_queue_peekback(ymo_queue_t* queue)
         return NULL;
     }
 }
+
 
 void* ymo_queue_find(
         ymo_queue_t* queue, ymo_queue_cmp_fn cmp_fn, void* item)
@@ -253,15 +266,18 @@ void* ymo_queue_find(
     return NULL;
 }
 
+
 const ymo_queue_node_t* ymo_queue_head(ymo_queue_t* queue)
 {
     return queue->head;
 }
 
+
 const ymo_queue_node_t* ymo_queue_tail(ymo_queue_t* queue)
 {
     return queue->tail;
 }
+
 
 /** Remove an item from the queue:
  * TODO: clean up branching
@@ -304,10 +320,9 @@ ymo_status_t ymo_queue_remove(ymo_queue_t* queue, ymo_queue_node_t** node_ptr)
     return YMO_OKAY;
 }
 
+
 size_t ymo_queue_size(ymo_queue_t* queue)
 {
     return queue->no_items;
 }
-
-
 

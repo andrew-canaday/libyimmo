@@ -41,15 +41,37 @@
 #include "ymo_server.h"
 #include "ymo_alloc.h"
 
+#define YMO_CONN_TRACE 0
+#if defined(YMO_CONN_TRACE) && YMO_CONN_TRACE == 1
+# define CONN_TRACE(fmt, ...) ymo_log_trace(fmt, __VA_ARGS__);
+# define CONN_TRACE_UUID(fmt, ...) ymo_log_trace_uuid(fmt, __VA_ARGS__);
+#else
+# define CONN_TRACE(fmt, ...)
+# define CONN_TRACE_UUID(fmt, ...)
+#endif /* YMO_CONN_TRACE */
+
+static const char* c_state_names[] = {
+    "YMO_CONN_OPEN",
+    "YMO_CONN_TLS_HANDSHAKE",
+    "YMO_CONN_TLS_ESTABLISHED",
+    "YMO_CONN_TLS_CLOSING",
+    "YMO_CONN_TLS_CLOSED",
+    "YMO_CONN_SHUTDOWN",
+    "YMO_CONN_CLOSING",
+    "YMO_CONN_CLOSED",
+};
+
 ymo_server_t* ymo_conn_server(const ymo_conn_t* conn)
 {
     return conn->server;
 }
 
+
 ymo_proto_t* ymo_conn_proto(const ymo_conn_t* conn)
 {
     return conn->proto;
 }
+
 
 void ymo_conn_id(uuid_t dst, const ymo_conn_t* conn)
 {
@@ -57,12 +79,14 @@ void ymo_conn_id(uuid_t dst, const ymo_conn_t* conn)
     return;
 }
 
+
 char* ymo_conn_id_str(const ymo_conn_t* conn)
 {
     char id_str[37];
     uuid_unparse(conn->id, id_str);
     return strndup(id_str, 37);
 }
+
 
 ymo_conn_t* ymo_conn_create(
         ymo_server_t* server, ymo_proto_t* proto, int client_fd,
@@ -73,13 +97,13 @@ ymo_conn_t* ymo_conn_create(
     if( conn ) {
         conn->proto = proto;
         conn->fd = client_fd;
-        conn->ev_flags = 0;
         ev_io_init(&conn->w_read, read_cb, client_fd, EV_READ);
         ev_io_init(&conn->w_write, write_cb, client_fd, EV_WRITE);
         conn->w_read.data = conn->w_write.data = (void*)conn;
         conn->server = server;
         conn->user = NULL;
         conn->toq = NULL;
+        conn->state = YMO_CONN_OPEN;
 
         bsat_timeout_init(&(conn->idle_timeout));
         conn->idle_timeout.data = conn;
@@ -94,18 +118,52 @@ ymo_conn_t* ymo_conn_create(
     return conn;
 }
 
+
 void ymo_conn_start_idle_timeout(
         ymo_conn_t* conn, bsat_toq_t* idle_toq)
 {
+    CONN_TRACE("State at invocation: %s (conn: %p, fd: %i)",
+            c_state_names[conn->state], (void*)conn, conn->fd);
     conn->toq = idle_toq;
     bsat_timeout_start(idle_toq, &(conn->idle_timeout));
 }
 
+
 void ymo_conn_reset_idle_timeout(
         ymo_conn_t* conn, bsat_toq_t* idle_toq)
 {
-    bsat_timeout_reset(idle_toq, &(conn->idle_timeout));
+    CONN_TRACE("State at invocation: %s (conn: %p, fd: %i)",
+            c_state_names[conn->state], (void*)conn, conn->fd);
+    switch( conn->state ) {
+        /* Okay to restart: */
+        case YMO_CONN_OPEN:
+        /* fallthrough */
+        case YMO_CONN_TLS_HANDSHAKE:
+        /* fallthrough */
+        case YMO_CONN_TLS_ESTABLISHED:
+            /* fallthrough */
+            bsat_timeout_reset(idle_toq, &(conn->idle_timeout));
+            break;
+
+        /* Okay to make sure it's armed, if it hasn't already timed out: */
+        case YMO_CONN_TLS_CLOSING:
+            break;
+        case YMO_CONN_TLS_CLOSED:
+            break;
+        case YMO_CONN_SHUTDOWN:
+        /* fallthrough */
+        case YMO_CONN_CLOSING:
+            bsat_timeout_start(idle_toq, &(conn->idle_timeout));
+            break;
+
+        /* Disallowed: */
+        case YMO_CONN_CLOSED:
+            ymo_log_debug("Attempt to re-arm idle watcher when closed (conn: %p, fd: %i)",
+                    (void*)conn, conn->fd);
+            break;
+    }
 }
+
 
 /* TODO: (server internals) Should we just pass idle_toq as a param?
  * Is user code ever going to call this directly?
@@ -117,17 +175,32 @@ void ymo_conn_cancel_idle_timeout(ymo_conn_t* conn)
     }
 }
 
+
+typedef void (*ymo_ev_io_toggle)(EV_P_ struct ev_io* w);
+static ymo_ev_io_toggle io_toggle[2] = {
+    &ev_io_stop,
+    &ev_io_start,
+};
+
+
 /* TODO: (server internals) This can be done more concisely: */
 void ymo_conn_rx_enable(ymo_conn_t* conn, int flag)
 {
-    if( flag && !(conn->ev_flags & EV_READ) ) {
-        conn->ev_flags |= EV_READ;
-        ev_io_start(conn->server->config.loop, &conn->w_read);
-    } else if( !flag && (conn->ev_flags & EV_READ) ) {
-        conn->ev_flags &= (~EV_READ);
-        ev_io_stop(conn->server->config.loop, &conn->w_read);
-    }
+    CONN_TRACE("RX-->%i; State at invocation: %s (conn: %p, fd: %i)",
+            flag, c_state_names[conn->state], (void*)conn, conn->fd);
+
+    io_toggle[flag & 0x01](conn->server->config.loop, &conn->w_read);
 }
+
+
+/* TODO: (server internals) */
+void ymo_conn_tx_enable(ymo_conn_t* conn, int flag)
+{
+    CONN_TRACE("TX-->%i; State at invocation: %s (conn: %p, fd: %i)",
+            flag, c_state_names[conn->state], (void*)conn, conn->fd);
+    io_toggle[flag & 0x01](conn->server->config.loop, &conn->w_write);
+}
+
 
 /** Send buckets over the wire. */
 ymo_status_t ymo_conn_send_buckets(
@@ -136,7 +209,9 @@ ymo_status_t ymo_conn_send_buckets(
 #if !(YMO_ENABLE_TLS)
     return ymo_net_send_buckets(conn->fd, head_p);
 #else
-    /* HACK HACK HACK HACK */
+    /* HACK HACK HACK HACK
+     * TODO: add ymo_net_send_tls or similar to ymo_net.
+     */
     ymo_status_t status = YMO_OKAY;
 
     if( !conn->ssl ) {
@@ -185,46 +260,92 @@ ymo_status_t ymo_conn_send_buckets(
 }
 
 
-/* TODO: (server internals) */
-void ymo_conn_tx_enable(ymo_conn_t* conn, int flag)
-{
-    if( flag && !(conn->ev_flags & EV_WRITE) ) {
-        conn->ev_flags |= EV_WRITE;
-        ev_io_start(conn->server->config.loop, &conn->w_write);
-    } else if( !flag && (conn->ev_flags & EV_WRITE) ) {
-        conn->ev_flags &= (~EV_WRITE);
-        ev_io_stop(conn->server->config.loop, &conn->w_write);
-    }
-}
-
 void ymo_conn_tx_now(ymo_conn_t* conn)
 {
     ev_invoke(conn->server->config.loop, &conn->w_write, EV_WRITE);
     return;
 }
 
+
+void ymo_conn_rx_now(ymo_conn_t* conn)
+{
+    ev_invoke(conn->server->config.loop, &conn->w_read, EV_READ);
+    return;
+}
+
+
 ymo_conn_state_t ymo_conn_close(ymo_conn_t* conn, int clean)
 {
-    if( clean && conn->state == YMO_CONN_OPEN ) {
-        shutdown(conn->fd, SHUT_WR);
-        ymo_conn_rx_enable(conn, 1);
-        conn->state = YMO_CONN_CLOSING;
-    } else {
-        conn->state = YMO_CONN_CLOSED;
-        ymo_conn_cancel_idle_timeout(conn);
-        ymo_conn_rx_enable(conn, 0);
-        ymo_conn_tx_enable(conn, 0);
-        close(conn->fd);
+    CONN_TRACE("Clean: %i; State at invocation: %s (conn: %p, fd: %i)",
+            clean, c_state_names[conn->state], (void*)conn, conn->fd);
+    static char junk_buffer[64];
+    switch( conn->state ) {
+        case YMO_CONN_TLS_ESTABLISHED:
+        /* TODO: SSL_shutdown / SSL_free */
+        /* fallthrough */
+        case YMO_CONN_TLS_CLOSING:
+        /* fallthrough */
+        case YMO_CONN_TLS_HANDSHAKE:
+        /* fallthrough */
+        case YMO_CONN_TLS_CLOSED:
+        /* fallthrough */
+        case YMO_CONN_OPEN:
+            ymo_conn_rx_enable(conn, 1);
+            if( shutdown(conn->fd, SHUT_WR) && clean ) {
+                ymo_log_debug("Failed to shut down socket %i: %s",
+                        conn->fd, strerror(errno));
+            }
+            /* TODO: try a recv here? */
+            conn->state = YMO_CONN_SHUTDOWN;
+            ymo_conn_tx_enable(conn, 0);
+        /* fallthrough */
+        case YMO_CONN_SHUTDOWN:
+        {
+            size_t len = 0;
+            do {
+                errno = 0;
+                len = recv(conn->fd, junk_buffer, 64, YMO_RECV_FLAGS);
+            } while( len > 0 );
+
+            if( clean && len < 0 && YMO_IS_BLOCKED(errno) ) {
+                break;
+            }
+
+            conn->state = YMO_CONN_CLOSING;
+        }
+        case YMO_CONN_CLOSING:
+            /* TODO: if the user invokes the close callback with
+             *       clean=0, the close cleanup callback probably
+             *       won't fire.
+             */
+            CONN_TRACE("Performing close (conn: %p, fd: %i)",
+                    (void*)conn, conn->fd);
+            ymo_conn_cancel_idle_timeout(conn);
+            ymo_conn_tx_enable(conn, 0);
+            ymo_conn_rx_enable(conn, 0);
+            shutdown(conn->fd, SHUT_RDWR);
+            close(conn->fd);
+            conn->state = YMO_CONN_CLOSED;
+        /* fallthrough */
+        case YMO_CONN_CLOSED:
+        default:
+            /* fallthrough */
+            break;
     }
+
+    CONN_TRACE("State at return: %s (conn: %p, fd: %i)",
+            c_state_names[conn->state], (void*)conn, conn->fd);
     return conn->state;
 }
 
+
 void ymo_conn_free(ymo_conn_t* conn)
 {
-    ymo_log_trace_uuid("Freeing conn %p", conn->id, (void*)conn);
+    CONN_TRACE_UUID("Freeing conn %p", conn->id, (void*)conn);
     YMO_DELETE(ymo_conn_t, conn);
     return;
 }
+
 
 #if defined(YMO_CONN_LOCK) && (YMO_CONN_LOCK == 1)
 void ymo_conn_lock(ymo_conn_t* conn)
@@ -232,10 +353,13 @@ void ymo_conn_lock(ymo_conn_t* conn)
     pthread_mutex_lock(&conn->lock);
 }
 
+
 void ymo_conn_unlock(ymo_conn_t* conn)
 {
     pthread_mutex_unlock(&conn->lock);
 }
+
+
 #endif /* YMO_CONN_LOCK */
 
 

@@ -46,6 +46,8 @@
 #include "ymo_ws_parse.h"
 #include "ymo_ws_session.h"
 
+#define YMO_WS_TX_NOW 0
+
 /*======================================================================
  * !!! TODO:
  *
@@ -69,6 +71,45 @@ static ymo_status_t ws_buffer_msg(
         uint8_t flags,
         const char* msg,
         size_t len);
+
+static ymo_status_t invoke_recv_callback(
+        ymo_ws_recv_cb_t recv_cb,
+        ymo_ws_session_t* session);
+
+static ymo_status_t ws_echo_cb(
+        ymo_ws_session_t* session,
+        void* user_data,
+        uint8_t flags,
+        const char* data,
+        size_t len);
+
+
+static ymo_status_t send_ws_close(ymo_ws_session_t* session, uint16_t reason);
+
+
+static ssize_t ws_err_close(
+        const char* cause,         /* <-- TEMP! Don't dig it... */
+        ymo_status_t err_val,
+        ymo_ws_session_t* session,
+        uint16_t reason);
+
+static int get_close_reason(ymo_ws_session_t* session, uint16_t* reason);
+
+static inline int is_reason_valid(uint16_t reason);
+
+static ssize_t handle_client_close(
+        ymo_ws_session_t* session, size_t len);
+
+static ymo_status_t
+issue_http_101(
+        ymo_http_request_t* request,
+        ymo_http_response_t* response,
+        const char* key);
+
+static ymo_status_t check_connection_hdr(
+        ymo_http_request_t* request, const char* conn_hdr);
+
+static inline uint16_t reason_from_errno(int err_rc);
 
 
 /*---------------------------------------------------------------*
@@ -134,6 +175,7 @@ proto_bail:
     return NULL;
 }
 
+
 /*---------------------------------------------------------------*
  *  Yimmo WS Protocol Init Callback:
  *---------------------------------------------------------------*/
@@ -186,8 +228,11 @@ ymo_status_t ymo_proto_ws_conn_ready(
 void ymo_proto_ws_conn_cleanup(
         void* proto_data, ymo_conn_t* conn, void* conn_data)
 {
+    ymo_ws_proto_data_t* p_data = proto_data;
     if( conn_data ) {
-        ymo_ws_session_free((ymo_ws_session_t*)conn_data);
+        ymo_ws_session_t* session = conn_data;
+        p_data->close_cb(session, session->user_data);
+        ymo_ws_session_free(session);
     }
     return;
 }
@@ -196,255 +241,6 @@ void ymo_proto_ws_conn_cleanup(
 /*---------------------------------------------------------------*
  *  Yimmo WS Protocol Read Callback:
  *---------------------------------------------------------------*/
-
-static ymo_status_t ws_buffer_msg(
-        ymo_ws_session_t* session,
-        void* user_data,
-        uint8_t flags,
-        const char* msg,
-        size_t len)
-{
-    ymo_status_t r_msg = YMO_OKAY;
-    if( !len ) {
-        return r_msg;
-    }
-
-    if( !session->msg ) {
-        session->msg = session->msg_end = YMO_ALLOC(YMO_WS_MSG_LEN_MAX);
-
-        if( !session->msg ) {
-            ymo_log_warning("Out of memory allocating WS message buffer");
-            return ENOMEM;
-        }
-
-        session->msg_len = 0;
-    }
-
-    /* Bail if we're out of buffer space for this message. */
-    if( len > YMO_WS_MSG_LEN_MAX - session->msg_len ) {
-        ymo_log_warning("Incoming message exceeds max WS message buffer size");
-        return EFBIG;
-    }
-
-    memcpy(session->msg_end, msg, len);
-    session->msg_end += len;
-
-    /* If this was the last of the message, go ahead and deliver it to the
-     * msg callback and reset the buffer:
-     */
-    if( flags & YMO_WS_FLAG_FIN ) {
-        r_msg = session->p_data->msg_cb(
-                session, session->user_data, flags, session->msg, session->msg_len);
-        session->msg_end = session->msg;
-        session->msg_len = 0;
-    }
-
-    return r_msg;
-}
-
-static ymo_status_t issue_ws_callbacks(
-        ymo_ws_recv_cb_t recv_cb,
-        ymo_ws_session_t* session)
-{
-    ymo_status_t status = ENOENT;
-    ymo_bucket_t* p = session->recv_head;
-
-    while( p ) {
-        status = recv_cb(
-                session,
-                session->user_data,
-                session->frame_in.flags.packed,
-                p->data, p->len);
-        if( status != YMO_OKAY ) {
-            ymo_log_debug("Callback failure: %i", status);
-            goto callback_bail;
-        }
-
-        p = p->next;
-    }
-
-callback_bail:
-    ymo_bucket_free_all(session->recv_head);
-    session->recv_head = session->recv_tail = NULL;
-    return status;
-}
-
-
-static ymo_status_t ws_echo_cb(
-        ymo_ws_session_t* session,
-        void* user_data,
-        uint8_t flags,
-        const char* data,
-        size_t len)
-{
-    ymo_log_debug("Echoing %zu bytes (op: 0x%x; fin: 0x%x)",
-            len, session->frame_in.flags.op_code, session->frame_in.flags.fin);
-    ymo_ws_frame_flags_t frame_flags = { .packed = flags };
-    ymo_status_t status = YMO_OKAY;
-    if( frame_flags.op_code == YMO_WS_OP_PING ) {
-        frame_flags.op_code = YMO_WS_OP_PONG;
-    }
-
-    status = ymo_ws_session_send_no_check(
-            session, frame_flags.packed, YMO_BUCKET_FROM_CPY(data, len));
-    return status;
-}
-
-
-static inline ymo_status_t invoke_close_cb(
-        ymo_ws_proto_data_t* p_data,
-        ymo_ws_session_t* session)
-{
-    if( p_data->close_cb ) {
-        p_data->close_cb(session, session->user_data);
-        p_data->close_cb = NULL;
-        return YMO_OKAY;
-    }
-    return EINVAL;
-}
-
-
-/* TODO: once the close packet is sent...we need to close. */
-static ymo_status_t ws_send_close(ymo_ws_session_t* session, uint16_t reason)
-{
-    char data[2];
-
-    data[0] = (char)(reason >> 8) & 0xff;
-    data[1] = (char)(reason & 0xff);
-
-    ymo_bucket_t* reason_msg = YMO_BUCKET_FROM_CPY(data, 2);
-    ymo_status_t send_status = ymo_ws_session_send_no_check(
-            session, YMO_WS_OP_CLOSE | YMO_WS_FLAG_FIN, reason_msg);
-
-    if( send_status == YMO_OKAY ) {
-        ymo_log_debug("Transmitting reason %hu NOW", reason);
-        ymo_conn_tx_now(session->conn);
-    }
-    return send_status;
-}
-
-
-static ssize_t ws_err_close(
-        const char* cause,         /* <-- TEMP! Don't dig it... */
-        ymo_status_t err_val,
-        ymo_ws_session_t* session,
-        uint16_t reason)
-{
-    ymo_log_debug("Please close due to: %s (%s)",
-            strerror(err_val), cause);
-    if( session->state != WS_SESSION_ERROR ) {
-        ymo_log_debug("Sending close: %hu", reason);
-        session->state = WS_SESSION_ERROR;
-        ws_send_close(session, reason);
-        invoke_close_cb(session->p_data, session);
-    }
-
-    /* HACK: Since we're closing at the WS layer, we
-     * set errno = EAGAIN and return -1 to cause
-     * further reads...
-     */
-    errno = EAGAIN;
-    return -1;
-}
-
-
-static int ws_get_reason(ymo_ws_session_t* session, uint16_t* reason)
-{
-    ymo_bucket_t* cur = session->recv_head;
-
-    uint8_t idx = 0;
-    uint8_t vals[2];
-    while( cur && idx < 2 )
-    {
-        if( cur->data ) {
-            uint8_t end = (2u - idx) < cur->len ? (2u-idx) : cur->len;
-            for( uint8_t i = 0; i < end; i++ )
-            {
-                vals[idx++] = cur->data[i];
-            }
-        }
-
-        cur = cur->next;
-    }
-
-    if( idx == 2 ) {
-        *reason = (vals[0] << 8) | vals[1];
-        return 0;
-    }
-
-    return -1;
-}
-
-
-static inline int is_reason_valid(uint16_t reason)
-{
-    if( reason >= 1000 ) {
-        switch( reason ) {
-            case 1004:
-            case 1005:
-                return 0;
-                break;
-            default:
-                break;
-        }
-
-        if( reason < 5000 ) {
-            return 1;
-        }
-    }
-    return 0;
-}
-
-
-static ssize_t ws_handle_close(
-        ymo_ws_session_t* session, size_t len)
-{
-    /* If we weren't expecting a close, send one back: */
-    if( session->state != WS_SESSION_EXPECT_CLOSE ) {
-        uint16_t reason;
-        if( !ws_get_reason(session, &reason) ) {
-            ymo_log_debug(
-                    "Client initiatied close with 0x%x / reason: %hu",
-                    YMO_WS_OP_CLOSE, reason);
-
-            if( !is_reason_valid(reason) ) {
-                return ws_err_close("Invalid reason code on close",
-                        EBADMSG, session, 1002);
-            }
-        } else {
-            ymo_log_debug(
-                    "Client initiatied close with 0x%x", YMO_WS_OP_CLOSE);
-        }
-
-        ymo_status_t cb_status = issue_ws_callbacks(ws_echo_cb, session);
-        session->state = WS_SESSION_CLOSE_RECEIVED;
-
-        /* Try to send immediately and then let the server
-         * know we're ready to terminate. If we get EAGAIN
-         * on send, the client will be stuck with TIME_WAIT.
-         *
-         * C'est la vie.
-         */
-        ymo_conn_tx_now(session->conn);
-
-        /* Prompt another read to listen for the close sequence: */
-        errno = EAGAIN;
-        return -1;
-    } else {
-        /* If we were expecting a close, call it a day by resetting errno
-         * and consuming the remaining bytes by returning len:
-         */
-        ymo_conn_close(session->conn, 1);
-        errno = 0;
-        return len;
-    }
-
-    /* Else, something's gone awry: */
-    errno = EBADMSG;
-    return -1;
-}
-
-
 
 /* WS Protocol read callback: */
 ssize_t ymo_proto_ws_read(
@@ -507,9 +303,10 @@ ws_parse_entry:
             len -= n;
             ymo_log_trace("%i bytes parsed (remain=%lu)", (int)n, len);
         } else {
+            uint16_t reason = reason_from_errno(errno);
             return ws_err_close(
                     "Parser error",
-                    errno, session, 1002);
+                    errno, session, reason);
         }
     } while( len );
 
@@ -531,7 +328,7 @@ ws_parse_complete:
                 case YMO_WS_OP_BINARY:
                     ymo_log_trace("Invoking callback: %s", "user callback");
                     if( session->state == WS_SESSION_CONNECTED ) {
-                        cb_status = issue_ws_callbacks(p_data->recv_cb, session);
+                        cb_status = invoke_recv_callback(p_data->recv_cb, session);
                     } else {
                         /* Presumably, we already sent a close? */
                         return len_in;
@@ -540,14 +337,16 @@ ws_parse_complete:
 
                 /* --- SERVER callback: --- */
                 case YMO_WS_OP_CLOSE:
-                    return ws_handle_close(session, len_in);
+                    return handle_client_close(session, len_in);
                     break;
                 case YMO_WS_OP_PING:
-                    cb_status = issue_ws_callbacks(ws_echo_cb, session);
+                    ymo_log_trace("Got ping! Sending Pong! (%p)", (void*)session);
+                    cb_status = invoke_recv_callback(ws_echo_cb, session);
                     break;
 
                 /* --- Ignored: ---- */
                 case YMO_WS_OP_PONG:
+                    ymo_log_trace("Ignoring pong on %p", (void*)session);
                     cb_status = YMO_OKAY;
                     break;
 
@@ -602,7 +401,6 @@ ymo_status_t ymo_proto_ws_write(
 
         if( !YMO_WS_SHOULD_CLOSE_ON_WRITE(session) ) {
             ymo_log_debug("Keeping client open for state: %i", session->state);
-            ymo_conn_tx_enable(conn, 0);
         } else {
             ymo_log_debug("Close frame sent. Terminating: %i", socket);
             ymo_conn_close(conn, 1);
@@ -625,69 +423,6 @@ ymo_http_upgrade_handler_t* ymo_ws_http_upgrade_handler(ymo_proto_t* proto)
     return upgrade_handler;
 }
 
-
-static ymo_status_t
-ymo_ws_issue_101(
-        ymo_http_request_t* request,
-        ymo_http_response_t* response,
-        const char* key)
-{
-    /* Combine key and GUID: */
-    size_t input_len = strlen(key) + strlen(WS_GUID);
-    unsigned char* input = YMO_ALLOC(input_len + 1);
-    sprintf((char*)input, "%s%s", key, WS_GUID);
-
-    /* Compute the SHA-1: */
-    unsigned char hashed_hdr[20];
-    SHA1(input, input_len, hashed_hdr);
-    YMO_FREE(input);
-
-    char* accept_hdr = ymo_blalloc(request->ws, sizeof(char), YMO_BASE64_LEN(20));
-    if( !accept_hdr ) {
-        return ENOMEM;
-    }
-
-    /* TODO: Check return value? */
-    ymo_base64_encode(accept_hdr, hashed_hdr, 20);
-
-    /* Send off the request: */
-    ymo_http_response_set_status(response, 101);
-    ymo_http_response_insert_header(response, "Server", "ymo_test_server");
-    ymo_http_response_insert_header(response, "Upgrade", "websocket");
-    ymo_http_response_insert_header(response, "Connection", "upgrade");
-    ymo_http_response_insert_header(response, "Sec-WebSocket-Accept", accept_hdr);
-    ymo_http_response_set_flags(response, YMO_HTTP_FLAG_REQUEST_KEEPALIVE);
-    ymo_http_response_finish(response);
-    return YMO_OKAY;
-}
-
-static ymo_status_t ymo_ws_check_connection_hdr(
-        ymo_http_request_t* request, const char* conn_hdr)
-{
-    static const char* sep = " ,\n\t";
-
-    ymo_status_t r = EBADMSG;
-    if( conn_hdr ) {
-        size_t hdr_len = strlen(conn_hdr);
-        char* conn_str = ymo_blalloc(request->ws, sizeof(char), hdr_len+1);
-        if( !conn_str ) {
-            return ENOMEM;
-        }
-
-        strcpy(conn_str, conn_hdr);
-        char* saveptr = NULL;
-        char* hdr_val = NULL;
-        for( hdr_val = strtok_r(conn_str, sep, &saveptr); hdr_val;
-             hdr_val = strtok_r(NULL, sep, &saveptr))
-        {
-            if( !strcasecmp(hdr_val, "upgrade") ) {
-                r = YMO_OKAY;
-                break;
-            }
-        }
-    }
-    return r;
-}
 
 ymo_http_upgrade_status_t ymo_ws_upgrade_cb(
         const char* hdr_upgrade,
@@ -726,7 +461,7 @@ ymo_http_upgrade_status_t ymo_ws_upgrade_cb(
         || !(request->flags & YMO_HTTP_FLAG_VERSION_1_1)
 #endif
         || (!host)
-        || (ymo_ws_check_connection_hdr(request, connection) != YMO_OKAY)
+        || (check_connection_hdr(request, connection) != YMO_OKAY)
         || (!sec_ws_key)
         || (ws_version != RFC_6455)
         ) {
@@ -750,7 +485,7 @@ ymo_http_upgrade_status_t ymo_ws_upgrade_cb(
         ymo_log_trace("\tsec_ws_proto: %s", sec_ws_proto);
         ymo_log_trace("\tsec_ws_version: %s", sec_ws_version);
         upgrade_status = YMO_HTTP_UPGRADE_HANDLED;
-        resp_status = ymo_ws_issue_101(request, response, sec_ws_key);
+        resp_status = issue_http_101(request, response, sec_ws_key);
     }
 
     if( resp_status != YMO_OKAY ) {
@@ -761,5 +496,380 @@ ymo_http_upgrade_status_t ymo_ws_upgrade_cb(
 }
 
 
+/*---------------------------------------------------------------*
+ *  Yimmo WS Protocol Static Util:
+ *---------------------------------------------------------------*/
+
+static ymo_status_t ws_buffer_msg(
+        ymo_ws_session_t* session,
+        void* user_data,
+        uint8_t flags,
+        const char* msg,
+        size_t len)
+{
+    ymo_status_t r_msg = YMO_OKAY;
+    if( !len ) {
+        return r_msg;
+    }
+
+    if( !session->msg ) {
+        session->msg = session->msg_end = YMO_ALLOC(YMO_WS_MSG_LEN_MAX);
+
+        if( !session->msg ) {
+            ymo_log_warning("Out of memory allocating WS message buffer");
+            return ENOMEM;
+        }
+
+        session->msg_len = 0;
+    }
+
+    /* Bail if we're out of buffer space for this message. */
+    if( len > YMO_WS_MSG_LEN_MAX - session->msg_len ) {
+        ymo_log_warning("Incoming message exceeds max WS message buffer size");
+        return EFBIG;
+    }
+
+    memcpy(session->msg_end, msg, len);
+    session->msg_end += len;
+
+    /* If this was the last of the message, go ahead and deliver it to the
+     * msg callback and reset the buffer:
+     */
+    if( flags & YMO_WS_FLAG_FIN ) {
+        r_msg = session->p_data->msg_cb(
+                session, session->user_data, flags, session->msg, session->msg_len);
+        session->msg_end = session->msg;
+        session->msg_len = 0;
+    }
+
+    return r_msg;
+}
+
+
+static ymo_status_t invoke_recv_callback(
+        ymo_ws_recv_cb_t recv_cb,
+        ymo_ws_session_t* session)
+{
+    ymo_status_t status = ENOENT;
+    ymo_bucket_t* p = session->recv_head;
+
+    while( p ) {
+        ymo_log_trace("Op: 0x%x, Fin: %i, Len: %zu",
+                session->frame_in.flags.op_code,
+                session->frame_in.flags.fin,
+                p->len);
+        status = recv_cb(
+                session,
+                session->user_data,
+                session->frame_in.flags.packed,
+                p->data, p->len);
+        if( status != YMO_OKAY ) {
+            ymo_log_debug("Callback failure: %i", status);
+            goto callback_bail;
+        }
+
+        p = p->next;
+    }
+
+callback_bail:
+    ymo_bucket_free_all(session->recv_head);
+    session->recv_head = session->recv_tail = NULL;
+    return status;
+}
+
+
+static ymo_status_t ws_echo_cb(
+        ymo_ws_session_t* session,
+        void* user_data,
+        uint8_t flags,
+        const char* data,
+        size_t len)
+{
+    ymo_log_debug("Echoing %zu bytes (op: 0x%x; fin: 0x%x)",
+            len, session->frame_in.flags.op_code, session->frame_in.flags.fin);
+    ymo_ws_frame_flags_t frame_flags = { .packed = flags };
+    ymo_status_t status = YMO_OKAY;
+    if( frame_flags.op_code == YMO_WS_OP_PING ) {
+        frame_flags.op_code = YMO_WS_OP_PONG;
+    }
+
+    status = ymo_ws_session_send_no_check(
+            session, frame_flags.packed, YMO_BUCKET_FROM_CPY(data, len));
+    return status;
+}
+
+
+/* TODO: once the close packet is sent...we need to close. */
+static ymo_status_t send_ws_close(ymo_ws_session_t* session, uint16_t reason)
+{
+    char data[2];
+
+    data[0] = (char)(reason >> 8) & 0xff;
+    data[1] = (char)(reason & 0xff);
+
+    ymo_bucket_t* reason_msg = YMO_BUCKET_FROM_CPY(data, 2);
+    ymo_status_t send_status = ymo_ws_session_send_no_check(
+            session, YMO_WS_OP_CLOSE | YMO_WS_FLAG_FIN, reason_msg);
+
+#if YMO_WS_TX_NOW
+    if( send_status == YMO_OKAY ) {
+        ymo_log_debug("Transmitting reason %hu NOW", reason);
+        ymo_conn_tx_now(session->conn);
+    }
+#endif
+    return send_status;
+}
+
+
+static ssize_t ws_err_close(
+        const char* cause,         /* <-- TEMP! Don't dig it... */
+        ymo_status_t err_val,
+        ymo_ws_session_t* session,
+        uint16_t reason)
+{
+    ymo_log_debug("Please close due to: %s (%s)",
+            strerror(err_val), cause);
+    if( session->state != WS_SESSION_ERROR ) {
+        ymo_log_debug("Sending close: %hu", reason);
+        session->state = WS_SESSION_ERROR;
+        send_ws_close(session, reason);
+    }
+
+    /* HACK: Since we're closing at the WS layer, we
+     * set errno = EAGAIN and return -1 to cause
+     * further reads...
+     */
+    return YMO_ERROR_SSIZE_T(EAGAIN);
+}
+
+
+static int get_close_reason(ymo_ws_session_t* session, uint16_t* reason)
+{
+    ymo_bucket_t* cur = session->recv_head;
+
+    uint8_t idx = 0;
+    uint8_t vals[2];
+    while( cur && idx < 2 )
+    {
+        if( cur->data ) {
+            uint8_t end = (2u - idx) < cur->len ? (2u-idx) : cur->len;
+            for( uint8_t i = 0; i < end; i++ )
+            {
+                vals[idx++] = cur->data[i];
+            }
+        }
+
+        cur = cur->next;
+    }
+
+    if( idx == 2 ) {
+        *reason = (vals[0] << 8) | vals[1];
+        return 0;
+    }
+
+    return -1;
+}
+
+
+static inline int is_reason_valid(uint16_t reason)
+{
+    if( reason >= 1000 && reason < 3000 ) {
+        switch( reason ) {
+            case 1000:
+            case 1001:
+            case 1002:
+            case 1003:
+            case 1007:
+            case 1008:
+            case 1009:
+            case 1010:
+            case 1011:
+                return 1;
+                break;
+            default:
+                return 0;
+        }
+    }
+
+    if( reason >= 3000 ) {
+        return 1;
+    }
+
+    return 0;
+}
+
+
+static ssize_t handle_client_close(
+        ymo_ws_session_t* session, size_t len)
+{
+    int expected_close = session->state == WS_SESSION_EXPECT_CLOSE;
+    session->state = WS_SESSION_CLOSE_RECEIVED;
+
+    /* If we weren't expecting a close, send one back: */
+    if( !expected_close ) {
+        uint16_t reason;
+        if( !get_close_reason(session, &reason) ) {
+            ymo_log_debug(
+                    "Client initiatied close with 0x%x / reason: %hu",
+                    YMO_WS_OP_CLOSE, reason);
+
+            if( !is_reason_valid(reason) ) {
+                return ws_err_close("Invalid reason code on close",
+                        EBADMSG, session, 1002);
+            }
+        } else {
+            ymo_log_debug(
+                    "Client initiatied close with 0x%x", YMO_WS_OP_CLOSE);
+        }
+
+        ymo_status_t cb_status = invoke_recv_callback(ws_echo_cb, session);
+
+#define YMO_WS_TX_NOW 1
+#if YMO_WS_TX_NOW
+        /* Try to send immediately and then let the server
+         * know we're ready to terminate. If we get EAGAIN
+         * on send, the client will be stuck with TIME_WAIT.
+         *
+         * C'est la vie.
+         */
+        ymo_conn_tx_now(session->conn);
+#endif
+
+        /* Prompt another read to listen for the close sequence: */
+        return YMO_ERROR_SSIZE_T(EAGAIN);
+    }
+
+    /* If we were expecting a close, call it a day by resetting errno
+     * and consuming the remaining bytes by returning len:
+     */
+    ymo_log_debug("Got expected close from %p. Closing connection.",
+            (void*)session);
+    ymo_conn_close(session->conn, 1);
+    errno = 0;
+    return len;
+}
+
+
+static ymo_status_t
+issue_http_101(
+        ymo_http_request_t* request,
+        ymo_http_response_t* response,
+        const char* key)
+{
+    /* Combine key and GUID: */
+    size_t input_len = strlen(key) + strlen(WS_GUID);
+    unsigned char* input = YMO_ALLOC(input_len + 1);
+    sprintf((char*)input, "%s%s", key, WS_GUID);
+
+    /* Compute the SHA-1: */
+    unsigned char hashed_hdr[20];
+    SHA1(input, input_len, hashed_hdr);
+    YMO_FREE(input);
+
+    char* accept_hdr = ymo_blalloc(request->ws, sizeof(char), YMO_BASE64_LEN(20));
+    if( !accept_hdr ) {
+        return ENOMEM;
+    }
+
+    /* TODO: Check return value? */
+    ymo_base64_encode(accept_hdr, hashed_hdr, 20);
+
+    /* Send off the request: */
+    ymo_http_response_set_status(response, 101);
+    ymo_http_response_insert_header(response, "Server", "ymo_test_server");
+    ymo_http_response_insert_header(response, "Upgrade", "websocket");
+    ymo_http_response_insert_header(response, "Connection", "upgrade");
+    ymo_http_response_insert_header(response, "Sec-WebSocket-Accept", accept_hdr);
+    ymo_http_response_set_flags(response, YMO_HTTP_FLAG_REQUEST_KEEPALIVE);
+    ymo_http_response_finish(response);
+    return YMO_OKAY;
+}
+
+
+static ymo_status_t check_connection_hdr(
+        ymo_http_request_t* request, const char* conn_hdr)
+{
+    static const char* sep = " ,\n\t";
+
+    ymo_status_t r = EBADMSG;
+    if( conn_hdr ) {
+        size_t hdr_len = strlen(conn_hdr);
+        char* conn_str = ymo_blalloc(request->ws, sizeof(char), hdr_len+1);
+        if( !conn_str ) {
+            return ENOMEM;
+        }
+
+        strcpy(conn_str, conn_hdr);
+        char* saveptr = NULL;
+        char* hdr_val = NULL;
+        for( hdr_val = strtok_r(conn_str, sep, &saveptr); hdr_val;
+             hdr_val = strtok_r(NULL, sep, &saveptr))
+        {
+            if( !strcasecmp(hdr_val, "upgrade") ) {
+                r = YMO_OKAY;
+                break;
+            }
+        }
+    }
+    return r;
+}
+
+
+static inline uint16_t reason_from_errno(int err_rc)
+{
+    uint16_t reason = 1002;
+    switch( err_rc ) {
+        /* 1000: Normal closure */
+        case YMO_OKAY:
+            reason = 1000;
+            break;
+
+        /* 1001: Server terminating */
+        case EPIPE:         /* Broken pipe */
+        case EADDRNOTAVAIL: /* Address not available */
+        case ENOPROTOOPT:   /* Protocol not available */
+            reason = 1001;
+            break;
+
+        /* 1002: Protocol Error */
+        case EPROTOTYPE:    /* Wrong protocol */
+        case EINVAL:        /* Invalid argument */
+        case EBADMSG:       /* Bad message */
+            reason = 1002;
+            break;
+
+        /* 1003: Cannot accept data type */
+        case ENOSYS:           /* Functionality not supported */
+        case EPROTONOSUPPORT:  /* Protocol not supported */
+        case ENOTSUP:          /* Not supported */
+            reason = 1003;
+            break;
+
+        /* 1007: Malformed *payload* data: */
+        case EILSEQ:
+            reason = 1007;
+            break;
+
+        /* 1008: Policy violation */
+        case ECONNREFUSED:
+        case EACCES:
+            reason = 1008;
+            break;
+
+        /* Terminating due to large message: */
+        case EFBIG:         /* File too big */
+        case EMSGSIZE:      /* Message size too big */
+        case EOVERFLOW:     /* Value too large for datatype */
+            reason = 1009;
+            break;
+
+        /* 1011: Terminating due to unexpected condition
+         *       (Server Error)
+         */
+        default:
+            reason = 1011;
+    }
+    return reason;
+}
 
 

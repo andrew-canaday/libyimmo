@@ -42,6 +42,7 @@ static int create_response(void)
     YMO_TAP_PASS("TODO: this isn't really a test!");
 }
 
+
 static int add_headers()
 {
     status = ymo_http_response_insert_header(
@@ -55,6 +56,7 @@ static int add_headers()
     ymo_assert(status == YMO_OKAY);
     YMO_TAP_PASS("Same here...");
 }
+
 
 /*-------------------------------------------------------------*
  * Main:

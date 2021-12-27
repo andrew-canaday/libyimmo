@@ -34,8 +34,6 @@ YMO_HTTP_TEST_URL_ROOT="${1:-"http://127.0.0.1:8081"}"
 TESTS_BUILDDIR="${PWD}"
 TESTS_SRCDIR="$( cd ${0%/*} ; echo ${PWD} )"
 
-. ${TESTS_SRCDIR}/bash/util.sh
-
 CTEST_LOG=${TESTS_BUILDDIR}/${0##*/}.trs
 CTEST_ERR_LOG=${TESTS_BUILDDIR}/${0##*/}.err
 

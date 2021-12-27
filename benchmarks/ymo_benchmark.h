@@ -46,6 +46,7 @@ void timeval_subtract(
     return;
 }
 
+
 void timeval_increment(struct timeval* out, struct timeval* diff)
 {
     out->tv_sec += diff->tv_sec;
@@ -59,6 +60,7 @@ void timeval_increment(struct timeval* out, struct timeval* diff)
     return;
 }
 
+
 /* Start timing an algorithm: */
 static inline void benchmark_start()
 {
@@ -66,12 +68,14 @@ static inline void benchmark_start()
     return;
 }
 
+
 /* Pause the timer, don't count any time elapsed between pause and unpause: */
 static inline void benchmark_pause()
 {
     gettimeofday(&pause_time, NULL);
     return;
 }
+
 
 /* Unpause the timer: */
 static inline void benchmark_unpause()
@@ -84,6 +88,7 @@ static inline void benchmark_unpause()
     return;
 }
 
+
 /* Stop the timer and spit out the total elapsed time: */
 static inline struct timeval benchmark_stop()
 {
@@ -92,6 +97,7 @@ static inline struct timeval benchmark_stop()
     timeval_subtract(&total_time, &start_time, &stop_time);
     return total_time;
 }
+
 
 #endif /* YMO_BENCHMARK_H */
 

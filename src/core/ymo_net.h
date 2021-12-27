@@ -208,5 +208,6 @@ static inline int ymo_sock_reuse(int fd, ymo_server_config_flags_t flags)
     return YMO_OKAY;
 }
 
+
 #endif /* YMO_NET_H */
 

@@ -50,6 +50,7 @@ char* naive_toupper(char* str_in)
     return str_in;
 }
 
+
 const char* s_orig = "This is a test (Copyright blah blah BLAH!)";
 char* lower_expect = NULL;
 char* upper_expect = NULL;
@@ -69,6 +70,7 @@ int setup(void)
     return 0;
 }
 
+
 int test_to_lower(void)
 {
     s_lower = strdup(s_orig);
@@ -81,6 +83,7 @@ int test_to_lower(void)
     ymo_assert_str_eq(s_lower, lower_expect);
     YMO_TAP_PASS(__func__);
 }
+
 
 int test_trim_front(void)
 {
@@ -120,6 +123,7 @@ int test_trim_front(void)
     YMO_TAP_PASS(__func__);
 }
 
+
 int test_base64_encoded(void)
 {
     const char* s_in = "This is a string of text";
@@ -127,6 +131,7 @@ int test_base64_encoded(void)
     ymo_assert_str_eq("VGhpcyBpcyBhIHN0cmluZyBvZiB0ZXh0", s_b64_out);
     YMO_TAP_PASS(__func__);
 }
+
 
 YMO_TAP_RUN(setup, NULL, NULL,
         YMO_TAP_TEST_FN(test_to_lower),

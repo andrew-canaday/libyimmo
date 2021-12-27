@@ -37,6 +37,7 @@ ymo_ws_session_t* ymo_ws_session_create(
     return session;
 }
 
+
 void ymo_ws_session_free(ymo_ws_session_t* session)
 {
     if( session ) {
@@ -50,6 +51,7 @@ void ymo_ws_session_free(ymo_ws_session_t* session)
         YMO_DELETE(ymo_ws_session_t, session);
     }
 }
+
 
 #define WS_HDR_LEN(n) (n+2)
 
@@ -100,6 +102,7 @@ static char* gen_ws_msg_hdr(size_t* hdr_len, uint8_t flag, size_t len)
     return hdr_data;
 }
 
+
 ymo_status_t ymo_ws_session_send_no_check(
         ymo_ws_session_t* session,
         uint8_t flags,
@@ -124,6 +127,7 @@ ymo_status_t ymo_ws_session_send_no_check(
     ymo_conn_tx_enable(session->conn, 1);
     return YMO_OKAY;
 }
+
 
 ymo_status_t ymo_ws_session_send(
         ymo_ws_session_t* session,
@@ -176,7 +180,4 @@ void* ymo_ws_session_get_userdata(ymo_ws_session_t* session)
 {
     return session->user_data;
 }
-
-
-
 

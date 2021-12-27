@@ -32,7 +32,9 @@ json_path="$1" ; shift
 hr '='
 log_info "Autobahn WebSocket Server Test Suite Results"
 
-cat "${json_path}" | jq --color-output '.'
+if [ "x${FULL_JSON}" != "xfalse" ]; then
+    cat "${json_path}" | jq --color-output '.' >&2
+fi
 
 
 hr '-'
@@ -43,6 +45,10 @@ log_info "PASSED: $( cat "${json_path}" \
 
 log_info "FAILED: $( cat "${json_path}" \
     | jq -r '[ .ymo_test_server | to_entries | .[] | select(.value.behavior == "FAILED") ] | length'
+    )"
+
+log_info "NON-STRICT: $( cat "${json_path}" \
+        | jq -r '[ .ymo_test_server | to_entries | .[] | select(.value.behavior == "NON-STRICT") ] | length'
     )"
 
 

@@ -1,4 +1,4 @@
-name: Configure, Make, and Check (Defaults + WSGI Build)
+name: Configure, Make, and Check
 on: [push]
 jobs:
   configure_make_check:
@@ -61,13 +61,21 @@ jobs:
       - name: Configure
         run: |
           ../../libyimmo/configure \
+          --enable-maintainer-debug \
           --enable-examples \
           --enable-wsgi \
-          --enable-silent-rules
+          --enable-silent-rules \
+          CFLAGS=-fdiagnostics-color=always
         working-directory: ./build/yimmo
 
       - name: Compile
-        run: make
+        run: |
+          make 2>./yimmo-warnings.txt
+        working-directory: ./build/yimmo
+
+      - name: Warnings
+        run: |
+          cat ./yimmo-warnings.txt
         working-directory: ./build/yimmo
 
       - name: Unit Tests

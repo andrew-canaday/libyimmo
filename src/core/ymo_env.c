@@ -55,6 +55,7 @@ long_env_fail:
     return EINVAL;
 }
 
+
 int ymo_env_as_float(const char* env_name, float* value, float* def_val)
 {
     if( !env_name ) {
@@ -80,6 +81,7 @@ float_env_fail:
     }
     return EINVAL;
 }
+
 
 int ymo_env_as_double(const char* env_name, double* value, double* def_val)
 {

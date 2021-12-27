@@ -61,7 +61,7 @@ function run_cmd() {
 export YMO_TEST_DURATION="${YMO_TEST_DURATION:-"10"}"
 export YMO_NO_CLIENTS="${YMO_NO_CLIENTS:-"50000"}"
 export YMO_NO_CONCURRENT="${YMO_NO_CONCURRENT:-"100"}"
-export YMO_EXAMPLE_URL="${YMO_EXAMPLE_URL:-"http://localhost:8081/index.html"}"
+export YMO_EXAMPLE_URL="${YMO_EXAMPLE_URL:-"http://localhost:8081/status"}"
 
 run_cmd go-wrk \
     -http=True \

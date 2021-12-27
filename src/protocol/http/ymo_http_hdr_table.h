@@ -87,6 +87,8 @@ __attribute__((YMO_FUNC_PURE_P, YMO_FUNC_UNUSED_A)) static inline ymo_http_hdr_i
     }
     return h & YMO_HDR_TABLE_MASK;
 }
+
+
 #endif /* HAVE_FUNC_ATTRIBUTE_WEAK && YMO_HTTP_HDR_HASH_ALLOW_WEAK */
 
 
