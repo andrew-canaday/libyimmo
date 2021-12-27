@@ -1,4 +1,4 @@
-name: Publish Yimmo-WSGI Docker Image
+name: Yimmo-WSGI Docker Image
 on:
   push:
     branches:
