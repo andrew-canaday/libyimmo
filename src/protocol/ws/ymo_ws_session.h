@@ -33,8 +33,16 @@
 #include "ymo_proto_ws.h"
 
 
-/* HACK HACK HACK */
+#ifndef YMO_WS_FRAME_MAX
+
+/** HACK HACK HACK.
+ *
+ * TODO: move this to configure (or runtime!) setting.
+ *
+ */
 #define YMO_WS_FRAME_MAX 32768
+
+#endif /* YMO_WS_FRAME_MAX */
 
 
 /** Session

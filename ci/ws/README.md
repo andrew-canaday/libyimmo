@@ -19,9 +19,9 @@ WebSockets are tested using the [Autobahn Test Suite](https://github.com/crossba
  - :white_check_mark: `3.*`: Reserved Bits
  - :white_check_mark: `4.*`: Opcodes
  - :white_check_mark: `5.*`: Fragmentation
- - :white_large_square: `6.*`: UTF-8 Handling (_out of scope_ — see notes below)
+ - :white_check_mark: `6.*`: UTF-8 Handling
  - :white_check_mark: `7.*`: Close Handling
- - :white_large_square: `9.*`: Limits/Performance (_partially out of scope_ — see notes below)
+ - :white_large_square: `9.*`: Limits/Performance (_off, by default_ — see notes below)
  - :white_check_mark: `10.*`: Misc
  - :white_large_square: `12.*`: WebSocket Compression/Payloads (_not yet implemented_)
  - :white_large_square: `13.*`: WebSocket Compression/Parameters (_not yet implemented_)
@@ -38,11 +38,6 @@ WebSockets are tested using the [Autobahn Test Suite](https://github.com/crossba
     > remove these from the exclusions list in
     > [`fuzzingclient.json`](./config/fuzzingclient.json)).
  - `2.10,11`: Not required by spec.
- - `6.3,4,9,1-21`: Out of scope.
-    > **NOTES**: Yimmo doesn't perform content-encoding verification.
-    >
-    > If your service or one of its clients invalid transmit invalid UTF-8,
-    > Yimmo will happily relay it for you.
  - `9.*`: Limits
     > **NOTES**: This series is testing limits which will pass/fail
     > based on values set when ``./configure`` is run.
