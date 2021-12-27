@@ -71,6 +71,7 @@ static ymo_status_t test_ws_recv_cb(
         const char*       data,
         size_t len)
 {
+#if EXAMPLE_PRINT_MSG
     if( data && len ) {
         if( flags & YMO_WS_OP_TEXT ) {
             ymo_log_info("Recv from %p: \"%.*s\"",
@@ -81,6 +82,7 @@ static ymo_status_t test_ws_recv_cb(
                 "Got a message with a zero length payload "
                 "(allowed by RFC-6455!)");
     }
+#endif
 
     return ymo_ws_session_send(
             session, flags, YMO_BUCKET_FROM_CPY(data, len));

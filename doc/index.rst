@@ -3,7 +3,7 @@ YIMMO
 
 Yimmo (yup, I made my own) is a streaming socket framework.
 
-It favors **ease of use** and performance over feature richness. It provides
+It favors ease of use and performance over feature richness. It provides
 some basics and attempts to provide a flexible, intuitive interface upon which
 more complicated functionality can be built.
 
