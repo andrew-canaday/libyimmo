@@ -14,7 +14,7 @@ jobs:
         shell: bash
     env:
       LD_LIBRARY_PATH: /usr/local/lib
-      IMAGE_NAME: "ghcr.io/${{ github.repository_owner }}/yimmo-ci-test:${{ github.ref_name }}" 
+      IMAGE_NAME: "ghcr.io/${{ github.repository }}-ci:${{ github.ref_name }}" 
     steps:
       - name: Checkout libyimmo
         uses: actions/checkout@v2
@@ -59,7 +59,7 @@ jobs:
         shell: bash
     env:
       LD_LIBRARY_PATH: /usr/local/lib
-      IMAGE_NAME: "ghcr.io/${{ github.repository_owner }}/yimmo-ci-test:${{ github.ref_name }}" 
+      IMAGE_NAME: "ghcr.io/${{ github.repository }}-ci:${{ github.ref_name }}" 
     steps:
       - name: Checkout libyimmo
         uses: actions/checkout@v2
@@ -142,7 +142,7 @@ jobs:
         shell: bash
     env:
       LD_LIBRARY_PATH: /usr/local/lib
-      IMAGE_NAME: "ghcr.io/${{ github.repository_owner }}/yimmo-ci-test:${{ github.ref_name }}" 
+      IMAGE_NAME: "ghcr.io/${{ github.repository }}-ci:${{ github.ref_name }}" 
     steps:
       - name: Checkout libyimmo
         uses: actions/checkout@v2
