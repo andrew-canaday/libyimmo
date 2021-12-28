@@ -411,7 +411,7 @@ void ymo_read_cb(struct ev_loop* loop, struct ev_io* watcher, int revents)
 
 
     if( EV_ERROR & revents ) {
-        ymo_log_warning("libev error on read fd: %i", watcher->fd);
+        ymo_log_debug("libev error on read fd: %i", watcher->fd);
         if( conn ) {
             close_and_free_connection(server, conn, 0);
         }
