@@ -64,7 +64,7 @@ The executable takes two arguments:
 #. a python statement whose result is a WSGI app
 
 ```bash
-yimmo-wsgi MODULE_NAME INIT_STATMENT
+yimmo-wsgi MODULE_NAME:INIT_STATMENT
 ```
 
 Yimmo WSGI uses the standard interpretter python home and module search path.
@@ -101,9 +101,7 @@ start it like so:
 
       # We'll run hello.py like this:
       PYTHONPATH=/opt/my_apps \
-          yimmo-wsgi \
-              hello \
-              app
+          yimmo-wsgi hello:app
 
 
 App Factory
@@ -142,9 +140,7 @@ important!), you start it like so:
 
       # We'll run hello.py like this:
       PYTHONPATH=/opt/my_apps \
-          yimmo-wsgi \
-              hello_factory \
-              'create_app("my_config.cfg")'
+          yimmo-wsgi 'hello_factory:create_app("my_config.cfg")'
 
 
 Configuration

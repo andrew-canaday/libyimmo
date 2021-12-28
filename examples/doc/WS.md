@@ -168,6 +168,8 @@ What we do here is:
 ```C
 int main(int argc, char** argv)
 {
+    ymo_log_init();
+
     /* Say hello */
     issue_startup_msg();
 

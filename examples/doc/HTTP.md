@@ -60,6 +60,7 @@ static ymo_status_t test_http_callback(
 ```C
 int main(int argc, char** argv)
 {
+    ymo_log_init();
     ymo_server_t* http_srv = NULL;
 
     /* Say hello */
