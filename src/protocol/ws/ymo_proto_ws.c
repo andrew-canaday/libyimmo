@@ -59,6 +59,16 @@
  * (WIP!)
  *----------------------------------------------------------------------*/
 
+#define YMO_PROTO_WS_TRACE 0
+#if defined(YMO_PROTO_WS_TRACE) && YMO_PROTO_WS_TRACE == 1
+# define PROTO_WS_TRACE(fmt, ...) ymo_log_trace(fmt, __VA_ARGS__);
+# define PROTO_WS_TRACE_UUID(fmt, ...) ymo_log_trace_uuid(fmt, __VA_ARGS__);
+#else
+# define PROTO_WS_TRACE(fmt, ...)
+# define PROTO_WS_TRACE_UUID(fmt, ...)
+#endif /* YMO_PROTO_WS_TRACE */
+
+
 #define YMO_WS_SHOULD_CLOSE_ON_WRITE(s) \
     ( (s->state == WS_SESSION_CLOSED) || \
       (s->state == WS_SESSION_CLOSE_RECEIVED) || \
@@ -258,14 +268,14 @@ ssize_t ymo_proto_ws_read(
 ws_parse_entry:
     /* If we're closing: ignore everything else? */
     if( session->state == WS_SESSION_CLOSE_RECEIVED ) {
-        ymo_log_trace("Got %zi bytes of data, but client sent close",
+        PROTO_WS_TRACE("Got %zi bytes of data, but client sent close",
                 len);
         return len;
     }
 
     /* If we're in an error state: ignore everything. */
     if( session->state == WS_SESSION_ERROR ) {
-        ymo_log_trace("Ignoring %zu bytes due to error state.", len);
+        PROTO_WS_TRACE("Ignoring %zu bytes due to error state.", len);
         return len;
     }
 
@@ -301,7 +311,7 @@ ws_parse_entry:
         if( n >= 0 ) {
             parse_buf += n;
             len -= n;
-            ymo_log_trace("%i bytes parsed (remain=%lu)", (int)n, len);
+            PROTO_WS_TRACE("%i bytes parsed (remain=%lu)", (int)n, len);
         } else {
             uint16_t reason = reason_from_errno(errno);
             return ws_err_close(
@@ -326,7 +336,6 @@ ws_parse_complete:
                 case YMO_WS_OP_TEXT:
                 /* fallthrough */
                 case YMO_WS_OP_BINARY:
-                    ymo_log_trace("Invoking callback: %s", "user callback");
                     if( session->state == WS_SESSION_CONNECTED ) {
                         cb_status = invoke_recv_callback(p_data->recv_cb, session);
                     } else {
@@ -340,13 +349,13 @@ ws_parse_complete:
                     return handle_client_close(session, len_in);
                     break;
                 case YMO_WS_OP_PING:
-                    ymo_log_trace("Got ping! Sending Pong! (%p)", (void*)session);
+                    PROTO_WS_TRACE("Got ping! Sending Pong! (%p)", (void*)session);
                     cb_status = invoke_recv_callback(ws_echo_cb, session);
                     break;
 
                 /* --- Ignored: ---- */
                 case YMO_WS_OP_PONG:
-                    ymo_log_trace("Ignoring pong on %p", (void*)session);
+                    PROTO_WS_TRACE("Ignoring pong on %p", (void*)session);
                     cb_status = YMO_OKAY;
                     break;
 
@@ -385,7 +394,7 @@ ymo_status_t ymo_proto_ws_write(
     ymo_ws_session_t* session = conn_data;
 
     if( !session->send_head ) {
-        ymo_log_trace(
+        PROTO_WS_TRACE(
                 "Got write on %p, but no data to send: disabling tx.",
                 (void*)conn);
         ymo_conn_tx_enable(conn, 0);
@@ -396,7 +405,7 @@ ymo_status_t ymo_proto_ws_write(
 
     /* If all data was sent okay, clear the send queue: */
     if( status == YMO_OKAY ) {
-        ymo_log_trace("All data sent okay for: %i", socket);
+        PROTO_WS_TRACE("All data sent okay for: %i", socket);
         session->send_head = session->send_tail = NULL;
 
         if( !YMO_WS_SHOULD_CLOSE_ON_WRITE(session) ) {
@@ -478,12 +487,12 @@ ymo_http_upgrade_status_t ymo_ws_upgrade_cb(
                 YMO_HTTP_UPGRADE_REQUIRED);
     } else {
         /* TODO: Optional "origin" header callback. */
-        ymo_log_trace("\thost: %s", host);
-        ymo_log_trace("\tconnection: %s", connection);
-        ymo_log_trace("\torigin: %s", origin);
-        ymo_log_trace("\tsec_ws_key: %s", sec_ws_key);
-        ymo_log_trace("\tsec_ws_proto: %s", sec_ws_proto);
-        ymo_log_trace("\tsec_ws_version: %s", sec_ws_version);
+        PROTO_WS_TRACE("\thost: %s", host);
+        PROTO_WS_TRACE("\tconnection: %s", connection);
+        PROTO_WS_TRACE("\torigin: %s", origin);
+        PROTO_WS_TRACE("\tsec_ws_key: %s", sec_ws_key);
+        PROTO_WS_TRACE("\tsec_ws_proto: %s", sec_ws_proto);
+        PROTO_WS_TRACE("\tsec_ws_version: %s", sec_ws_version);
         upgrade_status = YMO_HTTP_UPGRADE_HANDLED;
         resp_status = issue_http_101(request, response, sec_ws_key);
     }
@@ -554,7 +563,7 @@ static ymo_status_t invoke_recv_callback(
     ymo_bucket_t* p = session->recv_head;
 
     while( p ) {
-        ymo_log_trace("Op: 0x%x, Fin: %i, Len: %zu",
+        PROTO_WS_TRACE("Op: 0x%x, Fin: %i, Len: %zu",
                 session->frame_in.flags.op_code,
                 session->frame_in.flags.fin,
                 p->len);

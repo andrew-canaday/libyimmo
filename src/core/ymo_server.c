@@ -406,16 +406,17 @@ void ymo_multiproc_accept_cb(
  *---------*/
 void ymo_read_cb(struct ev_loop* loop, struct ev_io* watcher, int revents)
 {
+    ymo_conn_t* conn = (ymo_conn_t*)watcher->data;
+    ymo_server_t* server = conn->server;
+
+
     if( EV_ERROR & revents ) {
         ymo_log_warning("libev error on read fd: %i", watcher->fd);
-        /* TODO: Probably don't ignore this. */
+        if( conn ) {
+            close_and_free_connection(server, conn, 0);
+        }
         return;
     }
-
-    ymo_conn_t* conn = (ymo_conn_t*)watcher->data;
-
-    /* Reset the idle disconnect timer: */
-    ymo_server_t* server = conn->server;
 
     /* Read the payload: */
     char* recv_buf;

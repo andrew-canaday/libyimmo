@@ -206,7 +206,7 @@ ymo_log_level_t ymo_log_set_level_by_name(const char* level_name);
 
 /** Compile-time DEBUG log function/convenience macro */
 #define ymo_log_debug(fmt, ...) \
-    ymo_log(YMO_LOG_DEBUG, "(%i) %s:%i: "fmt, (int)getpid(), __func__, __LINE__, __VA_ARGS__)
+    ymo_log(YMO_LOG_DEBUG, "%s:%i: "fmt, __func__, __LINE__, __VA_ARGS__)
 
 #else
 #define ymo_log_debug_uuid(fmt, id, ...) ((void)0)
