@@ -1,5 +1,5 @@
 /*============================================================================*
- * Copyright (c) 2014 Andrew T. Canaday
+ * Copyright (c) 2021 Andrew T. Canaday
  *
  * NOTICE: THIS EXAMPLE FILE IS LICENSED SEPARATELY FROM THE REST OF LIBYIMMO.
  *
@@ -36,22 +36,32 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <libgen.h>
+
 #include <ev.h>
+
 #include "yimmo.h"
 #include "ymo_log.h"
 #include "ymo_http.h"
 #include "ymo_ws.h"
 
 
-#ifndef HTTP_PORT
-# define HTTP_PORT 8081
-#endif /* HTTP_PORT */
+#ifndef WS_ECHO_PORT
+# define WS_ECHO_PORT 8081
+#endif /* WS_ECHO_PORT */
+
+
+#define OUT_FMT(fmt, ...) \
+    fprintf(stderr, "%s: " fmt "\n", e_name, __VA_ARGS__)
+
+#define OUT_MSG(msg) OUT_FMT("%s", msg)
 
 
 /*----------------------------------------------------
  * Globals
  *----------------------------------------------------*/
 
+static char* e_name  = NULL;
 size_t no_connect    = 0;
 size_t no_disconnect = 0;
 size_t no_frames     = 0;
@@ -124,6 +134,10 @@ static void echo_sig_handler(struct ev_loop* loop, ev_signal* w, int w_sig)
  *----------------------------------------------------*/
 int main(int argc, char** argv)
 {
+    e_name = basename(argv[0]);
+
+    OUT_MSG("\n\n----- Yimmo WS Echo Server -----");
+
     struct ev_loop* loop = ev_default_loop(0);
     ymo_log_init();
 
@@ -140,7 +154,7 @@ int main(int argc, char** argv)
     };
 
     ymo_server_t* http_srv = ymo_http_simple_init(
-            loop, HTTP_PORT, &echo_http_callback, upgrade_handlers, NULL);
+            loop, WS_ECHO_PORT, &echo_http_callback, upgrade_handlers, NULL);
 
     /* Set up some signal handlers: */
     ev_signal sigint_watcher;
@@ -152,18 +166,20 @@ int main(int argc, char** argv)
 
     ymo_server_start(http_srv, loop);
     if( http_srv ) {
+        OUT_FMT("Starting echo server on port %i", WS_ECHO_PORT);
         ev_run(ev_default_loop(0), 0);
         ymo_server_free(http_srv);
     } else {
         ymo_log_fatal("Server failed to start: %s", strerror(errno));
     }
+    OUT_MSG("Server stopped");
 
-    fprintf(stderr, "%s\n", "Totals:");
-    fprintf(stderr, "  #active:     %zu\n", no_connect-no_disconnect);
-    fprintf(stderr, "  #connect:    %zu\n", no_connect);
-    fprintf(stderr, "  #disconnect: %zu\n", no_disconnect);
-    fprintf(stderr, "  #frames:     %zu\n", no_frames);
-    fprintf(stderr, "  #msgs:       %zu\n", no_msgs);
+    OUT_MSG("Totals:");
+    OUT_FMT("  #active:     %zu", no_connect-no_disconnect);
+    OUT_FMT("  #connect:    %zu", no_connect);
+    OUT_FMT("  #disconnect: %zu", no_disconnect);
+    OUT_FMT("  #frames:     %zu", no_frames);
+    OUT_FMT("  #msgs:       %zu", no_msgs);
     return 0;
 }
 
