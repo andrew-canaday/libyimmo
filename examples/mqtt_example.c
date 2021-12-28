@@ -95,6 +95,7 @@ mqtt_bail:
  */
 int main(int argc, char** argv)
 {
+    ymo_log_init();
     in_port_t mqtt_port = DEFAULT_MQTT_PORT;
     ymo_server_t* mqtt_srv = NULL;
 

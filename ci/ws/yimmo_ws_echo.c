@@ -125,6 +125,7 @@ static void echo_sig_handler(struct ev_loop* loop, ev_signal* w, int w_sig)
 int main(int argc, char** argv)
 {
     struct ev_loop* loop = ev_default_loop(0);
+    ymo_log_init();
 
     ymo_proto_t* ws_proto = ymo_proto_ws_create(
             YMO_WS_SERVER_DEFAULT,
