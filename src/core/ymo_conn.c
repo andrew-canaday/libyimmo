@@ -32,13 +32,13 @@
 #include <openssl/err.h>
 #endif /* YMO_ENABLE_TLS */
 
+/* TODO: Connection shouldn't need server internals.. */
 #include "yimmo.h"
 #include "ymo_log.h"
 #include "ymo_conn.h"
 #include "ymo_bucket.h"
 #include "ymo_net.h"
 #include "ymo_server.h"
-#include "ymo_proto.h"
 #include "ymo_alloc.h"
 
 #define YMO_CONN_TRACE 0
@@ -322,26 +322,10 @@ ymo_conn_state_t ymo_conn_close(ymo_conn_t* conn, int clean)
                     (void*)conn, conn->fd);
             ymo_conn_cancel_idle_timeout(conn);
             ymo_conn_tx_enable(conn, 0);
-            ymo_conn_rx_enable(conn, 0);
+            ymo_conn_rx_enable(conn, 1);
             shutdown(conn->fd, SHUT_RDWR);
             close(conn->fd);
             conn->state = YMO_CONN_CLOSED;
-
-            /* TEMP: Since the connection is actually closed, fire the
-             *       server read CB with an error code to prompt the
-             *       server to reap the connection.
-             *
-             *       This WILL result in another invocation of this
-             *       function which, already in the CLOSED state, will
-             *       be a no-op (sans the jump and stack setup...) and
-             *       conclude with the close callback and free:
-             *
-             * TODO: Probably cleaner to move the close_cb invocation
-             *       and free into this function...or else, just
-             *       have the SHUTDOWN state ensure that the connection
-             *       red watcher is re-armed (simplest).
-             */
-            ev_invoke(conn->server->config.loop, &conn->w_read, EV_ERROR);
         /* fallthrough */
         case YMO_CONN_CLOSED:
         default:
