@@ -13,7 +13,7 @@
 > exploration playground...
 >
 > :raised_hands: _**I use [gunicorn](https://gunicorn.org/) for my production WSGI workloads and
-> [libwebsockets](https://corewebsockets.org/) for websockets.** Check 'em out!_
+> [libwebsockets](https://libwebsockets.org/) for websockets.** Check 'em out!_
 >
 > <hr />
 >
