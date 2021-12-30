@@ -133,10 +133,51 @@ int test_base64_encoded(void)
 }
 
 
+#define assert_utf8_value(s, d, v) \
+    do { \
+        ymo_utf8_state_t state; \
+        ymo_utf8_state_reset(&state); \
+        int rc = ymo_check_utf8(&state, s, sizeof(s)-1, d); \
+        ymo_assert_test(rc == v, "Expected " #v " for " #s); \
+    } while( 0 );
+
+#define assert_utf8_valid(s, d) \
+    assert_utf8_value(s, d, YMO_UTF8_VALID)
+
+#define assert_utf8_invalid(s, d) \
+    assert_utf8_value(s, d, YMO_UTF8_INVALID)
+
+int test_utf8_validation(void)
+{
+    ymo_log_init();
+
+    /* Valid: */
+    assert_utf8_valid("Ascii is okay when done.", 1);
+    assert_utf8_valid("Ascii is okay when not done.", 0);
+    assert_utf8_valid("\x48\x65\x6c\x6c\x6f\x2d\xc2\xb5\x40\xc3\x9f\xc3\xb6\xc3\xa4\xc3\xbc\xc3\xa0\xc3\xa1\x2d\x55\x54\x46\x2d\x38\x21\x21", 1);
+
+    /* Invalid: */
+    assert_utf8_invalid("This should fail due to: \xff.", 1);
+    assert_utf8_invalid("Invalid start: \xc0.", 1);
+    assert_utf8_invalid("Invalid start: \xc1.", 1);
+    assert_utf8_invalid("Invalid continuation: \xdf\xc0", 1);
+    assert_utf8_invalid("Invalid continuation: \xe0\xc0\xc0", 1);
+    assert_utf8_invalid("Invalid continuation: \xf0\xc0\xc0\xc0", 1);
+    assert_utf8_invalid("This has a UTF-16 surrogate pair: \xed\xa1.", 1);
+    assert_utf8_invalid("Overlong: \xe0\x9f\x80", 1);
+    assert_utf8_invalid("Overlong: \xf0\x8f\x80\x80", 1);
+    assert_utf8_invalid("Out of range: \xf4\x8f\xbf\xc0", 1);
+
+    /* TODO: test 'done' flag stuff */
+    YMO_TAP_PASS(__func__);
+}
+
+
 YMO_TAP_RUN(setup, NULL, NULL,
         YMO_TAP_TEST_FN(test_to_lower),
         YMO_TAP_TEST_FN(test_trim_front),
         YMO_TAP_TEST_FN(test_base64_encoded),
+        YMO_TAP_TEST_FN(test_utf8_validation),
         YMO_TAP_TEST_END()
         )
 

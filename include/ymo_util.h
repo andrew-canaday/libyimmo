@@ -31,6 +31,9 @@
  * =============
  */
 
+#define YMO_UTF8_VALID    0
+#define YMO_UTF8_INVALID -1
+
 /*---------------------------------------------------------------*
  * Tables
  *---------------------------------------------------------------*/
@@ -38,6 +41,26 @@
 /* Base 64 table: */
 extern const char YMO_BASE64_TABLE[];
 
+/** Initialize or reset a UTF-8 state object. */
+#define ymo_utf8_state_reset(s) ((s)->flags = 0)
+
+typedef union ymo_utf8_state {
+    uint8_t  flags;
+    struct {
+        uint8_t  point_remain    : 2;
+        uint8_t  code_width      : 2;
+        uint8_t  check_surrogate : 1;
+        uint8_t  check_overlong  : 1;
+        uint8_t  check_max       : 1;
+    };
+} ymo_utf8_state_t;
+
+
+int ymo_check_utf8(
+        ymo_utf8_state_t* state,
+        const char*       buffer,
+        size_t len,
+        int done);
 
 /**---------------------------------------------------------------
  * Macros

@@ -22,9 +22,22 @@
 
 #include "ymo_config.h"
 #include <stdint.h>
+#include <stdio.h>
+
 #include "yimmo.h"
 #include "ymo_util.h"
 #include "ymo_alloc.h"
+
+#define YMO_UTIL_TRACE 1
+#if defined(YMO_UTIL_TRACE) && YMO_UTIL_TRACE == 1
+# include "ymo_log.h"
+# define UTIL_TRACE(fmt, ...) ymo_log_trace(fmt, __VA_ARGS__);
+# define UTIL_TRACE_UUID(fmt, ...) ymo_log_trace_uuid(fmt, __VA_ARGS__);
+#else
+# define UTIL_TRACE(fmt, ...)
+# define UTIL_TRACE_UUID(fmt, ...)
+#endif /* YMO_UTIL_TRACE */
+
 
 /*---------------------------------------------------------------*
  *  String case conversion macros:
@@ -347,5 +360,188 @@ char* ymo_base64_encoded(const unsigned char* src, size_t len)
         ymo_base64_encode(dst, src, len);
     }
     return dst;
+}
+
+
+#define UTF8_WIDTH_1 0
+#define UTF8_WIDTH_2 1
+#define UTF8_WIDTH_3 2
+#define UTF8_WIDTH_4 3
+
+int ymo_check_utf8(
+        ymo_utf8_state_t* state,
+        const char*       buffer,
+        size_t len,
+        int done)
+{
+    static const uint8_t c3_min[4] = {
+        0x00,
+        0x80,
+        0xA0,
+        0xE0,
+    };
+
+    /* Anything higher would have a bad continuation byte.
+     * Commented in case useful later.
+    static const uint8_t c3_max[3] = {
+        0xBF,
+        0xBF,
+        0xEF,
+    }
+    */
+
+    static const uint8_t c4_min[5] = {
+        0x00,
+        0x80,
+        0x80,
+        0x90,
+        0xF0,
+    };
+
+    static const uint8_t c4_max[5] = {
+        0x00,
+        0xBF,
+        0xBF,
+        0x8F,
+        0xF4,
+    };
+
+#define quartet(c,p) ( \
+        (c << 24) | \
+        (*(p) << 16) | \
+        (*(p+1) << 8)  | \
+        (*(p+2)) \
+        )
+
+    const char* p = buffer;
+    while( len-- )
+    {
+        uint8_t c = (uint8_t)*p++;
+
+        if( c > 0xF4 ) {
+            UTIL_TRACE("Got invalid UTF-8 char: 0x%02x", (int)c);
+            return YMO_UTF8_INVALID;
+        }
+
+        /* TODO: TIDY: */
+        if( state->point_remain == 0 ) {
+            /* HACK: we can save some time by checking for strings of ascii.
+             *
+             * TODO:
+             * - dubious whether checking 64 AND 32 is efficient...
+             * - we can skip the shifts if we do this on alignment boundaries
+             *   (but that also means we only check when a byte start happens
+             *   ON an alignment boundary)
+             * - we could do 128, 256, or 512 bits at a time with SIMD
+             */
+            if( len >= 4 && ((quartet(c,p) & 0x80808080) == 0) ) {
+                len -= 3;
+                p += 3;
+                continue;
+            }
+
+            UTIL_TRACE("Got start byte: 0x%02x", (int)c);
+            state->flags = 0;
+
+            /* TODO:
+             *  - 0xED: Need to invalidate range U+D800-FFFF
+             *  - 0xE0 / 0xF0: check for overlong encodings
+             *  - 0xF4: check for chracters above U+10FFFF
+             */
+            if( c == 0xC0 || c == 0xC1 ) {
+                UTIL_TRACE("Got invalid UTF-8 char: 0x%02x", (int)c);
+                return YMO_UTF8_INVALID;
+            }
+
+            if( !(c & 0x80)) { /* Single byte: */
+                UTIL_TRACE("Single byte: 0x%02x", (int)(int)c);
+                state->point_remain = 0;
+                state->code_width = UTF8_WIDTH_1;
+
+            } else if( (c & 0xE0) == 0xC0 ) { /* Two bytes: */
+                UTIL_TRACE("Two bytes: 0x%02x", (int)(int)c);
+                state->point_remain = 1;
+                state->code_width = UTF8_WIDTH_2;
+
+            } else if( (c & 0xF0) == 0xE0 ) { /* Three bytes: */
+                UTIL_TRACE("Three bytes: 0x%02x", (int)(int)c);
+                state->point_remain = 2;
+                state->code_width = UTF8_WIDTH_3;
+                state->check_surrogate = (c == 0xED);
+                state->check_overlong = (c == 0xE0);
+
+            } else if( (c & 0xF8) == 0xF0 ) { /* Four bytes: */
+                UTIL_TRACE("Four bytes: 0x%02x", (int)(int)c);
+                state->point_remain = 3;
+                state->code_width = UTF8_WIDTH_4;
+                state->check_overlong = (c == 0xF0);
+                state->check_max = (c == 0xF4);
+
+            } else {
+                UTIL_TRACE("Got invalid UTF-8 start byte: 0x%02x", (int)c);
+                return YMO_UTF8_INVALID;
+            }
+
+        } else if( (c & 0xC0) == 0x80 ) {
+            UTIL_TRACE("Got continuation byte: 0x%02x", (int)(int)c);
+
+            switch( state->code_width ) {
+
+                /* TODO:
+                 * Overlong checks: you only need to check the first.
+                 */
+
+                case UTF8_WIDTH_3:
+                    if( state->check_overlong && c < c3_min[state->point_remain] ) {
+                        UTIL_TRACE("Overlong encoding: 0x%02x", (int)c);
+                        return YMO_UTF8_INVALID;
+                    } else {
+                        state->check_overlong = 0;
+                    }
+
+                    if( state->check_surrogate && c >= 0xA0 ) {
+                        UTIL_TRACE(
+                                "Continuation yields char in range "
+                                "U+D800 — U+DFFF: 0x%02x", (int)c);
+                        return YMO_UTF8_INVALID;
+                    } else {
+                        state->check_surrogate = 0;
+                    }
+                    break;
+
+                case UTF8_WIDTH_4:
+                    if( state->check_overlong && c < c4_min[state->point_remain] ) {
+                        UTIL_TRACE("Overlong encoding: 0x%02x", (int)c);
+                        return YMO_UTF8_INVALID;
+                    } else {
+                        state->check_overlong = 0;
+                    }
+
+                    if( state->check_max && c > c4_max[state->point_remain] ) {
+                        UTIL_TRACE("Invalid UTF-8 value too large: 0x%02x",
+                                (int)c);
+                        return YMO_UTF8_INVALID;
+                    }
+                    break;
+            }
+
+            /* Got another byte for our code point */
+            --state->point_remain;
+        } else {
+            /* Expected char continuation. */
+            UTIL_TRACE("Expected UTF-8 continution byte. Got 0x%02x", (int)c);
+            return YMO_UTF8_INVALID;
+        }
+    }
+
+    if( state->point_remain && done ) {
+        UTIL_TRACE(
+                "UTF-8 stream ended with truncated multi-byte. "
+                "Expected %zu more", state->point_remain);
+        return YMO_UTF8_INVALID;
+    }
+
+    /* If we made it through the whole buffer, we're good so far. */
+    return YMO_UTF8_VALID;
 }
 

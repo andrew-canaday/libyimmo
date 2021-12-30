@@ -29,6 +29,7 @@
 #include <arpa/inet.h>
 
 #include "yimmo.h"
+#include "ymo_util.h"
 #include "ymo_ws.h"
 #include "ymo_proto_ws.h"
 
@@ -115,11 +116,6 @@ typedef struct ymo_ws_frame {
 
 } ymo_ws_frame_t;
 
-#define UTF8_WIDTH_1 0
-#define UTF8_WIDTH_2 1
-#define UTF8_WIDTH_3 2
-#define UTF8_WIDTH_4 3
-
 typedef uint8_t ws_msg_type_t;
 
 /** Internal structure used to manage a yimmo ws session. */
@@ -137,17 +133,7 @@ struct ymo_ws_session {
     ws_msg_type_t        msg_type;
 
     /* Experimentation: */
-    union {
-        uint8_t  utf8_state;
-        struct {
-            uint8_t  point_remain    : 2;
-            uint8_t  code_width      : 2;
-            uint8_t  check_surrogate : 1;
-            uint8_t  check_overlong  : 1;
-            uint8_t  check_max       : 1;
-        };
-    };
-
+    ymo_utf8_state_t  utf8_state;
 
     /* Buffered messages (if buffering is enabled), we buffer the
      * whole message — up to WS_MSG_LEN_MAX bytes — and deliver that):

@@ -290,7 +290,6 @@ ymo_conn_state_t ymo_conn_close(ymo_conn_t* conn, int clean)
         case YMO_CONN_TLS_CLOSED:
         /* fallthrough */
         case YMO_CONN_OPEN:
-            ymo_conn_rx_enable(conn, 1);
             if( shutdown(conn->fd, SHUT_WR) && clean ) {
                 ymo_log_debug("Failed to shut down socket %i: %s",
                         conn->fd, strerror(errno));
@@ -301,6 +300,7 @@ ymo_conn_state_t ymo_conn_close(ymo_conn_t* conn, int clean)
         /* fallthrough */
         case YMO_CONN_SHUTDOWN:
         {
+#if defined(CONN_READ_ON_SHUTDOWN) && CONN_READ_ON_SHUTDOWN
             size_t len = 0;
             do {
                 errno = 0;
@@ -310,22 +310,26 @@ ymo_conn_state_t ymo_conn_close(ymo_conn_t* conn, int clean)
             if( clean && len < 0 && YMO_IS_BLOCKED(errno) ) {
                 break;
             }
-
+#endif
             conn->state = YMO_CONN_CLOSING;
         }
+
         case YMO_CONN_CLOSING:
-            /* TODO: if the user invokes the close callback with
-             *       clean=0, the close cleanup callback probably
-             *       won't fire.
-             */
-            CONN_TRACE("Performing close (conn: %p, fd: %i)",
-                    (void*)conn, conn->fd);
-            ymo_conn_cancel_idle_timeout(conn);
-            ymo_conn_tx_enable(conn, 0);
-            ymo_conn_rx_enable(conn, 1);
-            shutdown(conn->fd, SHUT_RDWR);
-            close(conn->fd);
-            conn->state = YMO_CONN_CLOSED;
+            if( clean ) {
+                ymo_conn_rx_enable(conn, 1);
+            } else {
+                /* TODO: if the user invokes the close callback with
+                 *       clean=0, the close cleanup callback probably
+                 *       won't fire.
+                 */
+                CONN_TRACE("Performing close (conn: %p, fd: %i)",
+                        (void*)conn, conn->fd);
+                ymo_conn_cancel_idle_timeout(conn);
+                ymo_conn_tx_enable(conn, 0);
+                shutdown(conn->fd, SHUT_RDWR);
+                close(conn->fd);
+                conn->state = YMO_CONN_CLOSED;
+            }
         /* fallthrough */
         case YMO_CONN_CLOSED:
         default:

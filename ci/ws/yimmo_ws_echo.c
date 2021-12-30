@@ -61,11 +61,11 @@
  * Globals
  *----------------------------------------------------*/
 
-static char* e_name  = NULL;
-size_t no_connect    = 0;
+static char* e_name = NULL;
+size_t no_connect = 0;
 size_t no_disconnect = 0;
-size_t no_frames     = 0;
-size_t no_msgs       = 0;
+size_t no_frames = 0;
+size_t no_msgs = 0;
 
 
 /*----------------------------------------------------

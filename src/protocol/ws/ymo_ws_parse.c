@@ -43,7 +43,7 @@
 #define YMO_HTRACE 0
 #if defined(YMO_HTRACE) && YMO_HTRACE == 1
 # define HTRACE(fmt, ...) \
-    ymo_log_trace("\033[00;31;01;m"fmt"\033[00;m", __VA_ARGS__);
+    ymo_log_trace("\033[00;31;01;m"fmt "\033[00;m", __VA_ARGS__);
 # define HTRACE_UUID(fmt, ...) ymo_log_trace_uuid(fmt, __VA_ARGS__);
 #else
 # define HTRACE(fmt, ...)
@@ -288,191 +288,6 @@ typedef union {
     uint32_t* b4;
 } buff_ptr_t;
 
-#define UTF8_VALID   1
-#define UTF8_INVALID 0
-
-static int is_utf8_valid(
-        ymo_ws_session_t* session, const char* buffer, const char* end)
-{
-    static const uint8_t c3_min[4] = {
-        0x00,
-        0x80,
-        0xA0,
-        0xE0,
-    };
-
-    /* Anything higher would have a bad continuation byte.
-     * Commented in case useful later.
-    static const uint8_t c3_max[3] = {
-        0xBF,
-        0xBF,
-        0xEF,
-    }
-    */
-
-    static const uint8_t c4_min[5] = {
-        0x00,
-        0x80,
-        0x80,
-        0x90,
-        0xF0,
-    };
-
-    static const uint8_t c4_max[5] = {
-        0x00,
-        0xBF,
-        0xBF,
-        0x8F,
-        0xF4,
-    };
-
-    const char* p;
-    for( p = buffer; p < end ; p++ )
-    {
-        uint8_t c = (uint8_t)*p;
-
-        if( c > 0xF4 ) {
-            HTRACE("Got invalid UTF-8 char: 0x%02x", (int)c);
-            return UTF8_INVALID;
-        }
-
-        /* TODO: TIDY: */
-        if( session->point_remain == 0 ) {
-            HTRACE("Got start byte: 0x%02x", (int)c);
-            session->utf8_state = 0;
-
-            /* TODO:
-             *  - 0xED: Need to invalidate range U+D800-FFFF
-             *  - 0xE0 / 0xF0: check for overlong encodings
-             *  - 0xF4: check for chracters above U+10FFFF
-             */
-            if( c == 0xC0 || c == 0xC1 ) {
-                HTRACE("Got invalid UTF-8 char: 0x%02x", (int)c);
-                return UTF8_INVALID;
-            }
-
-            if( !(c & 0x80)) { /* Single byte: */
-                HTRACE("Single byte: 0x%02x", (int)(int)c);
-                session->point_remain = 0;
-                session->code_width = UTF8_WIDTH_1;
-
-            } else if( (c & 0xE0) == 0xC0 ) { /* Two bytes: */
-                HTRACE("Two bytes: 0x%02x", (int)(int)c);
-                session->point_remain = 1;
-                session->code_width = UTF8_WIDTH_2;
-                session->check_max = (c == 0xDF);
-
-            } else if( (c & 0xF0) == 0xE0 ) { /* Three bytes: */
-                HTRACE("Three bytes: 0x%02x", (int)(int)c);
-                session->point_remain = 2;
-                session->code_width = UTF8_WIDTH_3;
-                session->check_surrogate = (c == 0xED);
-                session->check_overlong = (c == 0xE0);
-
-            } else if( (c & 0xF8) == 0xF0 ) { /* Four bytes: */
-                HTRACE("Four bytes: 0x%02x", (int)(int)c);
-                session->point_remain = 3;
-                session->code_width = UTF8_WIDTH_4;
-                session->check_overlong = (c == 0xF0);
-                session->check_max = (c == 0xF4);
-
-            } else {
-                HTRACE("Got invalid UTF-8 start byte: 0x%02x", (int)c);
-                return UTF8_INVALID;
-            }
-
-        } else if( (c & 0xC0) == 0x80 ) {
-            HTRACE("Got continuation byte: 0x%02x", (int)(int)c);
-
-            switch( session->code_width ) {
-
-                case UTF8_WIDTH_2:
-                    if( session->check_max && c > 0xBF ) {
-                        HTRACE("Char exceeds 0x07FF: 0x%02x", (int)c);
-                        return UTF8_INVALID;
-                    } else {
-                        session->check_max = 0;
-                    }
-                    break;
-
-                case UTF8_WIDTH_3:
-                    if( session->check_overlong && c < c3_min[session->point_remain] ) {
-                        HTRACE("Overlong encoding: 0x%02x", (int)c);
-                        return UTF8_INVALID;
-                    } else {
-                        session->check_overlong = 0;
-                    }
-
-                    if( session->check_surrogate && c >= 0xA0 ) {
-                        HTRACE(
-                                "Continuation yields char in range "
-                                "U+D800 — U+DFFF: 0x%02x", (int)c);
-                        return UTF8_INVALID;
-                    } else {
-                        session->check_surrogate = 0;
-                    }
-                    break;
-
-                case UTF8_WIDTH_4:
-#if 0
-                    HTRACE("Range check:\n"
-                            "\tCheck Overlong? %s\n"
-                            "\tCheck Max? %s\n"
-                            "\t0x%02x <= 0x%02x <= 0x%02x",
-                            session->check_overlong? "true" : "false",
-                            session->check_max? "true" : "false",
-                            (int)c4_min[session->point_remain],
-                            (int)c,
-                            (int)c4_max[session->point_remain]
-                          );
-#endif
-
-                    if( session->check_overlong && c < c4_min[session->point_remain]) {
-                        HTRACE("Overlong encoding: 0x%02x", (int)c);
-                        return UTF8_INVALID;
-                    } else {
-                        session->check_overlong = 0;
-                    }
-
-                    if( session->check_max && c > c4_max[session->point_remain]) {
-                        HTRACE("Invalid UTF-8 value too large: 0x%02x",
-                                (int)c);
-                        return UTF8_INVALID;
-                    }
-                    break;
-            }
-
-            /* Got another byte for our code point */
-            --session->point_remain;
-        } else {
-            /* Expected char continuation. */
-            HTRACE("Expected UTF-8 continution byte. Got 0x%02x", (int)c);
-            return UTF8_INVALID;
-        }
-    }
-
-    HTRACE("Remaining code points: %i; parsed: %i; len: %i; fin: %i",
-            (int)session->point_remain,
-            (int)session->frame_in.parsed,
-            (int)session->frame_in.len,
-            (int)session->frame_in.flags.fin);
-
-    if( session->point_remain
-        && session->frame_in.flags.fin
-        && session->frame_in.parsed >= session->frame_in.len) {
-        HTRACE(
-                "UTF-8 stream ended with truncated multi-byte. "
-                "Expected %zu more", session->point_remain);
-        return UTF8_INVALID;
-    }
-
-    /* If we made it through the whole buffer, we're good so far. */
-    return UTF8_VALID;
-}
-
-
-size_t no_printed = 0;
-
 /* Parse websocket op code: */
 ssize_t
 ymo_ws_parse_payload(ymo_ws_session_t* session, char* buffer, size_t len)
@@ -526,10 +341,15 @@ ymo_ws_parse_payload(ymo_ws_session_t* session, char* buffer, size_t len)
      * - Measure it.
      *
      */
+    int parse_done = (session->frame_in.flags.fin
+                      && (session->frame_in.parsed == session->frame_in.len));
+
     if( (session->frame_in.flags.op_code == YMO_WS_OP_TEXT
-                || session->msg_type == YMO_WS_OP_TEXT )
-            && (session->frame_in.len
-                && !is_utf8_valid(session, buffer, parse_end)) ) {
+         || session->msg_type == YMO_WS_OP_TEXT)
+        && (session->frame_in.len
+            && ymo_check_utf8(
+                    &session->utf8_state, buffer, parse_len, parse_done
+                    ) != YMO_UTF8_VALID) ) {
 
         ymo_log_debug("Encountered bad UTF-8 after parsing %zu bytes",
                 session->frame_in.parsed + parse_len);
