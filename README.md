@@ -45,7 +45,7 @@ pattern which uses [libev](http://software.schmorp.de/pkg/coreev.html) for I/O r
 >
 > - [HTTP](./examples/doc/HTTP.md) — minimal libyimmo_http web server
 > - [WebSockets](./examples/doc/WS.md) — minimal libyimmo_ws socket server
-> - [WSGI](http://blog.yimmo.org/yimmo/wsgi/index.html) (or try the [docker image](https://hub.docker.com/repository/docker/andrewcanaday/yimmo-wsgi))
+> - [WSGI](http://blog.yimmo.org/yimmo/wsgi/index.html) (or try the [docker image](https://hub.docker.com/r/andrewcanaday/yimmo-wsgi))
 
 ## License
 
