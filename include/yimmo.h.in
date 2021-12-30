@@ -516,6 +516,14 @@ void ymo_conn_id(uuid_t dst, const ymo_conn_t* conn);
  */
 char* ymo_conn_id_str(const ymo_conn_t* conn);
 
+/** Start the shutdown sequence for a connection's underlying socket.
+ *
+ * :param conn: The connection to close.
+ * :returns: the connection state after invocation.
+ */
+ymo_status_t ymo_conn_shutdown(ymo_conn_t* conn);
+
+
 #if defined(YMO_CONN_LOCK) && (YMO_CONN_LOCK == 1)
 void ymo_conn_lock(ymo_conn_t* conn);
 void ymo_conn_unlock(ymo_conn_t* conn);

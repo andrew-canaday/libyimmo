@@ -690,8 +690,6 @@ static inline void close_and_free_connection(
                 proto->data, conn, conn->proto_data);
     }
 
-    ymo_conn_rx_enable(conn, 0);
-    ymo_conn_tx_enable(conn, 0);
     ymo_conn_free(conn);
     server->no_conn--;
     SERVER_TRACE("Number of connections: %zu\n", server->no_conn);

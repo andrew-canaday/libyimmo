@@ -412,7 +412,7 @@ ymo_status_t ymo_proto_ws_write(
             ymo_log_debug("Keeping client open for state: %i", session->state);
         } else {
             ymo_log_debug("Close frame sent. Terminating: %i", socket);
-            ymo_conn_close(conn, 1);
+            ymo_conn_shutdown(conn);
         }
     }
     return status;
@@ -753,7 +753,7 @@ static ssize_t handle_client_close(
      */
     ymo_log_debug("Got expected close from %p. Closing connection.",
             (void*)session);
-    ymo_conn_close(session->conn, 1);
+    ymo_conn_shutdown(session->conn);
     errno = 0;
     return len;
 }

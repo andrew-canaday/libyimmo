@@ -274,11 +274,12 @@ void ymo_conn_rx_now(ymo_conn_t* conn)
 }
 
 
-ymo_conn_state_t ymo_conn_close(ymo_conn_t* conn, int clean)
+ymo_status_t ymo_conn_shutdown(ymo_conn_t* conn)
 {
-    CONN_TRACE("Clean: %i; State at invocation: %s (conn: %p, fd: %i)",
-            clean, c_state_names[conn->state], (void*)conn, conn->fd);
-    static char junk_buffer[64];
+    CONN_TRACE("State at invocation: %s (conn: %p, fd: %i)",
+            c_state_names[conn->state], (void*)conn, conn->fd);
+
+    ymo_status_t rc = YMO_OKAY;
     switch( conn->state ) {
         case YMO_CONN_TLS_ESTABLISHED:
         /* TODO: SSL_shutdown / SSL_free */
@@ -290,48 +291,85 @@ ymo_conn_state_t ymo_conn_close(ymo_conn_t* conn, int clean)
         case YMO_CONN_TLS_CLOSED:
         /* fallthrough */
         case YMO_CONN_OPEN:
-            if( shutdown(conn->fd, SHUT_WR) && clean ) {
+            if( shutdown(conn->fd, SHUT_WR) ) {
+                rc = errno;
                 ymo_log_debug("Failed to shut down socket %i: %s",
-                        conn->fd, strerror(errno));
+                        conn->fd, strerror(rc));
+                break;
             }
-            /* TODO: try a recv here? */
+
             conn->state = YMO_CONN_SHUTDOWN;
+        /* fallthrough */
+        case YMO_CONN_SHUTDOWN:
+        /* fallthrough */
+        case YMO_CONN_CLOSING:
+            ymo_conn_rx_enable(conn, 1);
             ymo_conn_tx_enable(conn, 0);
+        default:
+            break;
+    }
+
+    CONN_TRACE("State at return: %s (conn: %p, fd: %i)",
+            c_state_names[conn->state], (void*)conn, conn->fd);
+    return rc;
+}
+
+
+ymo_conn_state_t ymo_conn_close(ymo_conn_t* conn, int clean)
+{
+    CONN_TRACE("Clean: %i; State at invocation: %s (conn: %p, fd: %i)",
+            clean, c_state_names[conn->state], (void*)conn, conn->fd);
+    static char junk_buffer[64];
+
+    /* If clean is false, jump right to closing the fd without doing the
+     * ol' shutdown + recv rigmarole.
+     */
+    if( !clean ) {
+        conn->state = YMO_CONN_CLOSING;
+    }
+
+    switch( conn->state ) {
+        case YMO_CONN_TLS_ESTABLISHED:
+        /* TODO: SSL_shutdown / SSL_free */
+        /* fallthrough */
+        case YMO_CONN_TLS_CLOSING:
+        /* fallthrough */
+        case YMO_CONN_TLS_HANDSHAKE:
+        /* fallthrough */
+        case YMO_CONN_TLS_CLOSED:
+        /* fallthrough */
+        case YMO_CONN_OPEN:
+            ymo_conn_shutdown(conn);
         /* fallthrough */
         case YMO_CONN_SHUTDOWN:
         {
-#if defined(CONN_READ_ON_SHUTDOWN) && CONN_READ_ON_SHUTDOWN
+            int rc = 0;
             size_t len = 0;
             do {
                 errno = 0;
                 len = recv(conn->fd, junk_buffer, 64, YMO_RECV_FLAGS);
             } while( len > 0 );
 
-            if( clean && len < 0 && YMO_IS_BLOCKED(errno) ) {
+            rc = errno;
+
+            if( clean && len < 0 && YMO_IS_BLOCKED(rc) ) {
                 break;
             }
-#endif
             conn->state = YMO_CONN_CLOSING;
         }
 
         case YMO_CONN_CLOSING:
-            if( clean ) {
-                ymo_conn_rx_enable(conn, 1);
-            } else {
-                /* TODO: if the user invokes the close callback with
-                 *       clean=0, the close cleanup callback probably
-                 *       won't fire.
-                 */
-                CONN_TRACE("Performing close (conn: %p, fd: %i)",
-                        (void*)conn, conn->fd);
-                ymo_conn_cancel_idle_timeout(conn);
-                ymo_conn_tx_enable(conn, 0);
-                shutdown(conn->fd, SHUT_RDWR);
-                close(conn->fd);
-                conn->state = YMO_CONN_CLOSED;
-            }
+            CONN_TRACE("Performing close (conn: %p, fd: %i)",
+                    (void*)conn, conn->fd);
+            ymo_conn_cancel_idle_timeout(conn);
+            ymo_conn_tx_enable(conn, 0);
+            shutdown(conn->fd, SHUT_RDWR);
+            close(conn->fd);
+            conn->state = YMO_CONN_CLOSED;
         /* fallthrough */
         case YMO_CONN_CLOSED:
+            ymo_conn_rx_enable(conn, 0);
+            ymo_conn_tx_enable(conn, 0);
         default:
             /* fallthrough */
             break;
