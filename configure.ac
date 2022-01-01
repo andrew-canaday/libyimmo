@@ -128,6 +128,8 @@ YMO_OPTION([SERVER_IDLE_TIMEOUT],[5],
     [Default client idle disconnect period in seconds])
 YMO_OPTION_DEPRECATED([SERVER_RECV_BUF_SIZE],[8192],
     [Server receive buffer size for calls to recv])
+YMO_OPTION_DEPRECATED([NET_SENDFILE_MAX],[1024],
+    [Maximum sendfile chunk size (unused, by default)])
 
 
 ##-----------------------------
@@ -139,6 +141,15 @@ YMO_OPTION_DEPRECATED([HTTP_REQ_WS_SIZE],[1024],
     [Per-request request buffer size])
 YMO_OPTION_DEPRECATED([HTTP_SEND_BUF_SIZE],[1024],
     [Per-response send buffer size])
+YMO_OPTION_DEPRECATED([HTTP_MAX_BODY],[4096],
+    [Max yimmo-buffered HTTP body payload size])
+
+
+##-----------------------------
+##    WebSocket Options:
+##-----------------------------
+YMO_OPTION_DEPRECATED([WS_FRAME_MAX],[4096],
+    [Max WebSocket frame size])
 
 
 ##-----------------------------

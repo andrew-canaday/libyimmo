@@ -51,10 +51,6 @@
 
 #if YMO_BUCKET_FROM_FILE == YMO_BUCKET_SENDFILE
 
-#ifndef YMO_NET_SENDFILE_MAX
-#  define YMO_NET_SENDFILE_MAX 1024
-#endif /* YMO_NET_SENDFILE_MAX */
-
 static ymo_status_t ymo_net_bucket_sendfile(int fd, ymo_bucket_t** head_p);
 #endif /* YMO_BUCKET_FROM_FILE */
 
