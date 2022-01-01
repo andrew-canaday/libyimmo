@@ -23,32 +23,14 @@ You can see the latest results from main **[here](http://blog.yimmo.org/results-
  - :white_check_mark: `5.*`: Fragmentation
  - :white_check_mark: `6.*`: UTF-8 Handling
  - :white_check_mark: `7.*`: Close Handling
- - :white_large_square: `9.*`: Limits/Performance (_off, by default_ — see notes below)
+ - :white_check_mark: `9.*`: Limits/Performance
  - :white_check_mark: `10.*`: Misc
  - :white_large_square: `12.*`: WebSocket Compression/Payloads (_not yet implemented_)
  - :white_large_square: `13.*`: WebSocket Compression/Parameters (_not yet implemented_)
 
 ### Exclusions
 
- - `1.1.6-8`, `1.2.6-8`: Frame size tests.
-    > **NOTES**:
-    >
-    > The principle focus here is testing the default configuration.
-    > These tests exceed the default maximum frame size.
-    >
-    > (You can always run `./configure` with a larger frame size and
-    > remove these from the exclusions list in
-    > [`fuzzingclient.json`](./config/fuzzingclient.json)).
  - `2.10,11`: Not required by spec.
- - `9.*`: Limits
-    > **NOTES**: This series is testing limits which will pass/fail
-    > based on values set when ``./configure`` is run.
-    >
-    > The principle focus here is testing the default configuration.
-    >
-    > (You can always run `./configure` with a larger frame size and
-    > remove these from the exclusions list in
-    > [`fuzzingclient.json`](./config/fuzzingclient.json)).
  - `12,13`: Libyimmo does not yet implement websockets compression.
 
 
