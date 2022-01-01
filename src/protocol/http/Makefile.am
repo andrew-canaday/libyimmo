@@ -33,6 +33,8 @@ yimmo_proto_http_HEADERS=\
 	ymo_http_session.h \
 	ymo_proto_http.h
 
+LDADD=\
+	$(top_builddir)/src/core/libyimmo.la
 
 SUBDIRS=\
 	include \

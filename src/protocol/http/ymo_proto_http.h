@@ -35,6 +35,10 @@
  *
  */
 
+#ifndef HTTP_MAX_BODY
+#  define HTTP_MAX_BODY 4096
+#endif
+
 
 /**---------------------------------------------------------------
  * Types

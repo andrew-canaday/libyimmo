@@ -63,7 +63,6 @@ static const char* state_names[] = {
 
 #define HTTP_PARSE_STATE_NAME(x) state_names[x]
 
-
 #else
 #define HTTP_PROTO_TRACE(fmt, ...)
 #define HTTP_PARSE_TRACE(fmt, ...)
@@ -96,7 +95,6 @@ static ymo_status_t buffer_body_cb(
          */
         request->content_length = 0;
         /* HACK: make the limit configurable! */
-#define HTTP_MAX_BODY 4096
         if( request->content_length <= HTTP_MAX_BODY ) {
             request->body = YMO_ALLOC(HTTP_MAX_BODY);
         }

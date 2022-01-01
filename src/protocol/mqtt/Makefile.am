@@ -30,6 +30,9 @@ yimmo_proto_mqtt_HEADERS=\
 	ymo_proto_mqtt.h
 
 
+LDADD=\
+	$(top_builddir)/src/core/libyimmo.la
+
 SUBDIRS=\
 	include \
 	test

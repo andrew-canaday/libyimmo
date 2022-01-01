@@ -73,13 +73,12 @@ ymo_ws_parse_op(ymo_ws_session_t* session, char* buffer, size_t len)
     session->frame_in.flags.packed = *buffer;
 
     /* Fail on reserved bits in frame: */
-#if YMO_WS_RFC6455_STRICT
     if( YMO_WS_FLAGS_RESERVED(session->frame_in.flags.packed) ) {
+        unsigned packed = session->frame_in.flags.packed;
         ymo_log_debug("Message uses reserved flag bits: 0x%x",
-                session->frame_in.flags.packed);
+                packed);
         return YMO_ERROR_SSIZE_T(EBADMSG);
     }
-#endif /* YMO_WS_RFC6455_STRICT */
 
     int fin_required = 0;
     switch( session->frame_in.flags.op_code ) {
@@ -140,7 +139,7 @@ ymo_ws_parse_op(ymo_ws_session_t* session, char* buffer, size_t len)
 ssize_t
 ymo_ws_parse_len(ymo_ws_session_t* session, char* buffer, size_t len)
 {
-    char ch = *buffer++;
+    char ch = *buffer;
     session->frame_in.masked = ch & YMO_WS_FLAG_MASKED;
     uint8_t msg_len = ch & YMO_WS_MASK_LEN;
 
@@ -153,6 +152,11 @@ ymo_ws_parse_len(ymo_ws_session_t* session, char* buffer, size_t len)
     if( msg_len <= 125 ) {
         session->frame_in.len = msg_len;
         session->frame_in.parse_state = WS_PARSE_MASKING_KEY;
+
+        ymo_status_t ok_alloc;
+        if( (ok_alloc = ymo_ws_session_alloc_frame(session, msg_len)) ) {
+            return YMO_ERROR_SSIZE_T(ok_alloc);
+        }
         goto skip_op_check;
     }
     /* 126 ==> 2 bytes follow for length: */
@@ -162,7 +166,7 @@ ymo_ws_parse_len(ymo_ws_session_t* session, char* buffer, size_t len)
     }
     /* 127 ==> 8 bytes follow for length: */
     else if( msg_len == 127 ) {
-        session->frame_in.len_idx = 4;
+        session->frame_in.len_idx = 8;
         session->frame_in.parse_state = WS_PARSE_LEN_EXTENDED;
     }
 
@@ -196,16 +200,14 @@ ymo_ws_parse_len_ext(ymo_ws_session_t* session, char* buffer, size_t len)
         if( session->frame_in.len & 0x8000000000000000 ) {
             return YMO_ERROR_SSIZE_T(EBADMSG);
         }
-        session->frame_in.parse_state = WS_PARSE_MASKING_KEY;
 
-        /* HACK: Check that we're not exceeding the max frame size: */
-        if( session->frame_in.len > YMO_WS_FRAME_MAX ) {
-            ymo_log_warning(
-                    "Frame length (%zu) exceeds frame max (%zu)",
-                    session->frame_in.len, YMO_WS_FRAME_MAX);
-            return YMO_ERROR_SSIZE_T(EMSGSIZE);
+        ymo_status_t ok_alloc;
+        if( (ok_alloc = ymo_ws_session_alloc_frame(
+                        session, session->frame_in.len)) ) {
+            return YMO_ERROR_SSIZE_T(ok_alloc);
         }
 
+        session->frame_in.parse_state = WS_PARSE_MASKING_KEY;
     }
 
     return (ssize_t)(current - start);

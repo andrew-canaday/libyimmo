@@ -33,6 +33,7 @@
 #include "ymo_ws.h"
 #include "ymo_proto_ws.h"
 
+#define YMO_WS_FRAME_MIN 256
 
 #ifndef YMO_WS_FRAME_MAX
 
@@ -106,7 +107,8 @@ typedef struct ymo_ws_frame {
     ymo_ws_frame_flags_t  flags;
 
     /* HACK HACK HACK */
-    char  buffer[YMO_WS_FRAME_MAX];
+    char*  buffer;
+    size_t buf_len;
 
     /* The following have mutually exclusive lifecycles: */
     union {
@@ -152,6 +154,13 @@ struct ymo_ws_session {
 /** Create a new WS session. */
 ymo_ws_session_t* ymo_ws_session_create(
         ymo_ws_proto_data_t* p_data, ymo_conn_t* conn);
+
+
+/** Used internally by WS protocol to allocate space for an incoming
+ * frame.
+ */
+ymo_status_t ymo_ws_session_alloc_frame(
+        ymo_ws_session_t* session, size_t len);
 
 /** Clear and free the given ws session object, including any nested data
  * which has been dynamically allocated. */

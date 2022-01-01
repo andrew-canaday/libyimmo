@@ -241,6 +241,7 @@ void ymo_proto_ws_conn_cleanup(
     ymo_ws_proto_data_t* p_data = proto_data;
     if( conn_data ) {
         ymo_ws_session_t* session = conn_data;
+        ymo_log_trace("Freeing session %p", conn_data);
         p_data->close_cb(session, session->user_data);
         ymo_ws_session_free(session);
     }
@@ -368,7 +369,12 @@ ws_parse_complete:
 
             /* Reset frame in on success; else bail: */
             if( cb_status == YMO_OKAY ) {
+                /* HACK: we need a reset function: */
+                char* buffer = session->frame_in.buffer;
+                size_t buf_len = session->frame_in.buf_len;
                 memset(&(session->frame_in), 0, sizeof(ymo_ws_frame_t));
+                session->frame_in.buffer = buffer;
+                session->frame_in.buf_len = buf_len;
             } else {
                 return ws_err_close(
                         "Callback returned an error",
@@ -409,9 +415,9 @@ ymo_status_t ymo_proto_ws_write(
         session->send_head = session->send_tail = NULL;
 
         if( !YMO_WS_SHOULD_CLOSE_ON_WRITE(session) ) {
-            ymo_log_debug("Keeping client open for state: %i", session->state);
+            PROTO_WS_TRACE("Keeping client open for state: %i", session->state);
         } else {
-            ymo_log_debug("Close frame sent. Terminating: %i", socket);
+            PROTO_WS_TRACE("Close frame sent. Terminating: %i", socket);
             ymo_conn_shutdown(conn);
         }
     }
@@ -594,7 +600,7 @@ static ymo_status_t ws_echo_cb(
         const char* data,
         size_t len)
 {
-    ymo_log_debug("Echoing %zu bytes (op: 0x%x; fin: 0x%x)",
+    PROTO_WS_TRACE("Echoing %zu bytes (op: 0x%x; fin: 0x%x)",
             len, session->frame_in.flags.op_code, session->frame_in.flags.fin);
     ymo_ws_frame_flags_t frame_flags = { .packed = flags };
     ymo_status_t status = YMO_OKAY;
@@ -622,7 +628,7 @@ static ymo_status_t send_ws_close(ymo_ws_session_t* session, uint16_t reason)
 
 #if YMO_WS_TX_NOW
     if( send_status == YMO_OKAY ) {
-        ymo_log_debug("Transmitting reason %hu NOW", reason);
+        PROTO_WS_TRACE("Transmitting reason %hu NOW", reason);
         ymo_conn_tx_now(session->conn);
     }
 #endif
@@ -639,7 +645,7 @@ static ssize_t ws_err_close(
     ymo_log_debug("Please close due to: %s (%s)",
             strerror(err_val), cause);
     if( session->state != WS_SESSION_ERROR ) {
-        ymo_log_debug("Sending close: %hu", reason);
+        PROTO_WS_TRACE("Sending close: %hu", reason);
         session->state = WS_SESSION_ERROR;
         send_ws_close(session, reason);
     }
@@ -718,7 +724,7 @@ static ssize_t handle_client_close(
     if( !expected_close ) {
         uint16_t reason;
         if( !get_close_reason(session, &reason) ) {
-            ymo_log_debug(
+            PROTO_WS_TRACE(
                     "Client initiatied close with 0x%x / reason: %hu",
                     YMO_WS_OP_CLOSE, reason);
 
@@ -727,7 +733,7 @@ static ssize_t handle_client_close(
                         EBADMSG, session, 1002);
             }
         } else {
-            ymo_log_debug(
+            PROTO_WS_TRACE(
                     "Client initiatied close with 0x%x", YMO_WS_OP_CLOSE);
         }
 

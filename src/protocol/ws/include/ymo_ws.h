@@ -53,10 +53,6 @@
  * Server Settings
  *---------------------------------------------------------------*/
 
-#ifndef YMO_WS_RFC6455_STRICT
-#define YMO_WS_RFC6455_STRICT 1
-#endif /* YMO_WS_RFC6455_STRICT */
-
 /** Type for `flags` param passed in to :c:func:`ymo_proto_ws_create`.
  */
 typedef uint8_t ymo_ws_server_flags_t;
@@ -80,12 +76,17 @@ typedef uint8_t ymo_ws_server_flags_t;
 
 #ifndef YMO_WS_MSG_LEN_MAX
 
+#ifndef YMO_WS_MSG_LEN_MAX
+
 /** Max length of a *buffered* WS message.
  *
  * .. todo::
  *    Move this to runtime configuration!
  */
-#define YMO_WS_MSG_LEN_MAX 4096
+#  define YMO_WS_MSG_LEN_MAX 4096
+
+#endif
+
 
 #endif /* YMO_WS_MSG_LEN_MAX */
 

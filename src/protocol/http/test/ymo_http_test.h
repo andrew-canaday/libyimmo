@@ -40,9 +40,18 @@
 #include "ymo_proto_http.h"
 #include "ymo_http_response.h"
 
-#define MAX_URI_LEN       128
-#define MAX_REQUEST_SIZE  1024
-#define MAX_RESPONSE_SIZE 1024
+#ifndef MAX_URI_LEN
+#  define MAX_URI_LEN       128
+#endif
+
+#ifndef MAX_REQUEST_SIZE
+#  define MAX_REQUEST_SIZE  1024
+#endif
+
+#ifndef MAX_RESPONSE_SIZE
+#  define MAX_RESPONSE_SIZE 1024
+#endif
+
 
 /*-------------------------------------------------------------*
  * We use this bit to verify callback data:

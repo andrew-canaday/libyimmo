@@ -16,12 +16,13 @@ ymo_ws_url=os.environ.get('YMO_DEFAULT_ENDPOINT', YMO_DEFAULT_ENDPOINT)
 
 
 async def hello():
-    async with websockets.connect(ymo_ws_url) as websocket:
-        for i in range(int(os.environ.get('YMO_WS_NO_CLIENTS', 10))):
-            await websocket.send("Client msg {}".format(i+1))
-            msg_resp = await websocket.recv()
-            print(f"{msg_resp}")
-        await websocket.close()
+    for c in range(int(os.environ.get('YMO_NO_CLIENTS', 10))):
+        async with websockets.connect(ymo_ws_url) as websocket:
+            for i in range(int(os.environ.get('YMO_WS_NO_MESSAGES', 10))):
+                await websocket.send("Client msg {}".format(i+1))
+                msg_resp = await websocket.recv()
+                print(f"{msg_resp}")
+            await websocket.close()
 
 if __name__ == '__main__':
     try:

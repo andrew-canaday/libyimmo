@@ -71,6 +71,11 @@ int ymo_check_utf8(
 #define YMO_MIN(x,y) ((x < y) ? x : y)
 
 
+/** Simple max macro.
+ */
+#define YMO_MAX(x,y) ((x > y) ? x : y)
+
+
 /** Fast single-char to lower macro.
  */
 #define YMO_TOLOWER(c) \

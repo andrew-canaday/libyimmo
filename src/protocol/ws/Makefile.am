@@ -30,6 +30,9 @@ yimmo_proto_ws_HEADERS=\
 	ymo_ws_session.h
 
 
+LDADD=\
+	$(top_builddir)/src/core/libyimmo.la
+
 SUBDIRS=\
 	include \
 	test

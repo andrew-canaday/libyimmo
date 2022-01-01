@@ -42,7 +42,7 @@
 #include <stdlib.h>
 
 #include "yimmo.h"
-
+#include "ymo_config.h"
 
 /** Allocator Macros
  * ------------------
@@ -264,7 +264,6 @@ static void ymo_free(void* p)               __attribute__((YMO_FUNC_UNUSED_P wea
     && defined(YMO_ALLOC_ALLOW_WEAK) \
     && (YMO_ALLOC_ALLOW_WEAK == 1)
 
-
 /* Do we have alias too? */
 #  if defined(HAVE_FUNC_ATTRIBUTE_ALIAS) \
     && (HAVE_FUNC_ATTRIBUTE_ALIAS == 1) \
@@ -302,7 +301,6 @@ void ymo_free(void* p)               __attribute__((YMO_FUNC_MALLOC_P weak));
  *
  *--------------------------------------------------------------------------*/
 #define YMO_ALLOC_LT_OVERRIDE 0
-
 #ifndef ymo_malloc
 #  define ymo_malloc(n)    malloc(n)
 #endif /* ymo_malloc */

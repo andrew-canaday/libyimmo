@@ -42,15 +42,19 @@
 #include "ymo_alloc.h"
 
 #define YMO_TRACE_NET 0
-#if defined(YMO_TRACE_NET) && YMO_TRACE_NET == 1
-#define YMO_NET_TRACE(fmt, ...) ymo_log_trace(fmt, __VA_ARGS__);
+#  if defined(YMO_TRACE_NET) && YMO_TRACE_NET == 1
+#  define YMO_NET_TRACE(fmt, ...) ymo_log_trace(fmt, __VA_ARGS__);
 #else
-#define YMO_NET_TRACE(fmt, ...)
+#  define YMO_NET_TRACE(fmt, ...)
 #endif /* YMO_TRACE_NET */
 
 
 #if YMO_BUCKET_FROM_FILE == YMO_BUCKET_SENDFILE
-#define YMO_NET_SENDFILE_MAX 1024
+
+#ifndef YMO_NET_SENDFILE_MAX
+#  define YMO_NET_SENDFILE_MAX 1024
+#endif /* YMO_NET_SENDFILE_MAX */
+
 static ymo_status_t ymo_net_bucket_sendfile(int fd, ymo_bucket_t** head_p);
 #endif /* YMO_BUCKET_FROM_FILE */
 
@@ -122,7 +126,7 @@ do_send:
 
     /* Bail on send error: */
     if( bytes_sent < 0 ) {
-        ymo_log_debug("Failed to send to fd: %i (%s)", fd, strerror(errno));
+        YMO_NET_TRACE("Failed to send to fd: %i (%s)", fd, strerror(errno));
         return errno;
     }
 
@@ -142,7 +146,6 @@ do_send:
         }
         /* Complete bucket send: */
         else {
-            current->bytes_sent = current->len;
             YMO_NET_TRACE("%i: bucket[%lu]: total bytes sent: %lu/%lu",
                     fd, i, remain, current->len);
             bytes_sent -= remain;
@@ -182,7 +185,7 @@ static ymo_status_t ymo_net_bucket_sendfile(int fd, ymo_bucket_t** head_p)
 
     if( rc == -1 ) {
         int s_err = errno;
-        ymo_log_debug("Failed to send fd %i to socket: %i (%s)",
+        YMO_NET_TRACE("Failed to send fd %i to socket: %i (%s)",
                 f_bucket->fd, fd, strerror(s_err));
         return s_err;
     }

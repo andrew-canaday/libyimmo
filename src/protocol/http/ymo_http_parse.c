@@ -35,6 +35,17 @@
 #include "ymo_http_response.h"
 #include "ymo_http_session.h"
 
+/* From RFC 7230: header field-names are tokens.
+ *
+ * tchar = "!" / "#" / "$" / "%" / "&" / "'" / "*" / "+" / "-" / "." /
+ *         "^" / "_" / "`" / "|" / "~" / DIGIT / ALPHA
+ * token = 1*tchar
+ * field-name = token
+ *
+ *
+ * (https://datatracker.ietf.org/doc/html/rfc7230#appendix-B)
+ */
+
 /*---------------------------------------------------------------*
  *  Declarations
  *---------------------------------------------------------------*/

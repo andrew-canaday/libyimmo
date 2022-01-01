@@ -21,10 +21,21 @@
 
 #include "ymo_config.h"
 #include "ymo_log.h"
+#include "ymo_util.h"
 #include "yimmo.h"
 #include "ymo_alloc.h"
 #include "core/ymo_conn.h"
 #include "ymo_ws_session.h"
+
+#define YMO_SESSION_MEM_WS_TRACE 0
+#if defined(YMO_SESSION_MEM_WS_TRACE) && YMO_SESSION_MEM_WS_TRACE == 1
+# define SESSION_MEM_WS_TRACE(fmt, ...) ymo_log_trace(fmt, __VA_ARGS__);
+# define SESSION_MEM_WS_TRACE_UUID(fmt, ...) ymo_log_trace_uuid(fmt, __VA_ARGS__);
+#else
+# define SESSION_MEM_WS_TRACE(fmt, ...)
+# define SESSION_MEM_WS_TRACE_UUID(fmt, ...)
+#endif /* YMO_SESSION_MEM_WS_TRACE */
+
 
 ymo_ws_session_t* ymo_ws_session_create(
         ymo_ws_proto_data_t* p_data, ymo_conn_t* conn)
@@ -38,6 +49,43 @@ ymo_ws_session_t* ymo_ws_session_create(
 }
 
 
+ymo_status_t ymo_ws_session_alloc_frame(
+        ymo_ws_session_t* session, size_t len)
+{
+    if( len > YMO_WS_FRAME_MAX ) {
+        SESSION_MEM_WS_TRACE("Requested frame size (%zu) exceeds max (%zu)",
+                len, YMO_WS_FRAME_MAX);
+        return ENOBUFS;
+    }
+
+    if( session->frame_in.buffer ) {
+        if( session->frame_in.buf_len >= len ) {
+            SESSION_MEM_WS_TRACE(
+                    "Existing frame size (%zu) sufficient for request (%zu)",
+                    session->frame_in.buf_len, len);
+            return YMO_OKAY;
+        }
+
+        SESSION_MEM_WS_TRACE(
+                "Freeing previous frame (%zu)",
+                session->frame_in.buf_len);
+        YMO_FREE( session->frame_in.buffer );
+        session->frame_in.buffer = NULL;
+        session->frame_in.buf_len = 0;
+    }
+
+    SESSION_MEM_WS_TRACE(
+            "%zu bytes requested. Allocating %zu",
+            len, YMO_MAX(YMO_WS_FRAME_MIN, len));
+    len = YMO_MAX(YMO_WS_FRAME_MIN,len);
+    session->frame_in.buffer = YMO_ALLOC(len);
+    if( session->frame_in.buffer ) {
+        session->frame_in.buf_len = len;
+        return YMO_OKAY;
+    }
+    return ENOMEM;
+}
+
 void ymo_ws_session_free(ymo_ws_session_t* session)
 {
     if( session ) {
@@ -47,6 +95,10 @@ void ymo_ws_session_free(ymo_ws_session_t* session)
 
         if( session->msg ) {
             YMO_FREE(session->msg);
+        }
+
+        if( session->frame_in.buffer ) {
+            YMO_FREE(session->frame_in.buffer);
         }
         YMO_DELETE(ymo_ws_session_t, session);
     }
