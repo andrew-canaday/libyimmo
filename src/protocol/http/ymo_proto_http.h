@@ -107,6 +107,14 @@ ymo_status_t ymo_proto_http_write(
         void* conn_data,
         int socket);
 
+/** */
+ssize_t ymo_proto_http_handle_error(
+        ymo_http_session_t* session,
+        ymo_http_exchange_t* exchange,
+        ymo_conn_t* conn,
+        ymo_status_t status);
+
+
 #endif /* YMO_HTTP_PROTO_HTTP_H */
 
 

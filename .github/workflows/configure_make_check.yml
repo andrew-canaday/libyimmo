@@ -70,7 +70,8 @@ jobs:
 
       - name: Compile
         run: |
-          make 2>./yimmo-warnings.txt
+          make 2>./yimmo-warnings.txt \
+            || cat ./yimmo-warnings.txt
         working-directory: ./build/yimmo
 
       - name: Warnings

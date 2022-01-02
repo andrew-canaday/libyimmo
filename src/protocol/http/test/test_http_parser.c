@@ -93,19 +93,6 @@ static int expect_100_continue(void)
 }
 
 
-static int einval_on_bad_version(void)
-{
-    const char* r_data = "GET /test-1-1 HTTP/53.2\r\n\r\n";
-    ssize_t r_val = make_request(r_data);
-
-    /* Confirm: */
-    ymo_assert(r_val == -1);         /* parse error returned */
-    ymo_assert(errno == EINVAL);     /* payload was invalid */
-    ymo_assert(r_info.called == 0);  /* callback not invoked */
-    YMO_TAP_PASS(__func__);
-}
-
-
 static int eagain_on_incomplete_request(void)
 {
     const char* r_data = "GET /test-1-1 HTTP/1.0";
@@ -156,7 +143,6 @@ YMO_TAP_RUN(&setup_suite, &setup_test, &cleanup,
         YMO_TAP_TEST_FN(request_basic_1_0),
         YMO_TAP_TEST_FN(request_basic_1_1),
         YMO_TAP_TEST_FN(expect_100_continue),
-        YMO_TAP_TEST_FN(einval_on_bad_version),
         YMO_TAP_TEST_FN(eagain_on_incomplete_request),
         YMO_TAP_TEST_END()
         )

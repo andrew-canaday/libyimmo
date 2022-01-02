@@ -229,16 +229,6 @@ static ymo_status_t check_headers(
             next_state = HTTP_STATE_EXPECT;
         }
 
-        /* TODO: check if exchange->body_remain > max body (for buffered
-         * requests):
-         */
-#if 0
-        /* TODO: If "Expect" header set, issue 417; else, issue 413. */
-        ymo_log_debug(
-                "Content-length (%lu) exceeds remaining buffer space",
-                exchange->request.content_length);
-        return EFBIG;
-#endif /* 0 */
     } else if( exchange->request.flags & YMO_HTTP_REQUEST_CHUNKED ) {
         exchange->chunk_current = exchange->chunk_hdr;
         next_state = HTTP_STATE_BODY_CHUNK_HEADER;
@@ -356,13 +346,13 @@ ssize_t ymo_parse_http_request_line(
                     ymo_status_t line_status = \
                         check_request(&next_state, exchange, v_len);
                     if( line_status == YMO_OKAY ) {
+                        *(recv_current++) = '\0';
                         current += parser_saw_cr(
                                 exchange, HTTP_STATE_HEADER_NAME);
                         goto http_request_parse_done;
                     } else {
-                        errno = line_status;
                         exchange->recv_current = recv_current;
-                        return -1;
+                        return YMO_ERROR_SSIZE_T(line_status);
                     }
                 }
                 break;
@@ -391,8 +381,7 @@ http_request_parse_done:
         return (current - buffer);
     }
 
-    errno = EFBIG;
-    return -1;
+    return YMO_ERROR_SSIZE_T(EFBIG);
 }
 
 
@@ -437,8 +426,7 @@ http_crlf_parse_done:
 bail_malformed_crlf:
     ymo_log_debug("Malformed HTTP exchange: bad CRLF; got 0x%x", (int)c);
     /* TODO: Issue HTTP 400 */
-    errno = EBADMSG;
-    return -1;
+    return YMO_ERROR_SSIZE_T(EBADMSG);
 }
 
 
@@ -482,17 +470,15 @@ ssize_t ymo_parse_http_headers(
                                         exchange->response,
                                         session->user_data);
                                 if( cb_status != YMO_OKAY ) {
-                                    errno = cb_status;
-                                    return -1;
+                                    return YMO_ERROR_SSIZE_T(cb_status);
                                 }
                             }
                             goto http_header_parse_done;
                         } else {
                             /* Something is wrong with the exchange!
                              * Set errno and bail: */
-                            errno = header_status;
                             exchange->recv_current = recv_current;
-                            return -1;
+                            return YMO_ERROR_SSIZE_T(header_status);
                         }
                     }
                 } else {
@@ -613,8 +599,7 @@ http_header_parse_done:
         return (current - buffer);
     }
 
-    errno = EFBIG;
-    return -1;
+    return YMO_ERROR_SSIZE_T(EFBIG);
 }
 
 
@@ -631,11 +616,6 @@ ssize_t ymo_parse_http_body(
     const char* current = buffer;
 
     do {
-        /*
-        HTTP_PARSE_TRACE("Parsing body data:\n↓\n%.*s\n↑\n",
-                (int)len, current);
-                */
-
         switch( exchange->state ) {
             case HTTP_STATE_BODY_CHUNK_HEADER:
                 do {
@@ -711,8 +691,7 @@ body_hdr_done:
                                 state_names[exchange->state]);
                     }
                 } else {
-                    errno = cb_status;
-                    return -1;
+                    return YMO_ERROR_SSIZE_T(cb_status);
                 }
             }
             break;

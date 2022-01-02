@@ -113,7 +113,7 @@ static ymo_status_t buffer_body_cb(
                 "Not enough body buffer space remaining "
                 "(buffer: %zu; payload: %zu).",
                 buf_remain, len);
-        return ENOMEM;
+        return EFBIG;
     }
 
     char* body_end = request->body + request->body_received;
@@ -277,7 +277,7 @@ static ymo_http_upgrade_status_t ymo_http_check_upgrade(
 
             /* An error occurred; inform caller: */
             default:
-                errno = EINVAL;
+                errno = ENOPROTOOPT;
                 return YMO_HTTP_UPGRADE_ERROR;
         }
     }
@@ -306,6 +306,7 @@ static ymo_status_t ymo_http_handler(
         hdr_upgrade = ymo_http_hdr_table_get_id(
                 &exchange->request.headers, HDR_ID_UPGRADE);
         HTTP_PROTO_TRACE("Got upgrade exchange: \"%s\"", hdr_upgrade);
+
         /* Check for upgrade handlers: */
         upgrade_status = ymo_http_check_upgrade(
                 conn, proto_data,
@@ -326,8 +327,9 @@ static ymo_status_t ymo_http_handler(
             case YMO_HTTP_UPGRADE_NOPROTO:
                 /* TODO: 4xx/5xx should be determined by type of error...
                  * For now 400 error on bad upgrade. */
+                ymo_http_response_insert_header(response, "Connection", "Close");
                 status = ymo_http_response_issue(response,
-                        YMO_HTTP_UPGRADE_REQUIRED);
+                        YMO_HTTP_NOT_IMPLEMENTED);
                 goto handle_callback_result;
                 break;
             default:
@@ -430,6 +432,7 @@ void ymo_proto_http_conn_cleanup(
 /*---------------------------------------------------------------*
  *  Yimmo HTTP Protocol Read Callback:
  *---------------------------------------------------------------*/
+
 /* HTTP Protocol read callback: */
 ssize_t ymo_proto_http_read(
         void* proto_data,
@@ -443,13 +446,17 @@ ssize_t ymo_proto_http_read(
     const char* parse_buf = recv_buf;
     ymo_http_exchange_t* exchange = NULL;
 
+    /* If we're already in an error state, just ignore additional reads: */
+    if( http_session->state == YMO_HTTP_SESSION_ERROR ) {
+        return len;
+    }
+
     /* Make sure we've got structures to read into: */
     ymo_status_t status = ymo_http_session_is_read_ready(http_session);
     if( status != YMO_OKAY ) {
         ymo_log_warning("Unable to prepare conn for reading: %s (%i)",
                 strerror(status), status);
-        errno = status;
-        return -1;
+        return YMO_ERROR_SSIZE_T(status);
     }
 
     exchange = http_session->exchange;
@@ -458,11 +465,10 @@ ssize_t ymo_proto_http_read(
     do {
         ssize_t n = 0;
         HTTP_PROTO_TRACE("Send to parser:\n"
-                "State: %s (next: %s); remain: %zu; buff:\n"
-                "---\n%*s\n...",
+                "State: %s (next: %s); remain: %zu",
                 HTTP_PARSE_STATE_NAME(exchange->state),
                 HTTP_PARSE_STATE_NAME(exchange->next_state),
-                len, (int)len, parse_buf);
+                len);
         switch( exchange->state ) {
             case HTTP_STATE_CONNECTED:
                 exchange->state = HTTP_STATE_REQUEST_METHOD;
@@ -524,7 +530,11 @@ ssize_t ymo_proto_http_read(
             len -= n;
         } else {
             /* Errno has been set by last parse function. */
-            return -1;
+            ymo_status_t err_status = errno;
+            ymo_log_trace("Failing HTTP request due to error %i: %s",
+                    err_status, strerror(err_status));
+            return ymo_proto_http_handle_error(
+                    http_session, exchange, conn, err_status);
         }
 
     } while( len );
@@ -551,8 +561,7 @@ http_parse_complete:
                         conn->server, conn, http_proto_data,
                         http_session, exchange);
                 if( status != YMO_OKAY && !YMO_IS_BLOCKED(status) ) {
-                    errno = status;
-                    return -1;
+                    return YMO_ERROR_SSIZE_T(status);
                 }
 
                 if( ymo_server_get_state(conn->server) == YMO_SERVER_STOP_GRACEFUL ) {
@@ -585,8 +594,7 @@ send_100_continue:
             } else {
                 ymo_log_error("Failed to create Expect response: %s",
                         strerror(errno));
-                errno = ENOMEM;
-                return -1;
+                return YMO_ERROR_SSIZE_T(ENOMEM);
             }
 
             /* Untoggle expect so we don't come back here: */
@@ -616,13 +624,6 @@ ymo_status_t ymo_proto_http_write(
     ymo_status_t status;
     ymo_http_session_t* http_session = conn_data;
     ymo_http_response_t* response = ymo_http_session_next_response(http_session);
-#if 0
-    HTTP_PROTO_TRACE("%i: YMO_HTTP_FLAG_SUPPORTS_CHUNKED: 0x%x", socket, response->flags & YMO_HTTP_FLAG_SUPPORTS_CHUNKED);
-    HTTP_PROTO_TRACE("%i: YMO_HTTP_RESPONSE_CHUNKED: 0x%x", socket, response->flags & YMO_HTTP_RESPONSE_CHUNKED);
-    HTTP_PROTO_TRACE("%i: YMO_HTTP_RESPONSE_READY: 0x%x", socket, response->flags & YMO_HTTP_RESPONSE_READY);
-    HTTP_PROTO_TRACE("%i: YMO_HTTP_RESPONSE_STARTED: 0x%x", socket, response->flags & YMO_HTTP_RESPONSE_STARTED);
-    HTTP_PROTO_TRACE("%i: YMO_HTTP_RESPONSE_COMPLETE: 0x%x", socket, response->flags & YMO_HTTP_RESPONSE_COMPLETE);
-#endif
 
     if( !response ) {
         ymo_log_debug("Got writable callback, but nothing to send on %i",
@@ -684,30 +685,9 @@ ymo_status_t ymo_proto_http_write(
         response->flags |= YMO_HTTP_RESPONSE_CHUNK_TERM;
     }
 
-#if 0
-    if( http_session->send_buffer ) {
-#endif
     /* We're good to write: */
     status = ymo_conn_send_buckets(
             conn, &http_session->send_buffer);
-#if 0
-} else {
-    /* We're either done with this response, or else waiting on more
-     * data.
-     * We set status to YMO_OKAY, as if we had send something.
-     * If the response is complete, we'll wrap it up, and check for
-     * another one in the queue:
-     *   - next response ready?: YMO_WOULDBLOCK (leave tx enabled)
-     *   - no responsee ready?: OKAY (tx disable)
-     *
-     * If the response is NOT complete, we'll return OKAY (tx disable)
-     * and have faith that someone will invoke response_finish to toggle
-     * the flag and bring us back here on another loop iteration in the
-     * future.
-     */
-    status = YMO_OKAY;
-}
-#endif
 
     /* This response has been fully sent: */
     if( status == YMO_OKAY && (r_flags & YMO_HTTP_RESPONSE_COMPLETE) ) {
@@ -720,12 +700,15 @@ ymo_status_t ymo_proto_http_write(
             return ymo_conn_transition_proto(conn, response->proto_new);
         }
 
-        /* Close after response complete if keep-alive not set */
-        if( !(response_flags & YMO_HTTP_FLAG_REQUEST_KEEPALIVE) ) {
+        /* Close after response complete if keep-alive not set or
+         * the session state is error:
+         */
+        if( !(response_flags & YMO_HTTP_FLAG_REQUEST_KEEPALIVE)
+                || (http_session->state == YMO_HTTP_SESSION_ERROR) ) {
             HTTP_PROTO_TRACE("Keep-alive flag not set (%i & %i = %i). Closing",
                     response_flags, YMO_HTTP_FLAG_REQUEST_KEEPALIVE,
                     response_flags & YMO_HTTP_FLAG_REQUEST_KEEPALIVE);
-            status = EPIPE; /* TODO: this is weird */
+            ymo_conn_shutdown(conn);
         }
 
         /* If there are more ready responses, return YMO_WOULDBLOCK to keep the
@@ -740,5 +723,62 @@ ymo_status_t ymo_proto_http_write(
     return status;
 }
 
+ssize_t ymo_proto_http_handle_error(
+        ymo_http_session_t* session,
+        ymo_http_exchange_t* exchange,
+        ymo_conn_t* conn,
+        ymo_status_t status)
+{
+    if( session->state == YMO_HTTP_SESSION_ERROR ) {
+        return YMO_ERROR_SSIZE_T(EPIPE);
+    }
+
+    session->state = YMO_HTTP_SESSION_ERROR;
+    ymo_http_status_t r_status;
+    ymo_http_response_t* resp_err = ymo_http_response_create(session);
+    if( !resp_err ) {
+        return YMO_ERROR_SSIZE_T(ENOMEM);
+    }
+
+    switch(status) {
+        case EPROTO:
+        case EBADMSG:
+        case EINVAL:
+            r_status = YMO_HTTP_BAD_REQUEST;
+            break;
+        case ENOMEM:
+            r_status = YMO_HTTP_INTERNAL_SERVER_ERROR;
+            break;
+        case EFBIG:
+            if( !(exchange->request.flags & YMO_HTTP_FLAG_EXPECT) ) {
+                r_status = YMO_HTTP_REQUEST_ENTITY_TOO_LARGE;
+            } else {
+                r_status = YMO_HTTP_EXPECTATION_FAILED;
+            }
+            break;
+        case ENOTSUP:
+        /* TEMP: check for dup */
+#if 0
+        case EOPNOTSUPP:
+#endif
+        case EPROTONOSUPPORT:
+        case ENOPROTOOPT:
+            r_status = YMO_HTTP_NOT_IMPLEMENTED;
+            break;
+        case EPROTOTYPE:
+            r_status = YMO_HTTP_UPGRADE_REQUIRED;
+            break;
+        default:
+            r_status = YMO_HTTP_INTERNAL_SERVER_ERROR;
+            break;
+    }
+
+    ymo_log_trace("Failing HTTP request with status: %i", r_status);
+    ymo_http_session_add_response(session, resp_err);
+    ymo_http_response_insert_header(resp_err, "Connection", "Close");
+    ymo_http_response_issue(resp_err, r_status);
+    ymo_conn_rx_enable(conn, 0);
+    return YMO_OKAY;
+}
 
 
