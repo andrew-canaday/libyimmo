@@ -70,10 +70,6 @@
 #define YMO_HTTP_RESPONSE_CHUNKED       (1<<27)
 #define YMO_HTTP_RESPONSE_CHUNK_TERM    (1<<28)
 
-#ifndef YMO_HTTP_MAX_CHUNK_SIZE
-#  define YMO_HTTP_MAX_CHUNK_SIZE 0x10000
-#endif
-
 
 /**---------------------------------------------------------------
  * HTTP Headers

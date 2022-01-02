@@ -95,19 +95,19 @@ static ymo_status_t buffer_body_cb(
          */
         request->content_length = 0;
         /* HACK: make the limit configurable! */
-        if( request->content_length <= HTTP_MAX_BODY ) {
-            request->body = YMO_ALLOC(HTTP_MAX_BODY);
+        if( request->content_length <= YMO_HTTP_MAX_BODY ) {
+            request->body = YMO_ALLOC(YMO_HTTP_MAX_BODY);
         }
 
         if( !request->body ) {
             ymo_log_warning(
                     "Failed to allocate %i bytes for body buffer.",
-                    HTTP_MAX_BODY);
+                    YMO_HTTP_MAX_BODY);
             return ENOMEM;
         }
     }
 
-    size_t buf_remain = HTTP_MAX_BODY - request->body_received;
+    size_t buf_remain = YMO_HTTP_MAX_BODY - request->body_received;
     if( len > buf_remain ) {
         ymo_log_warning(
                 "Not enough body buffer space remaining "
