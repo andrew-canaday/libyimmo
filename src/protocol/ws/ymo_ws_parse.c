@@ -29,26 +29,17 @@
 #include "ymo_util.h"
 #include "ymo_ws_parse.h"
 
-/*======================================================================
- * !!! TODO:
- *
- * Recent hacking has made a pretty gross read out of a bunch of
- * this stuff!!
- *
- * Clean it up!
- *
- * (WIP!)
- *----------------------------------------------------------------------*/
 
-#define YMO_HTRACE 0
-#if defined(YMO_HTRACE) && YMO_HTRACE == 1
-# define HTRACE(fmt, ...) \
-    ymo_log_trace("\033[00;31;01;m"fmt "\033[00;m", __VA_ARGS__);
-# define HTRACE_UUID(fmt, ...) ymo_log_trace_uuid(fmt, __VA_ARGS__);
+
+#define YMO_PARSE_WS_TRACE 0
+#if defined(YMO_PARSE_WS_TRACE) && YMO_PARSE_WS_TRACE == 1
+# define PARSE_WS_TRACE(fmt, ...) ymo_log_trace(fmt, __VA_ARGS__);
+# define PARSE_WS_TRACE_UUID(fmt, ...) ymo_log_trace_uuid(fmt, __VA_ARGS__);
 #else
-# define HTRACE(fmt, ...)
-# define HTRACE_UUID(fmt, ...)
-#endif /* YMO_HTRACE */
+# define PARSE_WS_TRACE(fmt, ...)
+# define PARSE_WS_TRACE_UUID(fmt, ...)
+#endif /* YMO_PARSE_WS_TRACE */
+
 
 /*---------------------------------------------------------------*
  *  Declarations
@@ -83,6 +74,7 @@ ymo_ws_parse_op(ymo_ws_session_t* session, char* buffer, size_t len)
     int fin_required = 0;
     switch( session->frame_in.flags.op_code ) {
         case YMO_WS_OP_CLOSE:
+            PARSE_WS_TRACE("Got close: 0x%02x", session->frame_in.flags.packed);
             fin_required = 1;
             break;
 
@@ -130,6 +122,8 @@ ymo_ws_parse_op(ymo_ws_session_t* session, char* buffer, size_t len)
         return YMO_ERROR_SSIZE_T(EBADMSG);
     }
 
+    PARSE_WS_TRACE("Parsed first byte: 0x%02x",
+            (session->frame_in.flags.packed));
     session->frame_in.parse_state = WS_PARSE_LEN;
     return 1;
 }
@@ -179,6 +173,7 @@ ymo_ws_parse_len(ymo_ws_session_t* session, char* buffer, size_t len)
     }
 
 skip_op_check:
+    PARSE_WS_TRACE("Parsed len byte: 0x%02x", msg_len);
     return 1;
 }
 
@@ -218,6 +213,7 @@ ymo_ws_parse_len_ext(ymo_ws_session_t* session, char* buffer, size_t len)
 ssize_t
 ymo_ws_parse_masking_key(ymo_ws_session_t* session, char* buffer, size_t len)
 {
+    PARSE_WS_TRACE("Frame in mask state: %d", session->frame_in.masked);
     if( !session->frame_in.masked ) {
         session->frame_in.parse_state = WS_PARSE_PAYLOAD;
         return 0;
@@ -231,8 +227,8 @@ ymo_ws_parse_masking_key(ymo_ws_session_t* session, char* buffer, size_t len)
 
         if( session->frame_in.mask_mod == 4 ) {
 #if 0 /* Don't trace masking key anymore. */
-            ymo_log_trace("Message length: %lu", session->frame_in.len);
-            ymo_log_trace("Masking key: 0x%02x%02x%02x%02x",
+            PARSE_WS_TRACE("Message length: %lu", session->frame_in.len);
+            PARSE_WS_TRACE("Masking key: 0x%02x%02x%02x%02x",
                     session->frame_in.masking_key[0],
                     session->frame_in.masking_key[1],
                     session->frame_in.masking_key[2],
@@ -244,6 +240,7 @@ ymo_ws_parse_masking_key(ymo_ws_session_t* session, char* buffer, size_t len)
              * can skip the payload parsing:
              */
             if( session->frame_in.len ) {
+                PARSE_WS_TRACE("Mask parsed. Next state: %s", "PAYLOAD");
                 session->frame_in.parse_state = WS_PARSE_PAYLOAD;
             } else {
                 /* HACK: add a zero-length bucket so the callback is
@@ -259,8 +256,10 @@ ymo_ws_parse_masking_key(ymo_ws_session_t* session, char* buffer, size_t len)
                 if( !session->recv_head ) {
                     session->recv_head = session->recv_tail;
                 }
+                PARSE_WS_TRACE("Mask parsed. Next state: %s", "COMPLETE");
                 session->frame_in.parse_state = WS_PARSE_COMPLETE;
             }
+
             goto masking_parse_done;
         }
 
@@ -332,22 +331,13 @@ ymo_ws_parse_payload(ymo_ws_session_t* session, char* buffer, size_t len)
     session->frame_in.parsed += parse_len;
 
 
-    /* Validate UTF-8
-     *
-     * TODO: First conception was to do this char-by-char as we loop through
-     *       the buffer during unmask.
-     *
-     * - Give it a shot. Does it tank the readability? (is it tanked already?)
-     * - Will we miss out on optimizations in the unmask loops if we
-     *   introduce a bunch of conditionals?
-     * - Measure it.
-     *
-     */
     int parse_done = (session->frame_in.flags.fin
                       && (session->frame_in.parsed == session->frame_in.len));
 
     if( (session->frame_in.flags.op_code == YMO_WS_OP_TEXT
-         || session->msg_type == YMO_WS_OP_TEXT)
+            || session->msg_type == YMO_WS_OP_TEXT)
+        && (session->frame_in.flags.op_code != YMO_WS_OP_CLOSE  /* Don't validate reason */
+            || session->frame_in.parsed > 2)
         && (session->frame_in.len
             && ymo_check_utf8(
                     &session->utf8_state, buffer, parse_len, parse_done
@@ -370,7 +360,7 @@ ymo_ws_parse_payload(ymo_ws_session_t* session, char* buffer, size_t len)
     }
 
     if( session->frame_in.parsed >= session->frame_in.len ) {
-        ymo_log_trace("msg parse complete (%lu)", session->frame_in.parsed);
+        PARSE_WS_TRACE("msg parse complete (%lu)", session->frame_in.parsed);
         session->frame_in.parse_state = WS_PARSE_COMPLETE;
 
         if( session->frame_in.flags.op_code != YMO_WS_OP_PONG ) {

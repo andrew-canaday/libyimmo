@@ -48,16 +48,6 @@
 
 #define YMO_WS_TX_NOW 0
 
-/*======================================================================
- * !!! TODO:
- *
- * Recent hacking has made a pretty gross read out of a bunch of
- * this stuff!!
- *
- * Clean it up!
- *
- * (WIP!)
- *----------------------------------------------------------------------*/
 
 #define YMO_PROTO_WS_TRACE 0
 #if defined(YMO_PROTO_WS_TRACE) && YMO_PROTO_WS_TRACE == 1
