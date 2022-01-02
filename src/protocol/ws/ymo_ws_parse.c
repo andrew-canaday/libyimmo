@@ -289,23 +289,22 @@ typedef union {
     uint32_t* b4;
 } buff_ptr_t;
 
-/* Parse websocket op code: */
-ssize_t
-ymo_ws_parse_payload(ymo_ws_session_t* session, char* buffer, size_t len)
+static ssize_t unmask_payload(
+        ymo_ws_session_t* session,
+        char* rd_buffer,
+        char* wr_buffer,
+        size_t parse_len)
 {
-    char* wr_buffer = session->frame_in.buffer + session->frame_in.parsed;
-    size_t msg_remain = session->frame_in.len - session->frame_in.parsed;
-    size_t parse_len = YMO_MIN(len, msg_remain);
     size_t parse_remain = parse_len;
 
     /* Unmask: */
     if( session->frame_in.flags.op_code != YMO_WS_OP_PONG ) {
-        char* parse_end = buffer + parse_len;
-        buff_ptr_t c_in = {.c = buffer};
+        char* parse_end = rd_buffer + parse_len;
+        buff_ptr_t c_in = {.c = rd_buffer};
         buff_ptr_t c_out = {.c = wr_buffer};
 
         /* Do the initial round of bytes before the alignment boundary: */
-        size_t end = YMO_MIN(parse_len, PTR32_CEIL(buffer)-(uintptr_t)buffer);
+        size_t end = YMO_MIN(parse_len, PTR32_CEIL(rd_buffer)-(uintptr_t)rd_buffer);
         while( end-- > 0 && parse_remain-- > 0 ) {
             char ch = *c_in.c++;
             *c_out.c++ =
@@ -331,46 +330,48 @@ ymo_ws_parse_payload(ymo_ws_session_t* session, char* buffer, size_t len)
         }
     }
 
+    return parse_len;
+}
+
+/* Parse websocket op code: */
+ssize_t
+ymo_ws_parse_payload(ymo_ws_session_t* session, char* buffer, size_t len)
+{
+    char* wr_buffer = session->frame_in.buffer + session->frame_in.parsed;
+    size_t msg_remain = session->frame_in.len - session->frame_in.parsed;
+    size_t parse_len = YMO_MIN(len, msg_remain);
+    unmask_payload(session, buffer, wr_buffer, parse_len);
+
     session->frame_in.parsed += parse_len;
-    int parse_done = (session->frame_in.flags.fin
-                      && (session->frame_in.parsed == session->frame_in.len));
+    int frame_done = session->frame_in.parsed == session->frame_in.len;
 
     if( (session->frame_in.flags.op_code == YMO_WS_OP_TEXT
             || session->msg_type == YMO_WS_OP_TEXT)
             && session->frame_in.len ) {
 
         /* HACK: skip over the reason code when validating UTF-8: */
-        if( session->frame_in.flags.op_code == YMO_WS_OP_CLOSE 
+        if( session->frame_in.flags.op_code == YMO_WS_OP_CLOSE
                 && wr_buffer == session->frame_in.buffer) {
             wr_buffer += 2;
         }
 
         if( ymo_check_utf8(
-                &session->utf8_state, wr_buffer, parse_len, parse_done
-                ) != YMO_UTF8_VALID) {
+                &session->utf8_state, wr_buffer, parse_len,
+                frame_done & session->frame_in.flags.fin ) != YMO_UTF8_VALID) {
             ymo_log_debug("Encountered bad UTF-8 after parsing %zu bytes",
                     session->frame_in.parsed + parse_len);
             return YMO_ERROR_SSIZE_T(EILSEQ);
         }
     }
 
-    if( session->frame_in.parsed == session->frame_in.len ) {
-        PARSE_WS_TRACE("msg parse complete (%lu)", session->frame_in.parsed);
+    if( frame_done ) {
+        PARSE_WS_TRACE("Frame parse complete (%lu)", session->frame_in.parsed);
         session->frame_in.parse_state = WS_PARSE_COMPLETE;
 
-        if( session->frame_in.flags.op_code != YMO_WS_OP_PONG ) {
-            session->recv_tail = ymo_bucket_create(
-                    session->recv_tail, NULL,
-                    NULL, 0,
-                    session->frame_in.buffer,
-                    session->frame_in.len);
-        }
-
-        if( !session->recv_head ) {
-            session->recv_head = session->recv_tail;
-        }
-
-        /* Anticipate a new message if fin bit is set for NON-CONTROL frames: */
+        /* NOTES:
+         * - Anticipate a new message if fin bit is set for NON-CONTROL frames:
+         * - For control frames: don't update the message state.
+         */
         switch( session->frame_in.flags.op_code ) {
             case YMO_WS_OP_CONTINUATION:
             /* fallthrough */
@@ -380,9 +381,25 @@ ymo_ws_parse_payload(ymo_ws_session_t* session, char* buffer, size_t len)
                 if( session->frame_in.flags.fin ) {
                     session->msg_type = 0;
                 }
+            /* fallthrough */
+            case YMO_WS_OP_CLOSE:
+            /* fallthrough */
+            case YMO_WS_OP_PING:
+                if( session->frame_in.flags.op_code != YMO_WS_OP_PONG ) {
+                    session->recv_tail = ymo_bucket_create(
+                            session->recv_tail, NULL,
+                            NULL, 0,
+                            session->frame_in.buffer,
+                            session->frame_in.len);
+                }
+
+                if( !session->recv_head ) {
+                    session->recv_head = session->recv_tail;
+                }
                 break;
-            default:
-                /* For control frames: don't update the message state. */
+
+            /* We're going to ignore any pongs: */
+            case YMO_WS_OP_PONG:
                 break;
         }
     }
