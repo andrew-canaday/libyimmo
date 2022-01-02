@@ -293,73 +293,68 @@ typedef union {
 ssize_t
 ymo_ws_parse_payload(ymo_ws_session_t* session, char* buffer, size_t len)
 {
+    char* wr_buffer = session->frame_in.buffer + session->frame_in.parsed;
     size_t msg_remain = session->frame_in.len - session->frame_in.parsed;
     size_t parse_len = YMO_MIN(len, msg_remain);
     size_t parse_remain = parse_len;
-    char* parse_end = buffer + parse_len;
-    buff_ptr_t current = {.c = buffer};
 
     /* Unmask: */
-    /* Do the initial round of bytes before the alignment boundary: */
-    size_t end = YMO_MIN(parse_len, PTR32_CEIL(buffer)-(uintptr_t)buffer);
-    while( end-- > 0 && parse_remain-- > 0 ) {
-        char ch = *current.c;
-        *current.c++ =
-            ch ^ session->frame_in.masking_key[session->frame_in.mask_mod++ % 4];
+    if( session->frame_in.flags.op_code != YMO_WS_OP_PONG ) {
+        char* parse_end = buffer + parse_len;
+        buff_ptr_t c_in = {.c = buffer};
+        buff_ptr_t c_out = {.c = wr_buffer};
+
+        /* Do the initial round of bytes before the alignment boundary: */
+        size_t end = YMO_MIN(parse_len, PTR32_CEIL(buffer)-(uintptr_t)buffer);
+        while( end-- > 0 && parse_remain-- > 0 ) {
+            char ch = *c_in.c++;
+            *c_out.c++ =
+                ch ^ session->frame_in.masking_key[session->frame_in.mask_mod++ % 4];
+        }
+
+        /* Do the next round of bytes, 4 bytes at a time: */
+        end = PTR32_FLOOR(parse_end)-(uintptr_t)c_in.c;
+        uint32_t mask = get_mask32(session);
+        while( end > 0 && parse_remain > 0 ) {
+            uint32_t val = *(c_in.b4++);
+            *(c_out.b4++) = val ^ mask;
+            end -= 4;
+            parse_remain -= 4;
+        }
+
+        /* Do the end round of bytes, post alignment boundary: */
+        end = (uintptr_t)parse_end - (uintptr_t)c_in.c;
+        while( end-- > 0 && parse_remain-- > 0 ) {
+            char ch = *c_in.c++;
+            *c_out.c++ =
+                ch ^ session->frame_in.masking_key[session->frame_in.mask_mod++ % 4];
+        }
     }
 
-    /* Do the next round of bytes, 4 bytes at a time: */
-    end = PTR32_FLOOR(parse_end)-(uintptr_t)current.c;
-    uint32_t mask = get_mask32(session);
-    while( end > 0 && parse_remain > 0 ) {
-        uint32_t val = *current.b4;
-        *(current.b4++) = val ^ mask;
-        end -= 4;
-        parse_remain -= 4;
-    }
-
-    /* Do the end round of bytes, post alignment boundary: */
-    end = (uintptr_t)parse_end - (uintptr_t)current.c;
-    while( end-- > 0 && parse_remain-- > 0 ) {
-        char ch = *current.c;
-        *current.c++ =
-            ch ^ session->frame_in.masking_key[session->frame_in.mask_mod++ % 4];
-    }
-
-    /* Book-keeping + append data to bucket chain: */
-    char* buffer_in = session->frame_in.buffer + session->frame_in.parsed;
     session->frame_in.parsed += parse_len;
-
-
     int parse_done = (session->frame_in.flags.fin
                       && (session->frame_in.parsed == session->frame_in.len));
 
     if( (session->frame_in.flags.op_code == YMO_WS_OP_TEXT
             || session->msg_type == YMO_WS_OP_TEXT)
-        && (session->frame_in.flags.op_code != YMO_WS_OP_CLOSE  /* Don't validate reason */
-            || session->frame_in.parsed > 2)
-        && (session->frame_in.len
-            && ymo_check_utf8(
-                    &session->utf8_state, buffer, parse_len, parse_done
-                    ) != YMO_UTF8_VALID) ) {
+            && session->frame_in.len ) {
 
-        ymo_log_debug("Encountered bad UTF-8 after parsing %zu bytes",
-                session->frame_in.parsed + parse_len);
-        return YMO_ERROR_SSIZE_T(EILSEQ);
+        /* HACK: skip over the reason code when validating UTF-8: */
+        if( session->frame_in.flags.op_code == YMO_WS_OP_CLOSE 
+                && wr_buffer == session->frame_in.buffer) {
+            wr_buffer += 2;
+        }
+
+        if( ymo_check_utf8(
+                &session->utf8_state, wr_buffer, parse_len, parse_done
+                ) != YMO_UTF8_VALID) {
+            ymo_log_debug("Encountered bad UTF-8 after parsing %zu bytes",
+                    session->frame_in.parsed + parse_len);
+            return YMO_ERROR_SSIZE_T(EILSEQ);
+        }
     }
 
-    /* HACK HACK: slap incoming data in a frame buffer: */
-    if( session->frame_in.flags.op_code != YMO_WS_OP_PONG ) {
-        memcpy(buffer_in, buffer, parse_len);
-
-        /* TODO:
-         * - bounds check
-         * - we can skip the memcpy if we do the unmasking into the buffer
-         * - allocate dynamically, rather than upper bound?
-         */
-    }
-
-    if( session->frame_in.parsed >= session->frame_in.len ) {
+    if( session->frame_in.parsed == session->frame_in.len ) {
         PARSE_WS_TRACE("msg parse complete (%lu)", session->frame_in.parsed);
         session->frame_in.parse_state = WS_PARSE_COMPLETE;
 
