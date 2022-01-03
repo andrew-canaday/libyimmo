@@ -82,6 +82,12 @@ static const char* state_names[] = {
 #define HTTP_PARSE_STATE_NAME(x)
 #endif /* YMO_HTTP_TRACE_PARSE */
 
+
+#define HACK_HTTP_V(c1, c2)  ((c1<<8)  | c2)
+#define HACK_HTTP_10         (('1'<<8) | '0')
+#define HACK_HTTP_11         (('1'<<8) | '1')
+
+
 /*---------------------------------------------------------------*
  *  Static Functions:
  *---------------------------------------------------------------*/
@@ -120,9 +126,6 @@ static ymo_status_t check_request(
             (void*)exchange,
             exchange->request.uri);
 
-#define HACK_HTTP_V(c1, c2) ((c1<<8) | c2)
-#define HACK_HTTP_10 (('1'<<8) | '0')
-#define HACK_HTTP_11 (('1'<<8) | '1')
     /* HACK: hard-code for standard version strings: */
     if( version_len == STD_HTTP_VERSION_STR_LEN ) {
         uint16_t http_ver = HACK_HTTP_V(
@@ -177,15 +180,9 @@ static ymo_status_t ymo_http_session_init_response(
     response->flags = exchange->request.flags;
     if( exchange->request.flags & YMO_HTTP_FLAG_REQUEST_KEEPALIVE ) {
         if( !(exchange->request.flags & YMO_HTTP_FLAG_VERSION_1_1) ) {
-#define USE_PRECOMPUTE
-#ifdef USE_PRECOMPUTE
             ymo_http_hdr_table_insert_precompute(
                     &response->headers, HDR_ID_CONNECTION,
                     "Connection", sizeof("Connection")-1, "Keep-alive");
-#else
-            ymo_http_hdr_table_insert(
-                    &response->headers, "Connection", "Keep-alive");
-#endif
         }
     } else {
         if( exchange->request.flags & YMO_HTTP_FLAG_VERSION_1_1 ) {

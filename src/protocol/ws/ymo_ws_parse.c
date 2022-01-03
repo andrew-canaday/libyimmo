@@ -198,7 +198,7 @@ ymo_ws_parse_len_ext(ymo_ws_session_t* session, char* buffer, size_t len)
 
         ymo_status_t ok_alloc;
         if( (ok_alloc = ymo_ws_session_alloc_frame(
-                        session, session->frame_in.len)) ) {
+                session, session->frame_in.len)) ) {
             return YMO_ERROR_SSIZE_T(ok_alloc);
         }
 
@@ -306,17 +306,15 @@ static ssize_t unmask_payload(
         /* Do the initial round of bytes before the alignment boundary: */
         size_t end = YMO_MIN(parse_len, PTR32_CEIL(rd_buffer)-(uintptr_t)rd_buffer);
         while( end-- > 0 && parse_remain-- > 0 ) {
-            char ch = *c_in.c++;
             *c_out.c++ =
-                ch ^ session->frame_in.masking_key[session->frame_in.mask_mod++ % 4];
+                *c_in.c++ ^ session->frame_in.masking_key[session->frame_in.mask_mod++ % 4];
         }
 
         /* Do the next round of bytes, 4 bytes at a time: */
         end = PTR32_FLOOR(parse_end)-(uintptr_t)c_in.c;
         uint32_t mask = get_mask32(session);
         while( end > 0 && parse_remain > 0 ) {
-            uint32_t val = *(c_in.b4++);
-            *(c_out.b4++) = val ^ mask;
+            *(c_out.b4++) = *(c_in.b4++)^mask;
             end -= 4;
             parse_remain -= 4;
         }
@@ -324,14 +322,14 @@ static ssize_t unmask_payload(
         /* Do the end round of bytes, post alignment boundary: */
         end = (uintptr_t)parse_end - (uintptr_t)c_in.c;
         while( end-- > 0 && parse_remain-- > 0 ) {
-            char ch = *c_in.c++;
             *c_out.c++ =
-                ch ^ session->frame_in.masking_key[session->frame_in.mask_mod++ % 4];
+                *(c_in.c++) ^ session->frame_in.masking_key[session->frame_in.mask_mod++ % 4];
         }
     }
 
     return parse_len;
 }
+
 
 /* Parse websocket op code: */
 ssize_t
@@ -346,21 +344,22 @@ ymo_ws_parse_payload(ymo_ws_session_t* session, char* buffer, size_t len)
     int frame_done = session->frame_in.parsed == session->frame_in.len;
 
     if( (session->frame_in.flags.op_code == YMO_WS_OP_TEXT
-            || session->msg_type == YMO_WS_OP_TEXT)
-            && session->frame_in.len ) {
+         || session->msg_type == YMO_WS_OP_TEXT)
+        && session->frame_in.len ) {
 
         /* HACK: skip over the reason code when validating UTF-8: */
         if( session->frame_in.flags.op_code == YMO_WS_OP_CLOSE
-                && wr_buffer == session->frame_in.buffer) {
+            && wr_buffer == session->frame_in.buffer ) {
             wr_buffer += 2;
         }
 
-        if( ymo_check_utf8(
+        ymo_status_t utf8_status;
+        if( (utf8_status = ymo_check_utf8(
                 &session->utf8_state, wr_buffer, parse_len,
-                frame_done & session->frame_in.flags.fin ) != YMO_UTF8_VALID) {
+                frame_done & session->frame_in.flags.fin)) ) {
             ymo_log_debug("Encountered bad UTF-8 after parsing %zu bytes",
                     session->frame_in.parsed + parse_len);
-            return YMO_ERROR_SSIZE_T(EILSEQ);
+            return YMO_ERROR_SSIZE_T(utf8_status);
         }
     }
 

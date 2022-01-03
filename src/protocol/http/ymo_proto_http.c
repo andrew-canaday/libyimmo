@@ -325,9 +325,6 @@ static ymo_status_t ymo_http_handler(
                 goto handle_callback_result;
                 break;
             case YMO_HTTP_UPGRADE_NOPROTO:
-                /* TODO: 4xx/5xx should be determined by type of error...
-                 * For now 400 error on bad upgrade. */
-                ymo_http_response_insert_header(response, "Connection", "Close");
                 status = ymo_http_response_issue(response,
                         YMO_HTTP_NOT_IMPLEMENTED);
                 goto handle_callback_result;
@@ -704,7 +701,7 @@ ymo_status_t ymo_proto_http_write(
          * the session state is error:
          */
         if( !(response_flags & YMO_HTTP_FLAG_REQUEST_KEEPALIVE)
-                || (http_session->state == YMO_HTTP_SESSION_ERROR) ) {
+            || (http_session->state == YMO_HTTP_SESSION_ERROR) ) {
             HTTP_PROTO_TRACE("Keep-alive flag not set (%i & %i = %i). Closing",
                     response_flags, YMO_HTTP_FLAG_REQUEST_KEEPALIVE,
                     response_flags & YMO_HTTP_FLAG_REQUEST_KEEPALIVE);
@@ -723,6 +720,7 @@ ymo_status_t ymo_proto_http_write(
     return status;
 }
 
+
 ssize_t ymo_proto_http_handle_error(
         ymo_http_session_t* session,
         ymo_http_exchange_t* exchange,
@@ -733,14 +731,13 @@ ssize_t ymo_proto_http_handle_error(
         return YMO_ERROR_SSIZE_T(EPIPE);
     }
 
-    session->state = YMO_HTTP_SESSION_ERROR;
     ymo_http_status_t r_status;
     ymo_http_response_t* resp_err = ymo_http_response_create(session);
     if( !resp_err ) {
         return YMO_ERROR_SSIZE_T(ENOMEM);
     }
 
-    switch(status) {
+    switch( status ) {
         case EPROTO:
         case EBADMSG:
         case EINVAL:
@@ -757,7 +754,7 @@ ssize_t ymo_proto_http_handle_error(
             }
             break;
         case ENOTSUP:
-        /* TEMP: check for dup */
+            /* TEMP: check for dup */
 #if 0
         case EOPNOTSUPP:
 #endif
@@ -775,10 +772,7 @@ ssize_t ymo_proto_http_handle_error(
 
     ymo_log_trace("Failing HTTP request with status: %i", r_status);
     ymo_http_session_add_response(session, resp_err);
-    ymo_http_response_insert_header(resp_err, "Connection", "Close");
     ymo_http_response_issue(resp_err, r_status);
-    ymo_conn_rx_enable(conn, 0);
     return YMO_OKAY;
 }
-
 

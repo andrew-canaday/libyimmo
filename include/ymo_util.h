@@ -31,18 +31,16 @@
  * =============
  */
 
-#define YMO_UTF8_VALID    0
-#define YMO_UTF8_INVALID -1
-
 /*---------------------------------------------------------------*
- * Tables
+ * Lookups:
  *---------------------------------------------------------------*/
 
 /* Base 64 table: */
 extern const char YMO_BASE64_TABLE[];
 
-/** Initialize or reset a UTF-8 state object. */
-#define ymo_utf8_state_reset(s) ((s)->flags = 0)
+/**---------------------------------------------------------------
+ * Types
+ *---------------------------------------------------------------*/
 
 typedef union ymo_utf8_state {
     uint8_t  flags;
@@ -55,12 +53,6 @@ typedef union ymo_utf8_state {
     };
 } ymo_utf8_state_t;
 
-
-int ymo_check_utf8(
-        ymo_utf8_state_t* state,
-        const char*       buffer,
-        size_t len,
-        int done);
 
 /**---------------------------------------------------------------
  * Macros
@@ -134,6 +126,8 @@ int ymo_check_utf8(
 
 #define YMO_RESET_ERRNO() (errno = 0)
 
+
+
 /**---------------------------------------------------------------
  * Functions
  *---------------------------------------------------------------*/
@@ -197,6 +191,44 @@ ymo_base64_encode(char* dst, const unsigned char* src, size_t len);
 
 char*
 ymo_base64_encoded(const unsigned char* src, size_t len);
+
+/** Initialize or reset a UTF-8 state object. */
+#define ymo_utf8_state_reset(s) ((s)->flags = 0)
+
+/** Check that a given string of bytes is valid UTF-8.
+ *
+ * :param state: present UTF-8 validator state
+ * :param buffer: the buffer to check
+ * :param len: the length of the buffer to check
+ * :param done: if true, ``buffer + (len-1)`` is the last byte in the stream
+ * :returns: ``YMO_OKAY`` on success; errno value otherwise
+ *
+ * .. code-block:: c
+ *    :caption: Example
+ *
+ *    char buffer[BUFF_MAX];
+ *    ymo_utf8_state_t state;
+ *    ymo_utf8_state_reset(&state);
+ *
+ *    // (read some data into buffer)
+ *
+ *    // Check that what we've got so is valid:
+ *    ymo_status_t u_status;
+ *    if( (u_status = ymo_check_utf8(&state, buffer, len, 0)) != YMO_OKAY ) {
+ *        ymo_log_info("Invalid UTF-8: %s", strerror(u_status));
+ *    }
+ *
+ *    // (read some more data into buffer; set done=1 if that's the EOM)
+ *    if( (u_status = ymo_check_utf8(&state, buffer, len, 1)) != YMO_OKAY ) {
+ *        ymo_log_info("Invalid UTF-8: %s", strerror(u_status));
+ *    }
+ *
+ */
+ymo_status_t ymo_check_utf8(
+        ymo_utf8_state_t* state,
+        const char*       buffer,
+        size_t            len,
+        int               done);
 
 #endif /* YMO_UTIL_H */
 

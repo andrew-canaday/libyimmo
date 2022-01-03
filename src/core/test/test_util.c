@@ -142,10 +142,10 @@ int test_base64_encoded(void)
     } while( 0 );
 
 #define assert_utf8_valid(s, d) \
-    assert_utf8_value(s, d, YMO_UTF8_VALID)
+    assert_utf8_value(s, d, YMO_OKAY)
 
 #define assert_utf8_invalid(s, d) \
-    assert_utf8_value(s, d, YMO_UTF8_INVALID)
+    assert_utf8_value(s, d, EILSEQ)
 
 int test_utf8_validation(void)
 {
@@ -155,6 +155,7 @@ int test_utf8_validation(void)
     assert_utf8_valid("Ascii is okay when done.", 1);
     assert_utf8_valid("Ascii is okay when not done.", 0);
     assert_utf8_valid("\x48\x65\x6c\x6c\x6f\x2d\xc2\xb5\x40\xc3\x9f\xc3\xb6\xc3\xa4\xc3\xbc\xc3\xa0\xc3\xa1\x2d\x55\x54\x46\x2d\x38\x21\x21", 1);
+    assert_utf8_valid("Incomplete, bud not done: \xf4\x8f", 0);
 
     /* Invalid: */
     assert_utf8_invalid("This should fail due to: \xff.", 1);
@@ -167,8 +168,8 @@ int test_utf8_validation(void)
     assert_utf8_invalid("Overlong: \xe0\x9f\x80", 1);
     assert_utf8_invalid("Overlong: \xf0\x8f\x80\x80", 1);
     assert_utf8_invalid("Out of range: \xf4\x8f\xbf\xc0", 1);
+    assert_utf8_invalid("Incomplete and done: \xf4\x8f", 1);
 
-    /* TODO: test 'done' flag stuff */
     YMO_TAP_PASS(__func__);
 }
 

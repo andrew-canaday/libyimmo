@@ -96,8 +96,8 @@ typedef struct ymo_ws_frame {
     ymo_ws_frame_flags_t  flags;
 
     /* HACK HACK HACK */
-    char*  buffer;
-    size_t buf_len;
+    char*   buffer;
+    size_t  buf_len;
 
     /* The following have mutually exclusive lifecycles: */
     union {

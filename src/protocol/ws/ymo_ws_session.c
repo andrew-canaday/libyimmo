@@ -69,7 +69,7 @@ ymo_status_t ymo_ws_session_alloc_frame(
         SESSION_MEM_WS_TRACE(
                 "Freeing previous frame (%zu)",
                 session->frame_in.buf_len);
-        YMO_FREE( session->frame_in.buffer );
+        YMO_FREE(session->frame_in.buffer);
         session->frame_in.buffer = NULL;
         session->frame_in.buf_len = 0;
     }
@@ -85,6 +85,7 @@ ymo_status_t ymo_ws_session_alloc_frame(
     }
     return ENOMEM;
 }
+
 
 void ymo_ws_session_free(ymo_ws_session_t* session)
 {

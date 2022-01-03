@@ -47,12 +47,12 @@ typedef enum ymo_http_session_state {
 /** Internal structure used to manage a yimmo session.
  */
 struct ymo_http_session {
-    ymo_http_session_state_t state;
-    ymo_conn_t*              conn;
-    ymo_http_exchange_t*     exchange;
-    ymo_http_response_t*     response;
-    ymo_bucket_t*            send_buffer;
-    void*                    user_data;
+    ymo_http_session_state_t  state;
+    ymo_conn_t*               conn;
+    ymo_http_exchange_t*      exchange;
+    ymo_http_response_t*      response;
+    ymo_bucket_t*             send_buffer;
+    void*                     user_data;
 };
 
 
