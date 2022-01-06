@@ -48,6 +48,7 @@ libyimmo_la_CFLAGS=\
 	-I@top_srcdir@/src \
 	-I@top_builddir@/include \
 	-I@top_srcdir@/include \
+	-DYMO_SOURCE="\"$(<F)\"" \
 	@BSAT_CFLAGS@ \
 	@PTHREAD_CFLAGS@
 

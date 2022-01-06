@@ -79,6 +79,11 @@ ymo_status_t ymo_http_session_free_request(
 
 
 /** */
+ymo_status_t ymo_http_session_init_response(
+        ymo_http_session_t* session,
+        ymo_http_exchange_t* exchange);
+
+/** */
 ymo_status_t ymo_http_session_add_response(
         ymo_http_session_t* http_session,
         ymo_http_response_t* response_in);

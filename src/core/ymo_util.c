@@ -363,7 +363,6 @@ char* ymo_base64_encoded(const unsigned char* src, size_t len)
 }
 
 
-
 /*---------------------------------------------------------------*
  *  Base 64:
  *---------------------------------------------------------------*/
@@ -413,7 +412,7 @@ ymo_status_t ymo_check_utf8(
     {
         uint8_t c = (uint8_t)*p++;
 
-        if( c > 0xF4 || c == 0xC0 || c == 0xC1) {
+        if( c > 0xF4 || c == 0xC0 || c == 0xC1 ) {
             UTIL_TRACE("Got invalid UTF-8 char: 0x%02x", (int)c);
             return EILSEQ;
         }

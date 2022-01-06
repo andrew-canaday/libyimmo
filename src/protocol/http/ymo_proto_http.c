@@ -42,26 +42,7 @@
 #if defined(YMO_HTTP_TRACE_PROTO) && YMO_HTTP_TRACE_PROTO == 1
 #define HTTP_PROTO_TRACE(fmt, ...) ymo_log_trace(fmt, __VA_ARGS__);
 
-/* HACK HACK HACK: */
-static const char* state_names[] = {
-    "CONNECTED",
-    "REQUEST_METHOD",
-    "REQUEST_URI_PATH",
-    "REQUEST_QUERY",
-    "REQUEST_FRAGMENT",
-    "REQUEST_VERSION",
-    "CRLF",
-    "HEADER_NAME",
-    "HEADER_VALUE_LEADING_SPACE",
-    "HEADER_VALUE",
-    "EXPECT",
-    "BODY_CHUNK_HEADER",
-    "BODY",
-    "BODY_CHUNK_TRAILER",
-    "COMPLETE",
-};
-
-#define HTTP_PARSE_STATE_NAME(x) state_names[x]
+#define HTTP_PARSE_STATE_NAME(x) ymo_http_state_names[x]
 
 #else
 #define HTTP_PROTO_TRACE(fmt, ...)
@@ -430,6 +411,41 @@ void ymo_proto_http_conn_cleanup(
  *  Yimmo HTTP Protocol Read Callback:
  *---------------------------------------------------------------*/
 
+/* TODO: move this to user code now that we have header_cb?
+ */
+static ymo_status_t send_100_continue(
+        ymo_conn_t* conn,
+        ymo_http_session_t* http_session,
+        ymo_http_exchange_t* exchange
+        )
+{
+    ymo_status_t status = YMO_OKAY;
+
+    /* If so, issue an HTTP 100 right now (fingers crossed we don't
+     * block on send...).
+     */
+    errno = 0;
+    ymo_http_response_t* res_expect
+        = ymo_http_response_create(http_session);
+    HTTP_PROTO_TRACE("Setting expect response to 100: %p",
+            (void*)res_expect);
+    if( res_expect ) {
+        /* HACK: set the keep-alive flag so that 100 response is sent
+         * without closing on HTTP/1.0.
+         */
+        res_expect->flags = YMO_HTTP_FLAG_REQUEST_KEEPALIVE;
+        ymo_http_session_add_response(http_session, res_expect);
+        status = ymo_http_response_issue(res_expect, 100);
+        ymo_conn_tx_now(conn);
+    } else {
+        status = ENOMEM;
+        ymo_log_error("Failed to create Expect response: %s",
+                strerror(status));
+    }
+    return status;
+}
+
+
 /* HTTP Protocol read callback: */
 ssize_t ymo_proto_http_read(
         void* proto_data,
@@ -458,11 +474,10 @@ ssize_t ymo_proto_http_read(
 
     exchange = http_session->exchange;
 
-/* http_parse_resume: */
+http_parse_resume:
     do {
         ssize_t n = 0;
-        HTTP_PROTO_TRACE("Send to parser:\n"
-                "State: %s (next: %s); remain: %zu",
+        HTTP_PROTO_TRACE("State: %s (next: %s); remain: %zu",
                 HTTP_PARSE_STATE_NAME(exchange->state),
                 HTTP_PARSE_STATE_NAME(exchange->next_state),
                 len);
@@ -488,14 +503,13 @@ ssize_t ymo_proto_http_read(
                 YMO_STMT_ATTR_FALLTHROUGH();
             case HTTP_STATE_HEADER_VALUE:
                 n = ymo_parse_http_headers(
-                        http_proto_data->header_cb,
                         http_session,
                         exchange,
                         parse_buf,
                         len);
                 break;
-            case HTTP_STATE_EXPECT:
-                goto send_100_continue;
+            case HTTP_STATE_HEADERS_COMPLETE:
+                goto http_headers_complete;
                 break;
             case HTTP_STATE_BODY_CHUNK_HEADER:
                 YMO_STMT_ATTR_FALLTHROUGH();
@@ -516,15 +530,14 @@ ssize_t ymo_proto_http_read(
                 break;
         }
         if( n >= 0 ) {
-            HTTP_PROTO_TRACE(
-                    "%zi bytes parsed:\n"
-                    "State: %s (next: %s); remain: %zu",
-                    n,
-                    HTTP_PARSE_STATE_NAME(exchange->state),
-                    HTTP_PARSE_STATE_NAME(exchange->next_state),
-                    len);
             parse_buf += n;
             len -= n;
+            HTTP_PROTO_TRACE(
+                    "State: %s (next: %s); parsed: %zi; remain: %zu",
+                    HTTP_PARSE_STATE_NAME(exchange->state),
+                    HTTP_PARSE_STATE_NAME(exchange->next_state),
+                    n,
+                    len);
         } else {
             /* Errno has been set by last parse function. */
             ymo_status_t err_status = errno;
@@ -536,9 +549,9 @@ ssize_t ymo_proto_http_read(
 
     } while( len );
 
-    if( exchange->state != HTTP_STATE_EXPECT ) {
-        /* If the exchange is complete, invoke the http exchange handler: */
-        if( exchange->state == HTTP_STATE_COMPLETE ) {
+http_state_assess:
+    switch( exchange->state ) {
+        case HTTP_STATE_COMPLETE:
 http_parse_complete:
             {
                 HTTP_PROTO_TRACE("HTTP exchange complete:\n"
@@ -568,41 +581,77 @@ http_parse_complete:
                     ymo_conn_rx_enable(conn, 0);
                 }
             }
-        }
-    } else {
-send_100_continue:
+            break;
+http_headers_complete:
+        case HTTP_STATE_HEADERS_COMPLETE:
         {
-            /* If so, issue an HTTP 100 right now (fingers crossed we don't
-             * block on send...).
-             */
-            errno = 0;
-            ymo_http_response_t* res_expect
-                = ymo_http_response_create(http_session);
-            HTTP_PROTO_TRACE("Setting expect response to 100: %p",
-                    (void*)res_expect);
-            if( res_expect ) {
-                /* HACK: set the keep-alive flag so that 100 response is sent
-                 * without closing on HTTP/1.0.
-                 */
-                res_expect->flags = YMO_HTTP_FLAG_REQUEST_KEEPALIVE;
-                ymo_http_session_add_response(http_session, res_expect);
-                status = ymo_http_response_issue(res_expect, 100);
-                ymo_conn_tx_now(conn);
-            } else {
-                ymo_log_error("Failed to create Expect response: %s",
-                        strerror(errno));
-                return YMO_ERROR_SSIZE_T(ENOMEM);
+            HTTP_PROTO_TRACE("Headers complete for %p", (void*)http_session);
+            ymo_status_t hdr_status;
+            exchange->state = exchange->next_state = HTTP_STATE_COMPLETE;
+
+            hdr_status = ymo_http_session_init_response(http_session, exchange);
+            if( hdr_status != YMO_OKAY ) {
+                return YMO_ERROR_SSIZE_T(hdr_status);
             }
 
-            /* Untoggle expect so we don't come back here: */
-            exchange->request.flags &= ~(YMO_HTTP_FLAG_EXPECT);
-            if( exchange->request.flags & YMO_HTTP_REQUEST_CHUNKED ) {
-                exchange->state = HTTP_STATE_BODY_CHUNK_HEADER;
-            } else {
-                exchange->state = HTTP_STATE_BODY;
+            if( exchange->request.content_length > 0 ) {
+                exchange->state = exchange->next_state = HTTP_STATE_COMPLETE;
+                exchange->state = exchange->state = HTTP_STATE_BODY;
+                exchange->body_remain = exchange->request.content_length;
+
+                if( exchange->request.flags & YMO_HTTP_FLAG_EXPECT ) {
+                    HTTP_PROTO_TRACE(
+                            "Expect with content-length: %zu",
+                            exchange->request.content_length);
+                    /* HACK: auto handle Expect (TODO: move to header_cb): */
+                    hdr_status = send_100_continue(conn, http_session, exchange);
+                }
+
+            } else if( exchange->request.flags & YMO_HTTP_REQUEST_CHUNKED ) {
+                exchange->chunk_current = exchange->chunk_hdr;
+                exchange->state = exchange->next_state = HTTP_STATE_BODY;
+                exchange->state = exchange->state = HTTP_STATE_BODY_CHUNK_HEADER;
+
+                if( exchange->request.flags & YMO_HTTP_FLAG_EXPECT ) {
+                    HTTP_PROTO_TRACE(
+                            "Expect with content-length: %zu (chunked)",
+                            exchange->request.content_length);
+
+                    /* HACK: auto handle Expect (TODO: move to header_cb): */
+                    hdr_status = send_100_continue(conn, http_session, exchange);
+                }
             }
-            exchange->next_state = HTTP_STATE_COMPLETE;
+
+            /* HACK: don't issue header cb for upgrade requests (for now). */
+            if( hdr_status == YMO_OKAY
+                    && http_proto_data->header_cb
+                    && !(exchange->request.flags & YMO_HTTP_FLAG_UPGRADE)
+                ) {
+                hdr_status = http_proto_data->header_cb(
+                        http_session,
+                        &exchange->request,
+                        exchange->response,
+                        http_session->user_data);
+            }
+
+            if( hdr_status != YMO_OKAY ) {
+                HTTP_PROTO_TRACE(
+                        "Header callback failed with: %s",
+                        strerror(hdr_status));
+                return YMO_ERROR_SSIZE_T(hdr_status);
+            }
+
+            if( len ) {
+                HTTP_PROTO_TRACE(
+                        "Headers completed with %zu bytes remaining.", len);
+                goto http_parse_resume;
+            } else {
+                goto http_state_assess;
+            }
         }
+        break;
+        default:
+            break;
     }
     return (parse_buf - recv_buf);
 }
@@ -690,6 +739,7 @@ ymo_status_t ymo_proto_http_write(
     if( status == YMO_OKAY && (r_flags & YMO_HTTP_RESPONSE_COMPLETE) ) {
         http_session->send_buffer = NULL;
         ymo_http_flags_t response_flags = response->flags;
+        int http_status = response->status;
         ymo_http_session_complete_response(http_session);
 
         /* If this was an upgrade response, we can transition protocols now. */
@@ -697,27 +747,37 @@ ymo_status_t ymo_proto_http_write(
             return ymo_conn_transition_proto(conn, response->proto_new);
         }
 
-        /* Close after response complete if keep-alive not set or
-         * the session state is error:
-         */
-        if( !(response_flags & YMO_HTTP_FLAG_REQUEST_KEEPALIVE)
-            || (http_session->state == YMO_HTTP_SESSION_ERROR) ) {
+        /* Close after response complete if keep-alive not set: */
+        if( !(response_flags & YMO_HTTP_FLAG_REQUEST_KEEPALIVE) ) {
             HTTP_PROTO_TRACE("Keep-alive flag not set (%i & %i = %i). Closing",
                     response_flags, YMO_HTTP_FLAG_REQUEST_KEEPALIVE,
                     response_flags & YMO_HTTP_FLAG_REQUEST_KEEPALIVE);
             ymo_conn_shutdown(conn);
         }
-
         /* If there are more ready responses, return YMO_WOULDBLOCK to keep the
          * write watcher enabled: */
         ymo_http_response_t* next =
             ymo_http_session_next_response(http_session);
         if( next && next->flags & YMO_HTTP_RESPONSE_READY ) {
             status = YMO_WOULDBLOCK;
+        } else if( http_session->state == YMO_HTTP_SESSION_ERROR ) {
+            /* If the last response was sent and we're in an error
+             * state, let's close the thing down: */
+            HTTP_PROTO_TRACE("Closing due to HTTP %i", http_status);
+            ymo_conn_shutdown(conn);
         }
     }
 
     return status;
+}
+
+
+/*---------------------------------------------------------------*
+ *  Utility:
+ *---------------------------------------------------------------*/
+ssize_t ymo_proto_http_handle_headers()
+{
+    return 0;
 }
 
 

@@ -35,12 +35,13 @@
 #include "ymo_http_response.h"
 #include "ymo_http_session.h"
 
-/* From RFC 7230: header field-names are tokens.
+/* From RFC 7230:
  *
  * tchar = "!" / "#" / "$" / "%" / "&" / "'" / "*" / "+" / "-" / "." /
  *         "^" / "_" / "`" / "|" / "~" / DIGIT / ALPHA
  * token = 1*tchar
  * field-name = token
+ * method = token
  *
  *
  * (https://datatracker.ietf.org/doc/html/rfc7230#appendix-B)
@@ -55,26 +56,7 @@
 #if defined(YMO_HTTP_TRACE_PARSE) && YMO_HTTP_TRACE_PARSE == 1
 #define HTTP_PARSE_TRACE(fmt, ...) ymo_log_trace(fmt, __VA_ARGS__);
 
-/* HACK HACK HACK: */
-static const char* state_names[] = {
-    "CONNECTED",
-    "REQUEST_METHOD",
-    "REQUEST_URI_PATH",
-    "REQUEST_QUERY",
-    "REQUEST_FRAGMENT",
-    "REQUEST_VERSION",
-    "CRLF",
-    "HEADER_NAME",
-    "HEADER_VALUE_LEADING_SPACE",
-    "HEADER_VALUE",
-    "EXPECT",
-    "BODY_CHUNK_HEADER",
-    "BODY",
-    "BODY_CHUNK_TRAILER",
-    "COMPLETE",
-};
-
-#define HTTP_PARSE_STATE_NAME(x) state_names[x]
+#define HTTP_PARSE_STATE_NAME(x) ymo_http_state_names[x]
 
 
 #else
@@ -160,92 +142,172 @@ bail_malformed_http_status:
 }
 
 
-/* TODO: move this to another translation unit. */
-static ymo_status_t ymo_http_session_init_response(
+static ssize_t parse_http_header_name(
         ymo_http_session_t* session,
-        ymo_http_exchange_t* exchange)
+        ymo_http_exchange_t* exchange,
+        char* buff_wr,
+        const char* buff_rd_start, const char* buff_rd_end,
+        size_t remain)
 {
-    ymo_status_t status = YMO_OKAY;
+    char c;
+    const char* buff_rd = buff_rd_start;
+    HTTP_PARSE_TRACE("parsing headers (%p); state: %s",
+            (void*)exchange, HTTP_PARSE_STATE_NAME(exchange->state));
 
-    /* Else, start prepping the app-facing response: */
-    ymo_http_response_t* response = ymo_http_response_create(session);
+    do {
+        c = *buff_rd;
+        /* Most of the time it's not ':' */
+        if( c != ':' ) {
+            /* When it's not ':', most of the time it's not '\r'. */
+            if( c != '\r' ) {
+                exchange->h_id = YMO_HDR_HASH_CH(exchange->h_id, c);
+                *(buff_wr++) = c;
+                --remain;
+            } else {
+                /* If we see CR, we're done with headers.*/
+                buff_rd += parser_saw_cr(exchange, HTTP_STATE_HEADERS_COMPLETE);
+                break;
+            }
+        } else {
+            *(buff_wr++) = '\0';
+            --remain;
+            ++buff_rd;
+            HTTP_PARSE_TRACE("got header (%p): %s",
+                    (void*)exchange, exchange->hdr_name);
+            exchange->state = \
+                HTTP_STATE_HEADER_VALUE_LEADING_SPACE;
+            break;
+        }
+    } while( ++buff_rd < buff_rd_end && remain );
 
-    if( !response ) {
-        ymo_log_error("Unable to create HTTP response object: %s",
-                strerror(errno));
-        status = ENOMEM;
+    if( remain ) {
+        exchange->recv_current = buff_wr;
+        exchange->remain = remain;
+        return (buff_rd - buff_rd_start);
     }
 
-    exchange->response = response;
-    response->flags = exchange->request.flags;
-    if( exchange->request.flags & YMO_HTTP_FLAG_REQUEST_KEEPALIVE ) {
-        if( !(exchange->request.flags & YMO_HTTP_FLAG_VERSION_1_1) ) {
-            ymo_http_hdr_table_insert_precompute(
-                    &response->headers, HDR_ID_CONNECTION,
-                    "Connection", sizeof("Connection")-1, "Keep-alive");
-        }
-    } else {
-        if( exchange->request.flags & YMO_HTTP_FLAG_VERSION_1_1 ) {
-            ymo_http_hdr_table_insert_precompute(
-                    &response->headers, HDR_ID_CONNECTION,
-                    "Connection", sizeof("Connection")-1, "close");
-        }
-    }
-
-    return status;
+    return YMO_ERROR_SSIZE_T(EFBIG);
 }
 
 
-/** Called by ymo_parse_http_headers when the header terminal is encountered.
- *
- * Performs the following actions after all headers have been received:
- * - validate header values
- * - check for available buffer space, if a body is being sent unchunked
- * - determine the next parse/handler action
- *
- * TODO: provide user callback (expect handling can be shuffled there too).
- */
-static ymo_status_t check_headers(
+static void http_header_got_value(
         ymo_http_session_t* session,
         ymo_http_exchange_t* exchange,
-        const char** current)
+        const char* hdr_name, size_t name_len,
+        const char* hdr_value, size_t value_len
+        )
 {
-    HTTP_PARSE_TRACE("Analyzing HTTP headers (%p) for \"%s\"",
-            (void*)exchange,
-            exchange->request.uri);
-    http_state_t next_state = HTTP_STATE_COMPLETE;
+    exchange->h_id = exchange->h_id & YMO_HDR_TABLE_MASK;
+    ymo_http_hdr_table_add_precompute(
+            &exchange->request.headers,
+            exchange->h_id,
+            hdr_name,
+            name_len,
+            hdr_value);
 
-    if( exchange->request.content_length > 0 ) {
-        next_state = HTTP_STATE_BODY;
-        exchange->body_remain = exchange->request.content_length;
-
-        /* Adjust the state if the client was audacious enough to send
-         * Expect: 100-continue:
-         */
-        if( exchange->request.flags & YMO_HTTP_FLAG_EXPECT ) {
-            next_state = HTTP_STATE_EXPECT;
+    switch( exchange->h_id ) {
+        case HDR_ID_CONNECTION:
+            /* 1.1: default to keep-alive unless "close": */
+            if( exchange->request.flags & YMO_HTTP_FLAG_VERSION_1_1 ) {
+                /* TODO: we know the lengths of these. Use
+                 * a ymo_strncmp function which checks length
+                 * first?
+                 *
+                 * Eh... the input isn't sorted or likely to
+                 * be super close, so... what's the benefit?
+                 */
+                if( !ymo_strcasecmp(hdr_value, value_len, "close", 5) ) {
+                    exchange->request.flags &= \
+                        YMO_HTTP_FLAG_REQUEST_CLOSE;
+                }
+            } else {
+                /* 1.0: default to close unless "keep-alive":
+                 *
+                 * TODO: what about "keep-alive, Upgrade"?
+                 *       strcasestr?
+                 */
+                if( !ymo_strcasecmp(hdr_value, value_len, "keep-alive", 10) ) {
+                    exchange->request.flags |= \
+                        YMO_HTTP_FLAG_REQUEST_KEEPALIVE;
+                }
+            }
+            break;
+        case HDR_ID_CONTENT_LENGTH:
+        {
+            long content_length;
+            char* end_ptr;
+            content_length =
+                strtol(hdr_value, &end_ptr, 10);
+            if( *end_ptr == '\0' ) {
+                exchange->request.content_length = \
+                    (size_t)content_length;
+            }
         }
+        break;
+        case HDR_ID_EXPECT:
+            if( !ymo_strcasecmp(hdr_value, value_len, "100-continue", 12) ) {
+                exchange->request.flags |= YMO_HTTP_FLAG_EXPECT;
+            }
+            break;
+        case HDR_ID_UPGRADE:
+            exchange->request.flags |= YMO_HTTP_FLAG_UPGRADE;
+            break;
+        case HDR_ID_TRANSFER_ENCODING:
+            if( !ymo_strcasecmp(hdr_value, value_len, "chunked", 7) ) {
+                exchange->request.flags |= YMO_HTTP_REQUEST_CHUNKED;
+            }
+            break;
+        default:
+            break;
+    }
+    exchange->h_id = YMO_HTTP_HDR_HASH_INIT();
+    return;
+}
 
-    } else if( exchange->request.flags & YMO_HTTP_REQUEST_CHUNKED ) {
-        exchange->chunk_current = exchange->chunk_hdr;
-        next_state = HTTP_STATE_BODY_CHUNK_HEADER;
+
+static ssize_t parse_http_header_value(
+        ymo_http_session_t* session,
+        ymo_http_exchange_t* exchange,
+        char* buff_wr,
+        const char* buff_rd_start, const char* buff_rd_end,
+        size_t remain)
+{
+    char c;
+    const char* buff_rd = buff_rd_start;
+    HTTP_PARSE_TRACE("parsing headers (%p); state: %s",
+            (void*)exchange, HTTP_PARSE_STATE_NAME(exchange->state));
+    do {
+        c = *buff_rd;
+        if( c != '\r' ) {
+            *(buff_wr++) = c;
+            --remain;
+        } else {
+            *(buff_wr++) = '\0';
+            --remain;
+            HTTP_PARSE_TRACE("got \"%s\" value (%p): \"%s\"",
+                    exchange->hdr_name,
+                    (void*)exchange,
+                    exchange->hdr_value);
+
+            http_header_got_value(
+                    session, exchange,
+                    exchange->hdr_name,
+                    (exchange->hdr_value - exchange->hdr_name) -1,
+                    exchange->hdr_value,
+                    (buff_wr - exchange->hdr_value) -1);
+            buff_rd += parser_saw_cr(
+                    exchange, HTTP_STATE_HEADER_NAME);
+            break;
+        }
+    } while( ++buff_rd < buff_rd_end && --remain );
+
+    if( remain ) {
+        exchange->recv_current = buff_wr;
+        exchange->remain = remain;
+        return (buff_rd - buff_rd_start);
     }
 
-    /* Adjust the state if the client was audacious enough to send
-     * Expect: 100-continue.
-     *
-     * TODO: move this to user code now that we have header_cb?
-     */
-    if( exchange->request.flags & YMO_HTTP_FLAG_EXPECT ) {
-        next_state = HTTP_STATE_EXPECT;
-    }
-
-    ymo_http_session_init_response(session, exchange);
-    *current += parser_saw_cr(exchange, next_state);
-    HTTP_PARSE_TRACE(
-            "jumping to state (%p): %s", (void*)exchange,
-            HTTP_PARSE_STATE_NAME(next_state));
-    return YMO_OKAY;
+    return YMO_ERROR_SSIZE_T(EFBIG);
 }
 
 
@@ -260,7 +322,7 @@ ssize_t ymo_parse_http_request_line(
     size_t remain = exchange->remain;
     char* recv_current = exchange->recv_current;
     const char* current = buffer;
-    const char* buf_end = buffer + len;
+    const char* buff_end = buffer + len;
     HTTP_PARSE_TRACE("%p parsing exchange line; state: %s",
             (void*)exchange, HTTP_PARSE_STATE_NAME(exchange->state));
 
@@ -272,11 +334,20 @@ ssize_t ymo_parse_http_request_line(
 
         switch( state ) {
             case HTTP_STATE_REQUEST_METHOD:
-                if( c != ' ' ) {
+                /* Technically, this can be composed of any "tchars", but
+                 * we stick to the conventions from the following:
+                 * - https://datatracker.ietf.org/doc/html/rfc7231#section-4
+                 * - https://www.iana.org/assignments/http-methods/http-methods.xhtml
+                 */
+                if( (c >= 'A' && c <= 'Z') || c == '-' ) {
                     break;
                 } else {
-                    up_ptr = &exchange->request.uri;
-                    goto status_item_next;
+                    if( c == ' ' ) {
+                        up_ptr = &exchange->request.uri;
+                        goto status_item_next;
+                    } else {
+                        return YMO_ERROR_SSIZE_T(EINVAL);
+                    }
                 }
                 break;
             case HTTP_STATE_REQUEST_URI_PATH:
@@ -368,7 +439,7 @@ status_item_next:
         *up_ptr = recv_current;
         state = ++exchange->state;
         --remain;
-    } while( ++current < buf_end && remain );
+    } while( ++current < buff_end && remain );
 
 
 http_request_parse_done:
@@ -390,7 +461,8 @@ ssize_t ymo_parse_http_crlf(
     HTTP_PARSE_TRACE("parsing CRLF (%p)", (void*)exchange);
 
     if( c != '\n' ) {
-        goto bail_malformed_crlf;
+        ymo_log_debug("Malformed HTTP exchange: bad CRLF; got 0x%x", (int)c);
+        return YMO_ERROR_SSIZE_T(EBADMSG);
     }
 
     /* Jump to next HTTP state, as set in parser_saw_cr: */
@@ -400,9 +472,12 @@ ssize_t ymo_parse_http_crlf(
             exchange->hdr_name = \
                 exchange->recv_current;
             break;
-        case HTTP_STATE_EXPECT:
+        case HTTP_STATE_HEADERS_COMPLETE:
             break;
         case HTTP_STATE_BODY_CHUNK_HEADER:
+            /* NOTE: this is to check for the last chunk.
+             *       Else, we'll bounce back to HTTP_STATE_BODY.
+             */
             exchange->next_state = HTTP_STATE_BODY_CHUNK_TRAILER;
             break;
         case HTTP_STATE_BODY:
@@ -415,185 +490,79 @@ ssize_t ymo_parse_http_crlf(
     }
     HTTP_PARSE_TRACE("got LF (%p); jump to state: %s",
             (void*)exchange, HTTP_PARSE_STATE_NAME(exchange->state));
-    goto http_crlf_parse_done;
 
-http_crlf_parse_done:
     return 1;
-
-bail_malformed_crlf:
-    ymo_log_debug("Malformed HTTP exchange: bad CRLF; got 0x%x", (int)c);
-    /* TODO: Issue HTTP 400 */
-    return YMO_ERROR_SSIZE_T(EBADMSG);
 }
 
 
 /* HTTP header parser: */
 ssize_t ymo_parse_http_headers(
-        ymo_http_header_cb_t header_cb,
         ymo_http_session_t* session,
         ymo_http_exchange_t* exchange,
         const char* buffer, size_t len)
 {
-    char c;
     size_t remain = exchange->remain;
-    char* recv_current = exchange->recv_current;
-    const char* current = buffer;
-    const char* buf_end = buffer + len;
-    HTTP_PARSE_TRACE("parsing headers (%p); state: %s",
-            (void*)exchange, HTTP_PARSE_STATE_NAME(exchange->state));
+    char* buff_wr = exchange->recv_current;
+    const char* buff_rd = buffer;
+    const char* buff_rd_end = buffer + len;
     do {
-        c = *current;
+        HTTP_PARSE_TRACE("parsing headers (%p); state: %s; c: '%c'",
+                (void*)exchange,
+                HTTP_PARSE_STATE_NAME(exchange->state),
+                *buff_rd);
         switch( exchange->state ) {
             case HTTP_STATE_HEADER_NAME:
-                /* Most of the time it's not ':' */
-                if( c != ':' ) {
-                    /* When it's not ':', most of the time it's not '\r'. */
-                    if( c != '\r' ) {
-                        exchange->h_id = YMO_HDR_HASH_CH(exchange->h_id, c);
-                        break;
-                    } else {
-                        /* If we see CR, we're done with headers.*/
-                        ymo_status_t header_status =
-                            check_headers(session, exchange, &current);
-                        if( header_status == YMO_OKAY ) {
-                            if( header_cb
-                                /* HACK: don't issue header cb for
-                                 *       upgrade requests (for now): */
-                                && !(exchange->request.flags & YMO_HTTP_FLAG_UPGRADE)
-                                ) {
-                                ymo_status_t cb_status = header_cb(
-                                        session,
-                                        &exchange->request,
-                                        exchange->response,
-                                        session->user_data);
-                                if( cb_status != YMO_OKAY ) {
-                                    return YMO_ERROR_SSIZE_T(cb_status);
-                                }
-                            }
-                            goto http_header_parse_done;
-                        } else {
-                            /* Something is wrong with the exchange!
-                             * Set errno and bail: */
-                            exchange->recv_current = recv_current;
-                            return YMO_ERROR_SSIZE_T(header_status);
-                        }
-                    }
-                } else {
-                    *(recv_current++) = '\0';
-                    --remain;
-                    HTTP_PARSE_TRACE("got header (%p): %s",
-                            (void*)exchange, exchange->hdr_name);
-                    exchange->state = \
-                        HTTP_STATE_HEADER_VALUE_LEADING_SPACE;
+            {
+                ssize_t n = parse_http_header_name(
+                        session, exchange,
+                        buff_wr, buff_rd, buff_rd_end, remain);
+
+                if( n >= 0 ) {
+                    buff_wr = exchange->recv_current;
+                    remain = exchange->remain;
+                    buff_rd += n;
                     continue;
+                } else {
+                    return YMO_ERROR_SSIZE_T(errno);
                 }
-                break;
+            }
+            break;
             case HTTP_STATE_HEADER_VALUE_LEADING_SPACE:
                 /* Swallowing leading space between name and value: */
-                if( c == ' ' ) {
-                    continue;
+                if( *buff_rd == ' ' ) {
+                    ++buff_rd;
+                    break;
                 }
-                exchange->hdr_value = recv_current;
+                exchange->hdr_value = buff_wr;
                 exchange->state = HTTP_STATE_HEADER_VALUE;
                 YMO_STMT_ATTR_FALLTHROUGH();
             case HTTP_STATE_HEADER_VALUE:
-                if( c != '\r' ) {
-                    break;
+            {
+                ssize_t n = parse_http_header_value(
+                        session, exchange, buff_wr,
+                        buff_rd, buff_rd_end, remain);
+
+                if( n >= 0 ) {
+                    buff_wr = exchange->recv_current;
+                    remain = exchange->remain;
+                    buff_rd += n;
+                    continue;
                 } else {
-                    *(recv_current++) = '\0';
-                    --remain;
-                    HTTP_PARSE_TRACE("got \"%s\" value (%p): \"%s\"",
-                            exchange->hdr_name,
-                            (void*)exchange,
-                            exchange->hdr_value);
-
-                    exchange->h_id = exchange->h_id & YMO_HDR_TABLE_MASK;
-                    ymo_http_hdr_table_add_precompute(
-                            &exchange->request.headers,
-                            exchange->h_id,
-                            exchange->hdr_name,
-                            (exchange->hdr_value - exchange->hdr_name)-1,
-                            exchange->hdr_value);
-
-                    switch( exchange->h_id ) {
-                        case HDR_ID_CONNECTION:
-                            /* 1.1: default to keep-alive unless "close": */
-                            if( exchange->request.flags & YMO_HTTP_FLAG_VERSION_1_1 ) {
-                                /* TODO: we know the lengths of these. Use
-                                 * a ymo_strncmp function which checks length
-                                 * first?
-                                 *
-                                 * Eh... the input isn't sorted or likely to
-                                 * be super close, so... what's the benefit?
-                                 */
-                                if( !strcasecmp(exchange->hdr_value, "close") ) {
-                                    exchange->request.flags &= \
-                                        YMO_HTTP_FLAG_REQUEST_CLOSE;
-                                }
-                            } else {
-                                /* 1.0: default to close unless "keep-alive":
-                                 *
-                                 * TODO: what about "keep-alive, Upgrade"?
-                                 *       strcasestr?
-                                 */
-                                if( !strcasecmp(exchange->hdr_value, "keep-alive") ) {
-                                    exchange->request.flags |= \
-                                        YMO_HTTP_FLAG_REQUEST_KEEPALIVE;
-                                }
-                            }
-                            break;
-                        case HDR_ID_CONTENT_LENGTH:
-                        {
-                            long content_length;
-                            char* end_ptr;
-                            content_length =
-                                strtol(exchange->hdr_value, &end_ptr, 10);
-                            if( *end_ptr == '\0' ) {
-                                exchange->request.content_length = \
-                                    (size_t)content_length;
-
-                                exchange->request.content_length =
-                                    content_length;
-                            }
-                        }
-                        break;
-                        case HDR_ID_EXPECT:
-                            if( !strcasecmp(exchange->hdr_value, "100-continue") ) {
-                                exchange->request.flags |= YMO_HTTP_FLAG_EXPECT;
-                            }
-                            break;
-                        case HDR_ID_UPGRADE:
-                            exchange->request.flags |= YMO_HTTP_FLAG_UPGRADE;
-                            break;
-                        case HDR_ID_TRANSFER_ENCODING:
-                            if( !strcasecmp(exchange->hdr_value, "chunked")) {
-                                exchange->request.flags |= YMO_HTTP_REQUEST_CHUNKED;
-                            }
-                            break;
-                        default:
-                            break;
-                    }
-                    exchange->h_id = YMO_HTTP_HDR_HASH_INIT();
-                    current += parser_saw_cr(
-                            exchange, HTTP_STATE_HEADER_NAME);
-                    goto http_header_parse_done;
+                    return YMO_ERROR_SSIZE_T(errno);
                 }
-                break;
+            }
+            break;
             default:
                 goto http_header_parse_done;
                 break;
         }
-
-        /* Since we're here, store the char we just saw. */
-        *(recv_current++) = c;
-        --remain;
-    } while( ++current < buf_end && remain );
+    } while( buff_rd < buff_rd_end && remain );
 
 http_header_parse_done:
     if( remain ) {
-        exchange->recv_current = recv_current;
+        exchange->recv_current = buff_wr;
         exchange->remain = remain;
-        return (current - buffer);
+        return (buff_rd - buffer);
     }
 
     return YMO_ERROR_SSIZE_T(EFBIG);
@@ -641,7 +610,7 @@ ssize_t ymo_parse_http_body(
                             }
                             HTTP_PARSE_TRACE(
                                     "Jumping to state: %s",
-                                    state_names[exchange->state]);
+                                    ymo_http_state_names[exchange->state]);
                             goto body_hdr_done;
                             break;
                         default:
@@ -685,7 +654,7 @@ body_hdr_done:
                         }
                         HTTP_PARSE_TRACE(
                                 "Jumping to state: %s",
-                                state_names[exchange->state]);
+                                ymo_http_state_names[exchange->state]);
                     }
                 } else {
                     return YMO_ERROR_SSIZE_T(cb_status);
@@ -699,7 +668,7 @@ body_hdr_done:
                         exchange->state = exchange->next_state;
                         HTTP_PARSE_TRACE(
                                 "Jumping to state: %s",
-                                state_names[exchange->state]);
+                                ymo_http_state_names[exchange->state]);
                         break;
                     }
                 } while( --len );

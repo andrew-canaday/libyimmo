@@ -192,6 +192,32 @@ ymo_base64_encode(char* dst, const unsigned char* src, size_t len);
 char*
 ymo_base64_encoded(const unsigned char* src, size_t len);
 
+
+static inline int ymo_strcmp(
+        const char* s1, size_t l1,
+        const char* s2, size_t l2
+        )
+{
+    if( l1 == l2 ) {
+        return memcmp(s1, s2, l1);
+    }
+    return -1;
+}
+
+
+static inline int ymo_strcasecmp(
+        const char* s1, size_t l1,
+        const char* s2, size_t l2
+        )
+{
+    if( l1 == l2++ ) {
+        while( --l2 > 0 && ymo_tolower(*s1++) == ymo_tolower(*s2++) ) {}
+        return l2;
+    }
+    return -1;
+}
+
+
 /** Initialize or reset a UTF-8 state object. */
 #define ymo_utf8_state_reset(s) ((s)->flags = 0)
 
@@ -227,8 +253,8 @@ ymo_base64_encoded(const unsigned char* src, size_t len);
 ymo_status_t ymo_check_utf8(
         ymo_utf8_state_t* state,
         const char*       buffer,
-        size_t            len,
-        int               done);
+        size_t len,
+        int done);
 
 #endif /* YMO_UTIL_H */
 

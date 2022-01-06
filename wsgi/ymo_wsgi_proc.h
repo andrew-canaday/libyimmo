@@ -48,6 +48,11 @@
 # endif /* HAVE_DECL_SO_REUSEPORT */
 #endif /* YMO_WSGI_REUSEPORT */
 
+
+/** HACK: move elsewhere */
+#define YMO_WSGI_TKILL_TIMEOUT 5.0
+#define YMO_WSGI_PKILL_TIMEOUT (YMO_WSGI_TKILL_TIMEOUT*1.5)
+
 /**---------------------------------
  *           Types
  *---------------------------------*/
@@ -64,6 +69,7 @@ struct ymo_wsgi_proc {
     long    no_wsgi_threads;
     int     restart_count;
     long    port;
+    int     term;
 
     /* Process Type: */
     int  is_main;
@@ -74,6 +80,8 @@ struct ymo_wsgi_proc {
     ev_signal  sigint_watcher;
     ev_signal  sigchld_watcher;
     ev_signal  sigterm_watcher;
+    ev_timer   pkill_timer;
+    ev_timer   tkill_timer;
 
     /* Child process: */
     pid_t              ppid;

@@ -455,11 +455,6 @@ ymo_http_upgrade_status_t ymo_ws_upgrade_cb(
     const char* sec_ws_version = ymo_http_hdr_table_get(
             &request->headers, "sec-websocket-version");
 
-    long ws_version = 0;
-    if( sec_ws_version ) {
-        ws_version = strtol(sec_ws_version, NULL, 10);
-    }
-
     /* Error 400, on invalid header data (RFC6455 4.2.1.): */
     if( strcasecmp(request->method, "get")
 #ifdef TODO_REQUEST_FLAGS_NOT_EXPOSED
@@ -468,7 +463,7 @@ ymo_http_upgrade_status_t ymo_ws_upgrade_cb(
         || (!host)
         || (check_connection_hdr(request, connection) != YMO_OKAY)
         || (!sec_ws_key)
-        || (ws_version != RFC_6455)
+        || (strcmp(sec_ws_version,"13"))
         ) {
         ymo_log_debug("Bad \"%s\" upgrade request for %s", hdr_upgrade, request->uri);
         ymo_log_debug("\thost: %s", host);

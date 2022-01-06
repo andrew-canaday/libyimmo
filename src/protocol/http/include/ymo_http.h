@@ -131,6 +131,7 @@
 /*  */
 typedef uint32_t ymo_http_hdr_flags_t;
 
+#define YMO_HDR_16_BIT
 #ifdef YMO_HDR_16_BIT
 typedef uint16_t ymo_http_hdr_id_t;
 #else

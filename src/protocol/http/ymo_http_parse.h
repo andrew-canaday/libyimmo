@@ -73,7 +73,6 @@ ssize_t ymo_parse_http_crlf(
  * :returns: number of bytes parsed on success, -1 on failure.
  */
 ssize_t ymo_parse_http_headers(
-        ymo_http_cb_t header_cb,
         ymo_http_session_t* session,
         ymo_http_exchange_t* request_in,
         const char* buffer,

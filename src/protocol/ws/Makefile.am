@@ -47,6 +47,7 @@ libyimmo_ws_la_CFLAGS=\
 	-I@top_srcdir@/src/protocol \
 	-I@top_srcdir@/src/protocol/ws/include \
 	-I@top_srcdir@/src/protocol/http/include \
+	-DYMO_SOURCE="\"$(<F)\"" \
 	@OPENSSL_INCLUDES@ \
 	@BSAT_CFLAGS@
 

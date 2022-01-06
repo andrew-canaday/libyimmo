@@ -37,6 +37,8 @@
 #include "ymo_http.h"
 #include "ymo_proto_http.h"
 
+
+
 /*-------------------------------------------------------------*
  * Tests:
  *-------------------------------------------------------------*/
@@ -49,7 +51,7 @@ static int request_basic_1_0(void)
     ymo_assert(r_val == (ssize_t)strlen(r_data)); /* completely parsed */
     ymo_assert(r_info.called == 1);               /* callback invoked */
     ymo_assert_str_eq(r_info.uri, "/test-1-0");   /* uri correct */
-    ymo_assert_str_eq(r_info.response_data, RESPONSE_OK);
+    ymo_assert_str_eq(r_info.response_data, TEST_HTTP_200);
     YMO_TAP_PASS(__func__);
 }
 
@@ -63,7 +65,7 @@ static int request_basic_1_1(void)
     ymo_assert(r_val == (ssize_t)strlen(r_data)); /* completely parsed */
     ymo_assert(r_info.called == 1);               /* callback invoked */
     ymo_assert_str_eq(r_info.uri, "/test-1-1");
-    ymo_assert_str_eq(r_info.response_data, RESPONSE_OK);
+    ymo_assert_str_eq(r_info.response_data, TEST_HTTP_200);
     YMO_TAP_PASS(__func__);
 }
 
@@ -71,19 +73,24 @@ static int request_basic_1_1(void)
 static int expect_100_continue(void)
 {
     const char* r_data =
-        "POST /body HTTP/1.1\r\n" \
-        "Host: 127.0.0.1:8081\r\n" \
-        "User-Agent: curl/7.64.1\r\n" \
-        "Accept: */*\r\n" \
-        "Expect: 100-continue\r\n" \
-        "Content-Length: 4\r\n" \
-        "Content-Type: application/x-www-form-urlencoded\r\n" \
-        "\r\n" \
+        "POST /body HTTP/1.1\r\n"
+        "Host: 127.0.0.1:8081\r\n"
+        "Accept: */*\r\n"
+        "Expect: 100-continue\r\n"
+        "Content-Length: 4\r\n"
+        "Content-Type: application/x-www-form-urlencoded\r\n"
+        "\r\n"
         "data";
 
     const char* expected =
-        "HTTP/1.1 100 Continue\r\n" \
-        "Content-Length: 0\r\n\r\n";
+        "HTTP/1.1 100 Continue\r\n"
+        "Content-Length: 0\r\n"
+        "\r\n"
+        "HTTP/1.1 200 OK\r\n"
+        "content-type: text/plain\r\n"
+        "Content-Length: 2\r\n"
+        "\r\n"
+        "OK";
 
     make_request(r_data);
 
@@ -101,6 +108,54 @@ static int eagain_on_incomplete_request(void)
     /* Confirm: */
     ymo_assert(r_val == (ssize_t)strlen(r_data)); /* completely parsed */
     ymo_assert(r_info.called == 0);               /* callback not invoked */
+    YMO_TAP_PASS(__func__);
+}
+
+
+static int test_400_on_bad_method(void)
+{
+    const char* r_data =
+        "GE+ /bad-method HTTP/1.1\r\n"
+        "Host: 127.0.0.1:8081\r\n"
+        "\r\n";
+    make_request(r_data);
+    ymo_assert_str_eq(r_info.response_data, TEST_HTTP_400);
+    YMO_TAP_PASS(__func__);
+}
+
+
+static int test_400_on_bad_version(void)
+{
+    const char* r_data =
+        "GET /bad-version HTTP/1.3\r\n"
+        "Host: 127.0.0.1:8081\r\n"
+        "\r\n";
+    make_request(r_data);
+    ymo_assert_str_eq(r_info.response_data, TEST_HTTP_400);
+    YMO_TAP_PASS(__func__);
+}
+
+
+static int test_400_on_bad_uri(void)
+{
+    const char* r_data =
+        "GET /bad URI HTTP/1.3\r\n"
+        "Host: 127.0.0.1:8081\r\n"
+        "\r\n";
+    make_request(r_data);
+    ymo_assert_str_eq(r_info.response_data, TEST_HTTP_400);
+    YMO_TAP_PASS(__func__);
+}
+
+
+static int test_400_on_missing_header_value(void)
+{
+    const char* r_data =
+        "GET /bad URI HTTP/1.3\r\n"
+        "Host\r\n"
+        "\r\n";
+    make_request(r_data);
+    ymo_assert_str_eq(r_info.response_data, TEST_HTTP_400);
     YMO_TAP_PASS(__func__);
 }
 
@@ -144,6 +199,10 @@ YMO_TAP_RUN(&setup_suite, &setup_test, &cleanup,
         YMO_TAP_TEST_FN(request_basic_1_1),
         YMO_TAP_TEST_FN(expect_100_continue),
         YMO_TAP_TEST_FN(eagain_on_incomplete_request),
+        YMO_TAP_TEST_FN(test_400_on_bad_method),
+        YMO_TAP_TEST_FN(test_400_on_bad_version),
+        YMO_TAP_TEST_FN(test_400_on_bad_uri),
+        YMO_TAP_TEST_FN(test_400_on_missing_header_value),
         YMO_TAP_TEST_END()
         )
 

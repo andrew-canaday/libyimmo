@@ -50,6 +50,7 @@ YMO_ENUM8_TYPEDEF(http_state) {
     HTTP_STATE_HEADER_NAME,
     HTTP_STATE_HEADER_VALUE_LEADING_SPACE,
     HTTP_STATE_HEADER_VALUE,
+    HTTP_STATE_HEADERS_COMPLETE,
     HTTP_STATE_EXPECT,
     HTTP_STATE_BODY_CHUNK_HEADER,
     HTTP_STATE_BODY,
@@ -57,6 +58,7 @@ YMO_ENUM8_TYPEDEF(http_state) {
     HTTP_STATE_COMPLETE,
 } YMO_ENUM8_AS(http_state_t);
 
+extern const char* ymo_http_state_names[];
 
 /** Enum type used to track HTTP end of line state.
  */

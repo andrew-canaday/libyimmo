@@ -54,15 +54,23 @@
 
 
 /*-------------------------------------------------------------*
- * We use this bit to verify callback data:
+ * Responses:
  *-------------------------------------------------------------*/
 
-#define RESPONSE_OK \
-    "HTTP/1.1 200 OK\r\n" \
-    "content-type: text/plain\r\n" \
-    "Content-Length: 2\r\n" \
-    "\r\n" \
-    "OK"
+static const char* TEST_HTTP_200 =
+    "HTTP/1.1 200 OK\r\n"
+    "content-type: text/plain\r\n"
+    "Content-Length: 2\r\n"
+    "\r\n"
+    "OK";
+
+
+static const char* TEST_HTTP_400 =
+    "HTTP/1.1 400 Bad Request\r\n"
+    "Content-Length: 0\r\n"
+    "Connection: Close\r\n"
+    "\r\n";
+
 
 ymo_test_server_t* test_server = NULL;
 
@@ -152,7 +160,7 @@ static ssize_t make_request(const char* r_data)
 
 
     /* If all went okay, send the response by faking a write-ready event: */
-    if( r_val > 0 ) {
+    if( r_val >= 0 ) {
         ymo_proto_http_write(
                 test_server->proto_data,
                 test_conn->conn,
@@ -161,6 +169,8 @@ static ssize_t make_request(const char* r_data)
         r_info.bytes_sent = read(
                 test_conn->fd_read, r_info.response_data,
                 sizeof(r_info.response_data));
+    } else {
+        ymo_log_debug("Not writing due to: %s", strerror(r_val));
     }
 
     /* Free the test protocol and return: */

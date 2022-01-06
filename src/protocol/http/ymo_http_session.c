@@ -103,6 +103,41 @@ ymo_http_session_free_request(ymo_http_session_t* http_session)
 }
 
 
+ymo_status_t ymo_http_session_init_response(
+        ymo_http_session_t* session,
+        ymo_http_exchange_t* exchange)
+{
+    ymo_status_t status = YMO_OKAY;
+
+    /* Else, start prepping the app-facing response: */
+    ymo_http_response_t* response = ymo_http_response_create(session);
+
+    if( !response ) {
+        ymo_log_error("Unable to create HTTP response object: %s",
+                strerror(errno));
+        status = ENOMEM;
+    }
+
+    exchange->response = response;
+    response->flags = exchange->request.flags;
+    if( exchange->request.flags & YMO_HTTP_FLAG_REQUEST_KEEPALIVE ) {
+        if( !(exchange->request.flags & YMO_HTTP_FLAG_VERSION_1_1) ) {
+            ymo_http_hdr_table_insert_precompute(
+                    &response->headers, HDR_ID_CONNECTION,
+                    "Connection", sizeof("Connection")-1, "Keep-alive");
+        }
+    } else {
+        if( exchange->request.flags & YMO_HTTP_FLAG_VERSION_1_1 ) {
+            ymo_http_hdr_table_insert_precompute(
+                    &response->headers, HDR_ID_CONNECTION,
+                    "Connection", sizeof("Connection")-1, "close");
+        }
+    }
+
+    return status;
+}
+
+
 ymo_status_t ymo_http_session_add_response(
         ymo_http_session_t* http_session, ymo_http_response_t* response_in)
 {

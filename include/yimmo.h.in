@@ -47,6 +47,8 @@
 #ifndef YMO_SOURCE
 #  ifdef __FILE_NAME__
 #    define YMO_SOURCE __FILE_NAME__
+#  elif defined(__BASE_FILE__)
+#    define YMO_SOURCE __BASE_FILE__
 #  else
 #    define YMO_SOURCE __FILE__
 #  endif /* __FILE_NAME__ */

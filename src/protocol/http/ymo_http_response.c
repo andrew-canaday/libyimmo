@@ -268,9 +268,6 @@ ymo_status_t ymo_http_response_issue(
         ymo_http_response_insert_header(response, "Connection", "Close");
         /* TODO: not sure about response having session... */
         response->session->state = YMO_HTTP_SESSION_ERROR;
-
-        /* Same, re: conn... */
-        ymo_conn_rx_enable(response->session->conn, 0);
     }
     ymo_http_response_set_status(response, status);
     ymo_http_response_finish(response);

@@ -51,6 +51,16 @@ static int worker_proc_init(
         PyThreadState** _py_ts_save, ymo_wsgi_proc_t* w_proc);
 static int worker_proc_teardown(
         PyThreadState** _py_ts_save, ymo_wsgi_proc_t* w_proc);
+static void ymo_wsgi_main_pkill(
+        struct ev_loop* loop, ev_timer* w, int revents);
+static void ymo_wsgi_worker_tkill(
+        struct ev_loop* loop, ev_timer* w, int revents);
+static void ymo_wsgi_main_shutdown(
+        ymo_wsgi_proc_t* w_proc, int my_pid);
+static void ymo_wsgi_worker_shutdown(
+        ymo_wsgi_proc_t* w_proc, int my_pid);
+static void ymo_wsgi_sig_shutdown(
+        ymo_wsgi_proc_t* w_proc, int w_sig);
 
 /*---------------------------------*
  *        Process Workers:
@@ -153,6 +163,28 @@ ymo_wsgi_worker_t* ymo_wsgi_proc_assign_worker(ymo_wsgi_proc_t* w_proc, size_t s
 /*---------------------------------*
  *       Main Init/Shutdown:
  *---------------------------------*/
+static void ymo_wsgi_main_pkill(struct ev_loop* loop, ev_timer* w, int revents)
+{
+    int my_pid = (int)getpid();
+    ymo_log_notice("Main %i kill timer fired after %.3f seconds.",
+            my_pid, YMO_WSGI_PKILL_TIMEOUT);
+
+    ev_break(loop, EVBREAK_ALL);
+    if( w->data ) {
+        ymo_wsgi_proc_t* w_proc = w->data;
+        ymo_log_trace("Proc: %p", w->data);
+
+        for( int i = 0; i < w_proc->no_wsgi_proc; i++ ) {
+            ymo_log_notice(
+                    "%i sending SIGTERM to %i", my_pid, (int)w_proc->children[i]);
+            kill(w_proc->children[i], SIGKILL);
+        }
+    } else {
+        ymo_log_debug("Got %p proc. Bailing.", w->data);
+    }
+}
+
+
 static void main_proc_init(ymo_wsgi_proc_t* w_proc)
 {
     /* Set up signal handlers: */
@@ -182,6 +214,21 @@ static int main_proc_teardown(ymo_wsgi_proc_t* w_proc)
 /*---------------------------------*
  *      Worker Init/Shutdown:
  *---------------------------------*/
+static void ymo_wsgi_worker_tkill(struct ev_loop* loop, ev_timer* w, int revents)
+{
+    ymo_wsgi_proc_t* w_proc = w->data;
+    ymo_log_notice("Thread timer fired after %.3f seconds.",
+            YMO_WSGI_TKILL_TIMEOUT);
+    for( int thread_id = 0; thread_id < w_proc->no_wsgi_threads; thread_id++ ) {
+        ymo_log_notice("Cancelling worker thread %i/%i",
+                thread_id+1, w_proc->no_wsgi_threads);
+        pthread_cancel(w_proc->w_threads[thread_id].thread);
+        ymo_log_notice("Worker thread %i/%i cancelled.",
+                thread_id+1, w_proc->no_wsgi_threads);
+    }
+}
+
+
 static int worker_proc_init(
         PyThreadState** _py_ts_save, ymo_wsgi_proc_t* w_proc)
 {
@@ -227,7 +274,6 @@ static int worker_proc_init(
 static int worker_proc_teardown(
         PyThreadState** _py_ts_save, ymo_wsgi_proc_t* w_proc)
 {
-    ymo_server_free(w_proc->http_srv);
     PyEval_RestoreThread(*_py_ts_save);
 
     ymo_wsgi_stop_workers(w_proc->no_wsgi_threads, w_proc->w_threads);
@@ -235,12 +281,16 @@ static int worker_proc_teardown(
         ymo_log_notice("Waiting on worker thread %i/%i",
                 thread_id+1, w_proc->no_wsgi_threads);
         ymo_wsgi_worker_join(&(w_proc->w_threads[thread_id]));
+        ymo_log_notice("Worker thread %i/%i done",
+                thread_id+1, w_proc->no_wsgi_threads);
     }
-    return ymo_wsgi_shutdown();
+    int rc = ymo_wsgi_shutdown();
+    ymo_server_free(w_proc->http_srv);
+
+    return rc;
 }
 
 
-/* TODO: We might have one of the queue locks. */
 ymo_status_t ymo_wsgi_stop_workers(int no_wsgi_threads, ymo_wsgi_worker_t* workers)
 {
     for( int thread_id = 0; thread_id < no_wsgi_threads; thread_id++ ) {
@@ -248,34 +298,21 @@ ymo_status_t ymo_wsgi_stop_workers(int no_wsgi_threads, ymo_wsgi_worker_t* worke
                 thread_id+1, no_wsgi_threads);
         workers[thread_id].running = 0;
 
-#if 0
-        if( !pthread_mutex_trylock(&workers[thread_id]->lock_in) ) {
+        if( !pthread_mutex_trylock(&workers[thread_id].lock_in) ) {
             ymo_wsgi_worker_notify(&workers[thread_id]);
             ymo_wsgi_worker_unlock_in(&workers[thread_id]);
         }
-#endif
-        ymo_wsgi_worker_notify(&workers[thread_id]);
-        sleep(1);
-        pthread_cancel(workers[thread_id].thread);
         ymo_log_notice("Worker thread %i/%i notified.",
                 thread_id+1, no_wsgi_threads);
     }
+
     return YMO_OKAY;
 }
 
 
+
 static void ymo_wsgi_main_shutdown(ymo_wsgi_proc_t* w_proc, int my_pid)
 {
-    if( ev_is_active(&(w_proc->sigchld_watcher)) ) {
-        ymo_log_notice("%i: stopping SIGCHLD watcher", my_pid);
-        ev_signal_stop(w_proc->loop, &(w_proc->sigchld_watcher));
-    }
-
-    /* Stop listening for SIGCHLD.
-     * (Probably, libev did this for us, but it doesn't hurt to be sure).
-     */
-    signal(SIGCHLD, SIG_IGN);
-
     ymo_log_notice(
             "%i: shutting down %i child processes",
             my_pid, w_proc->no_wsgi_proc);
@@ -285,15 +322,10 @@ static void ymo_wsgi_main_shutdown(ymo_wsgi_proc_t* w_proc, int my_pid)
         kill(w_proc->children[i], SIGTERM);
     }
 
-    /* HACK: (TEMP) Okay, and then wait a few seconds and then kill them all: */
-    sleep(5);
-    for( int i = 0; i < w_proc->no_wsgi_proc; i++ ) {
-        ymo_log_notice(
-                "%i sending SIGTERM to %i", my_pid, (int)w_proc->children[i]);
-        kill(w_proc->children[i], SIGKILL);
-    }
-
-    ev_break(w_proc->loop, EVBREAK_ALL);
+    /* Start the kill timer: */
+    ev_timer_init(&(w_proc->pkill_timer), &ymo_wsgi_main_pkill,
+            YMO_WSGI_PKILL_TIMEOUT, 0.0);
+    ev_timer_start(w_proc->loop, &w_proc->pkill_timer);
 }
 
 
@@ -314,6 +346,11 @@ static void ymo_wsgi_worker_shutdown(ymo_wsgi_proc_t* w_proc, int my_pid)
     ymo_log_notice("%i got SIGTERM. Starting shutdown.", my_pid);
     ymo_server_stop_graceful(w_proc->http_srv);
     ymo_wsgi_stop_workers(w_proc->no_wsgi_threads, w_proc->w_threads);
+
+    /* Start the kill timer: */
+    ev_timer_init(&(w_proc->tkill_timer), &ymo_wsgi_worker_tkill,
+            YMO_WSGI_TKILL_TIMEOUT, 0.0);
+    ev_timer_start(w_proc->loop, &w_proc->tkill_timer);
     return;
 }
 
@@ -327,6 +364,7 @@ static void ymo_wsgi_sig_shutdown(ymo_wsgi_proc_t* w_proc, int w_sig)
                 my_pid, strsignal(w_sig), w_sig);
     }
 
+    w_proc->term = 1;
     if( !w_proc->is_worker ) {
         ymo_wsgi_main_shutdown(w_proc, my_pid);
     } else {
@@ -341,6 +379,16 @@ static void ymo_wsgi_sig_shutdown(ymo_wsgi_proc_t* w_proc, int w_sig)
 void ymo_wsgi_proc_sigchld(struct ev_loop* loop, ev_signal* w, int revents)
 {
     ymo_wsgi_proc_t* w_proc = w->data;
+
+    if( w_proc && w_proc->term ) {
+        ymo_log_notice("Child process terminated. Waiting on %zu more.",
+                w_proc->no_wsgi_proc-1);
+        if( --w_proc->no_wsgi_proc == 1 ) {
+            ymo_log_notice("Main process (%i) terminating", getpid());
+            ev_break(loop, EVBREAK_ALL);
+        }
+        return;
+    }
 
     /* Stop SIGINT/SIGCHLD handlers: */
     ev_signal_stop(w_proc->loop, &(w_proc->sigint_watcher));

@@ -30,6 +30,26 @@
 #include "ymo_http_exchange.h"
 #include "ymo_http_hdr_table.h"
 
+const char* ymo_http_state_names[] = {
+    "HTTP_STATE_CONNECTED",
+    "HTTP_STATE_REQUEST_METHOD",
+    "HTTP_STATE_REQUEST_URI_PATH",
+    "HTTP_STATE_REQUEST_QUERY",
+    "HTTP_STATE_REQUEST_FRAGMENT",
+    "HTTP_STATE_REQUEST_VERSION",
+    "HTTP_STATE_CRLF",
+    "HTTP_STATE_HEADER_NAME",
+    "HTTP_STATE_HEADER_VALUE_LEADING_SPACE",
+    "HTTP_STATE_HEADER_VALUE",
+    "HTTP_STATE_HEADERS_COMPLETE",
+    "HTTP_STATE_EXPECT",
+    "HTTP_STATE_BODY_CHUNK_HEADER",
+    "HTTP_STATE_BODY",
+    "HTTP_STATE_BODY_CHUNK_TRAILER",
+    "HTTP_STATE_COMPLETE",
+};
+
+
 ymo_http_exchange_t* ymo_http_exchange_create(void)
 {
     ymo_http_exchange_t* exchange = YMO_NEW0(ymo_http_exchange_t);

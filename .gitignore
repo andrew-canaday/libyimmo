@@ -71,3 +71,7 @@ local_dev
 
 # Backup files:
 *~
+
+# TAP test files:
+*.err
+*.trs
