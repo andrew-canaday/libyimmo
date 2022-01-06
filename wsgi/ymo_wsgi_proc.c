@@ -310,7 +310,6 @@ ymo_status_t ymo_wsgi_stop_workers(int no_wsgi_threads, ymo_wsgi_worker_t* worke
 }
 
 
-
 static void ymo_wsgi_main_shutdown(ymo_wsgi_proc_t* w_proc, int my_pid)
 {
     ymo_log_notice(

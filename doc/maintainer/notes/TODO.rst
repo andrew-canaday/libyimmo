@@ -9,13 +9,13 @@ Items in this document:
 - **ALSO...**: TODO items that *should* really be in source...
 
 
-+---------+------------+------------+-----------------+
-| |/|     | |_|        | |x|        | |v|             |
-+---------+------------+------------+-----------------+
-| done    | not done   | won't do   | deprioritized   |
-+---------+------------+------------+-----------------+
-| ``|/|`` | ``|_|``    | ``|x|``    | ``|v|``         |
-+---------+------------+------------+-----------------+
++---------+------------+------------+-----------------+---------+
+| |/|     | |_|        | |x|        | |v|             | |w|     |
++---------+------------+------------+-----------------+---------+
+| done    | not done   | won't do   | deprioritized   | WIP     |
++---------+------------+------------+-----------------+---------+
+| ``|/|`` | ``|_|``    | ``|x|``    | ``|v|``         | ``|w|`` |
++---------+------------+------------+-----------------+---------+
 
 .. contents:: Contents
    :local:
@@ -27,7 +27,7 @@ Next Up
 
 - |_| Add GPL exceptions for OpenSSL + Python (IMO, python API is pretty clearly a "System Interface" anyway, but we'll make it explicit).
 - |_| Generic list/pool/queue types (ala kernel)
-- |_| HTTP header compare override
+- |w| HTTP header compare override
 - |_| Provide faster file handling (sendfile or caching)
 - |_| WSGI code cleanup / PEP3333 compliance check
 - |_| ``EV_EMBED``, ``ev_realloc``, and faux-slab allocator example
@@ -47,9 +47,9 @@ Next Up
 
 Tidying
 .......
-- |_| Exchanges: why allocate request/response separately? It's the source of a lot of cache misses.
-- |_| We work with lots of strings of known length — make some string utilities and take advantage of that.
-- |_| Most ``_creates`` need an ``_init`` (see `needs init`_) to facilitate static allocation / the next item in this list.
+- |x| Exchanges: why allocate request/response separately? It's the source of a lot of cache misses (sometimes need disentangled responses + allows request re-use)
+- |/| We work with lots of strings of known length — make some string utilities and take advantage of that. (*WIP!*)
+- |w| Most ``_creates`` need an ``_init`` (see `needs init`_) to facilitate static allocation / the next item in this list.
 - |_| Don't ``void*`` + ``malloc`` when an intrusive data structure would do.
 - |_| Multiple alignment CEIL/FLOOR definitions + assumptions about the relationship between ``sizeof()`` and alignment
 - |_| Ditch the bit-fields, just use flags, and skip needing to write a set of rules about when to use which.
@@ -57,18 +57,20 @@ Tidying
 TESTS!!!!
 .........
 
+(|/| doesn't imply full coverage).
+
 - |_| Facilities for testing custom protocols (*WIP!*)
-- |_| HTTP unit tests (*WIP!*)
+- |/| HTTP unit tests
     - |/| Header tables
-    - |/| Parser: init, loader, tests (*very basics* done)
-- |_| HTTP client/server tests (*WIP!*)
+    - |/| Parser: init, loader, tests
+- |/| HTTP client/server tests
     - |/| HTTP 1.1 Basics
     - |/| HTTP 1.0 Basics
-- |/| Core unit tests (*very basics* done)
-- |_| WS unit tests
+- |/| Core unit tests
+- |/| WS unit tests (*autobahn*)
 - |x| (MQTT unit tests)
 - |/| automatic live/integration tests — e.g. HTTP request/response validation against a running server, autobahn, etc.
-- |_| How to test client/server in CI (GH Actions, atm)? Docker compose?
+- |/| How to test client/server in CI (GH Actions, atm)? **Docker compose**.
 
 DOCS
 ....
@@ -87,17 +89,17 @@ DOCS
 Packaging
 .........
 
-- |_| Distribute ``make dist`` output as tar.gz?
-- |_| Docker (WSGI runner, example servers)
-- |_| Homebrew
+- |/| Distribute ``make dist`` output as tar.gz
+- |/| Docker (WSGI runner, example servers)
+- |_| Homebrew (*WIP!*)
 - |_| RPM's? Deb? (...or whatever else is cool and used a lot?...)
 
 
 Accidental Not-Invented-Here-Syndrome Fixes
 ............................................
 
-- |_| Switch from ``ymo_assert`` to ``Unity``?
-- |_| Make logging more configurable or use a 3rd party lib (zlog, etc)
+- |?| Switch from ``ymo_assert`` to ``Unity``?
+- |?| Make logging more configurable or use a 3rd party lib (zlog, etc)
 
 Configuration
 .............
@@ -117,7 +119,7 @@ Usability/Stability
 
 - |/| WS body buffering (optional)
 - |_| HTTP expect handler *callback* (automatic handling in place), ala upgrade handler.
-- |_| **clean up includes and include paths!**
+- |_| clean up includes and include paths!
 
 
 Utility
@@ -212,15 +214,15 @@ General
 Misc
 ....
 
-- |_| WSGI static build + LTO?
+- |?| WSGI static build + LTO?
 
 Interface
 ---------
 
 - |_| Users should be able to set up their own socket and still use server
-- |_| Should users be able to manage their own events and just invoke protocols?
+- |?| Should users be able to manage their own events and just invoke protocols?
 - |_| Clean up server/conn/proto cross-contamination + tidy interfaces
-- |_| (Should more of the connection functions be public?)
+- |?| (Should more of the connection functions be public?)
 - |/| Provide bind/listen code
 - |/| Eliminate two-struct http_request scheme
 - |/| Clean up compressed header table generation
@@ -238,11 +240,11 @@ Core Architecture
 
 - |/| Leverage ``SO_REUSEPORT``
 - |_| Add optional multi-threading support to core.
-- |_| Add optional multi-process support to core? (Probably: *no*).
+- |?| Add optional multi-process support to core? (Probably: *no*).
 
 Concurrency
 ...........
-- |_| Thread pools — |/| for WSGI (*hacky, though*)
+- |_| Thread pools (|/| for WSGI — *hacky, though*)
 - |_| Create utility function to run a function in a thread with automatic
       ev_async cb
 - |/| Decouple ev_loop / IO from python interpretter, CPU-wise
@@ -271,8 +273,11 @@ Memory
 
 - |/| Add compile-time allocator specification
 - |/| Allow user to compile without g_slice (e.g. to use malloc/jemalloc, etc)
-- |_| Reference counting for buckets (*maybe*)
-- |_| User-specified allocators (just macros, atm; make ``weak`` symbols)
+- |/| User-specified allocators (just macros, atm; make ``weak`` symbols)
+- |_| Chain-alloc to complement block-alloc
+- |_| HTTP make blalloc ``ws`` a member of :c:struct:`ymo_http_exchange`
+- |?| Add ref-counted allocator?
+- |?| Reference counting for buckets (*maybe*)
 
 Performance considerations
 ..........................

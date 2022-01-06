@@ -335,7 +335,6 @@ handle_callback_result:
         response->exchange = http_session->exchange;
         http_session->exchange = NULL;
         ymo_http_session_add_response(http_session, response);
-        return status;
     } else {
         /* TODO, we need to figure out *why* we bailed here and then
          * decide if it's 4xx/5xx or just terminate conn. */
@@ -624,8 +623,8 @@ http_headers_complete:
 
             /* HACK: don't issue header cb for upgrade requests (for now). */
             if( hdr_status == YMO_OKAY
-                    && http_proto_data->header_cb
-                    && !(exchange->request.flags & YMO_HTTP_FLAG_UPGRADE)
+                && http_proto_data->header_cb
+                && !(exchange->request.flags & YMO_HTTP_FLAG_UPGRADE)
                 ) {
                 hdr_status = http_proto_data->header_cb(
                         http_session,

@@ -57,12 +57,12 @@ ymo_http_session_free(ymo_http_session_t* http_session)
         ymo_conn_tx_enable(http_session->conn, 0);
         ymo_conn_rx_enable(http_session->conn, 0);
         ymo_log_trace("Freeing session: %p", (void*)http_session);
-        ymo_http_session_free_request(http_session);
-        ymo_status_t status;
-        do
-        {
-            status = ymo_http_session_complete_response(http_session);
-        } while( status == YMO_OKAY );
+
+        /* Free requests/responses: */
+        while( ymo_http_session_free_request(http_session) == YMO_OKAY ) {}
+        while( ymo_http_session_complete_response(http_session) == YMO_OKAY ) {}
+
+        /* Free send buffer: */
         ymo_bucket_free_all(http_session->send_buffer);
         YMO_DELETE(ymo_http_session_t, http_session);
     }

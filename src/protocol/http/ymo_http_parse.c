@@ -569,9 +569,6 @@ http_header_parse_done:
 }
 
 
-/** HTTP body parser
- * TODO: store in buckets!
- */
 ssize_t ymo_parse_http_body(
         ymo_http_body_cb_t body_cb,
         ymo_http_session_t* session,

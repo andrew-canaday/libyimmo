@@ -64,14 +64,28 @@ static const char* TEST_HTTP_200 =
     "\r\n"
     "OK";
 
-
 static const char* TEST_HTTP_400 =
     "HTTP/1.1 400 Bad Request\r\n"
     "Content-Length: 0\r\n"
     "Connection: Close\r\n"
     "\r\n";
 
+static const char* TEST_HTTP_413 =
+    "HTTP/1.1 413 Request Entity Too Large\r\n"
+    "Content-Length: 0\r\n"
+    "Connection: Close\r\n"
+    "\r\n";
 
+static const char* TEST_HTTP_501 =
+    "HTTP/1.1 501 Not Implemented\r\n"
+    "Content-Length: 0\r\n"
+    "Connection: Close\r\n"
+    "\r\n";
+
+
+/*---------------------------------------------------------------*
+ * Request Info:
+ *---------------------------------------------------------------*/
 ymo_test_server_t* test_server = NULL;
 
 struct {

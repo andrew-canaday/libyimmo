@@ -119,10 +119,11 @@ static inline ymo_http_hdr_table_node_t* ymo_http_hdr_table_node_create(
     if( table->pool.head ) {
         node = table->pool.head;
         table->pool.head = node->next;
+        node->flags = YMO_HDR_FLAG_DEFAULT;
     } else {
         node = YMO_NEW(ymo_http_hdr_table_node_t);
         if( node ) {
-            node->flags |= YMO_HDR_FLAG_NOPOOL;
+            node->flags |= YMO_HDR_FLAG_DEFAULT | YMO_HDR_FLAG_NOPOOL;
         }
     }
 #else
@@ -172,7 +173,6 @@ static ymo_http_hdr_id_t table_insert_first(
     ymo_http_hdr_table_node_t* node = ymo_http_hdr_table_node_create(table);
     if( node ) {
         node->h_id = h_id;
-        node->flags = YMO_HDR_FLAG_DEFAULT;
         node->hdr = hdr;
         node->hdr_len = hdr_len;
         node->value = value;

@@ -42,34 +42,6 @@
 /*-------------------------------------------------------------*
  * Tests:
  *-------------------------------------------------------------*/
-static int request_basic_1_0(void)
-{
-    const char* r_data = "GET /test-1-0 HTTP/1.0\r\n\r\n";
-    ssize_t r_val = make_request(r_data);
-
-    /* Confirm: */
-    ymo_assert(r_val == (ssize_t)strlen(r_data)); /* completely parsed */
-    ymo_assert(r_info.called == 1);               /* callback invoked */
-    ymo_assert_str_eq(r_info.uri, "/test-1-0");   /* uri correct */
-    ymo_assert_str_eq(r_info.response_data, TEST_HTTP_200);
-    YMO_TAP_PASS(__func__);
-}
-
-
-static int request_basic_1_1(void)
-{
-    const char* r_data = "GET /test-1-1 HTTP/1.1\r\n\r\n";
-    ssize_t r_val = make_request(r_data);
-
-    /* Confirm: */
-    ymo_assert(r_val == (ssize_t)strlen(r_data)); /* completely parsed */
-    ymo_assert(r_info.called == 1);               /* callback invoked */
-    ymo_assert_str_eq(r_info.uri, "/test-1-1");
-    ymo_assert_str_eq(r_info.response_data, TEST_HTTP_200);
-    YMO_TAP_PASS(__func__);
-}
-
-
 static int expect_100_continue(void)
 {
     const char* r_data =
@@ -112,6 +84,40 @@ static int eagain_on_incomplete_request(void)
 }
 
 
+/*============
+ * 200:
+ *------------*/
+static int request_basic_1_0(void)
+{
+    const char* r_data = "GET /test-1-0 HTTP/1.0\r\n\r\n";
+    ssize_t r_val = make_request(r_data);
+
+    /* Confirm: */
+    ymo_assert(r_val == (ssize_t)strlen(r_data)); /* completely parsed */
+    ymo_assert(r_info.called == 1);               /* callback invoked */
+    ymo_assert_str_eq(r_info.uri, "/test-1-0");   /* uri correct */
+    ymo_assert_str_eq(r_info.response_data, TEST_HTTP_200);
+    YMO_TAP_PASS(__func__);
+}
+
+
+static int request_basic_1_1(void)
+{
+    const char* r_data = "GET /test-1-1 HTTP/1.1\r\n\r\n";
+    ssize_t r_val = make_request(r_data);
+
+    /* Confirm: */
+    ymo_assert(r_val == (ssize_t)strlen(r_data)); /* completely parsed */
+    ymo_assert(r_info.called == 1);               /* callback invoked */
+    ymo_assert_str_eq(r_info.uri, "/test-1-1");
+    ymo_assert_str_eq(r_info.response_data, TEST_HTTP_200);
+    YMO_TAP_PASS(__func__);
+}
+
+
+/*============
+ * 4xx:
+ *------------*/
 static int test_400_on_bad_method(void)
 {
     const char* r_data =
@@ -159,6 +165,40 @@ static int test_400_on_missing_header_value(void)
     YMO_TAP_PASS(__func__);
 }
 
+#if 0
+static int test_413_on_large_payload(void)
+{
+    const char* r_data =
+        "POST /large-payload HTTP/1.1\r\n"
+        "Host: 127.0.0.1:8081\r\n"
+        "Accept: */*\r\n"
+        "Content-Length: 330368\r\n"
+        "Content-Type: application/x-www-form-urlencoded\r\n"
+        "\r\n";
+    make_request(r_data);
+    ymo_assert_str_eq(r_info.response_data, TEST_HTTP_413);
+    YMO_TAP_PASS(__func__);
+}
+#endif
+
+
+/*============
+ * 5xx:
+ *------------*/
+static int test_501_on_bad_upgrade(void)
+{
+    const char* r_data =
+        "GET /bad-upgrade HTTP/1.1\r\n"
+        "Host: 127.0.0.1:8081\r\n"
+        "Upgrade: not-a-protocol\r\n"
+        "\r\n";
+    make_request(r_data);
+    ymo_assert_str_eq(r_info.response_data, TEST_HTTP_501);
+    YMO_TAP_PASS(__func__);
+}
+
+
+
 
 /*-------------------------------------------------------------*
  * Main:
@@ -203,6 +243,7 @@ YMO_TAP_RUN(&setup_suite, &setup_test, &cleanup,
         YMO_TAP_TEST_FN(test_400_on_bad_version),
         YMO_TAP_TEST_FN(test_400_on_bad_uri),
         YMO_TAP_TEST_FN(test_400_on_missing_header_value),
+        YMO_TAP_TEST_FN(test_501_on_bad_upgrade),
         YMO_TAP_TEST_END()
         )
 

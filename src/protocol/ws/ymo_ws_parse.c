@@ -44,11 +44,6 @@
 /*---------------------------------------------------------------*
  *  Declarations
  *---------------------------------------------------------------*/
-/** Round pointer value up to next word boundary: */
-#define PTR32_ALIGN (sizeof(uint32_t) - 1)
-#define PTR32_FLOOR(p) (((uintptr_t)p) & ~PTR32_ALIGN)
-#define PTR32_CEIL(p) ((((uintptr_t)p) + PTR32_ALIGN) & ~PTR32_ALIGN)
-
 #define YMO_WS_FLAGS_RESERVED(f) \
     (f & (YMO_WS_FLAG_RSV1 | YMO_WS_FLAG_RSV2 | YMO_WS_FLAG_RSV3) )
 
@@ -304,14 +299,14 @@ static ssize_t unmask_payload(
         buff_ptr_t c_out = {.c = wr_buffer};
 
         /* Do the initial round of bytes before the alignment boundary: */
-        size_t end = YMO_MIN(parse_len, PTR32_CEIL(rd_buffer)-(uintptr_t)rd_buffer);
+        size_t end = YMO_MIN(parse_len, YMO_PTR32_CEIL(rd_buffer)-(uintptr_t)rd_buffer);
         while( end-- > 0 && parse_remain-- > 0 ) {
             *c_out.c++ =
                 *c_in.c++ ^ session->frame_in.masking_key[session->frame_in.mask_mod++ % 4];
         }
 
         /* Do the next round of bytes, 4 bytes at a time: */
-        end = PTR32_FLOOR(parse_end)-(uintptr_t)c_in.c;
+        end = YMO_PTR32_FLOOR(parse_end)-(uintptr_t)c_in.c;
         uint32_t mask = get_mask32(session);
         while( end > 0 && parse_remain > 0 ) {
             *(c_out.b4++) = *(c_in.b4++)^mask;

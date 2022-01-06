@@ -36,7 +36,7 @@
  *---------------------------------------------------------------*/
 
 /* Base 64 table: */
-extern const char YMO_BASE64_TABLE[];
+extern const unsigned char YMO_BASE64_TABLE[];
 
 /**---------------------------------------------------------------
  * Types
@@ -85,17 +85,20 @@ typedef union ymo_utf8_state {
 #define YMO_BASE64_LEN(len) \
     ( (4*(len+2)) / 3)
 
-#define YMO_PTR_ALIGN (sizeof(void*) - 1)
+#define YMO_PTR_ALIGN_MASK_TYPE \
+    (void*)
+
+#define YMO_PTR_ALIGN_MASK (sizeof(YMO_PTR_ALIGN_MASK_TYPE) - 1)
 
 /** Round a pointer DOWN to the nearest void* alignment boundary.
  *
  */
-#define YMO_PTR_FLOOR(p) (((uintptr_t)p) & ~YMO_PTR_ALIGN)
+#define YMO_PTR_FLOOR(p) (((uintptr_t)p) & ~YMO_PTR_ALIGN_MASK)
 
 /** Round a pointer UP to the nearest void* alignment boundary.
  *
  */
-#define YMO_PTR_CEIL(p) ((((uintptr_t)p) + YMO_PTR_ALIGN) & ~YMO_PTR_ALIGN)
+#define YMO_PTR_CEIL(p) ((((uintptr_t)p) + YMO_PTR_ALIGN_MASK) & ~YMO_PTR_ALIGN_MASK)
 
 /** .. c:macro:: YMO_TYPE_ALIGN(t)
  *
@@ -103,16 +106,22 @@ typedef union ymo_utf8_state {
  *
  */
 
-#define YMO_UTIL_USE_ALIGNOF 1
-
+#define YMO_UTIL_USE_ALIGNOF 0
 #if defined(YMO_UTIL_USE_ALIGNOF) && YMO_UTIL_USE_ALIGNOF \
     && defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L
-
 #  define YMO_TYPE_ALIGN(t) _Alignof(t)
 #else
-#  define YMO_TYPE_ALIGN(t) YMO_PTR_ALIGN
+#  define YMO_TYPE_ALIGN(t) (sizeof(void*))
 #endif
 
+
+#define YMO_PTR32_ALIGN_MASK (sizeof(uint32_t) - 1)
+
+/** Round pointer value down to next 32-bit word boundary: */
+#define YMO_PTR32_FLOOR(p) (((uintptr_t)p) & ~YMO_PTR32_ALIGN_MASK)
+
+/** Round pointer value up to next 32-bit word boundary: */
+#define YMO_PTR32_CEIL(p) ((((uintptr_t)p) + YMO_PTR32_ALIGN_MASK) & ~YMO_PTR32_ALIGN_MASK)
 
 /** Round the input address DOWN to the nearest value that's a multiple
  * of the alignment for the type given by ``s``.
@@ -147,6 +156,7 @@ static inline char ymo_tolower(char c) \
  */
 static inline char ymo_toupper(char c) \
     YMO_FUNC_UNUSED YMO_FUNC_FLATTEN;
+
 
 static inline char ymo_tolower(char c)
 {
@@ -186,13 +196,43 @@ void ymo_ntolower(char* dst, const char* src, size_t len);
  */
 void ymo_ntoupper(char* dst, const char* src, size_t len);
 
-ymo_status_t
-ymo_base64_encode(char* dst, const unsigned char* src, size_t len);
+/** Base64-encode a string into the given buffer.
+ *
+ * .. warning::
+ *    ``dst`` must point to a location in memory with enough space
+ *    to encode all of ``src`` as base64. Use :c:macro:`YMO_BASE64_LEN`
+ *    to determine the length, if need be.
+ *
+ * :param dst: destination buffer
+ * :param src: input string
+ * :param len: length of ``src``
+ * :returns: ``YMO_OKAY`` on success
+ */
+ymo_status_t ymo_base64_encode(char* dst, const char* src, size_t len);
 
-char*
-ymo_base64_encoded(const unsigned char* src, size_t len);
+
+/** Allocate enough space to store ``src`` base64-encoded, encode it
+ * and return a pointer to the new buffer on success.
+ *
+ * :param src: input string
+ * :param len: length of ``src``
+ * :returns: pointer to new buffer on success; ``NULL`` on failure
+ *
+ * .. note::
+ *    Use :c:macro:`YMO_FREE` to deallocate the returned buffer.
+ *
+ */
+char* ymo_base64_encoded(const char* src, size_t len);
 
 
+/** String compare when the length of both strings are known.
+ *
+ * :param s1: string 1
+ * :param l1: string 1 length
+ * :param s2: string 2
+ * :param le: string 2 length
+ * :returns: ``0`` if the strings are equal; **non-zero**, otherwise.
+ */
 static inline int ymo_strcmp(
         const char* s1, size_t l1,
         const char* s2, size_t l2
@@ -205,6 +245,14 @@ static inline int ymo_strcmp(
 }
 
 
+/** Case insensitive string compare when the length of both strings are known.
+ *
+ * :param s1: string 1
+ * :param l1: string 1 length
+ * :param s2: string 2
+ * :param le: string 2 length
+ * :returns: ``0`` if the strings are equal; **non-zero**, otherwise.
+ */
 static inline int ymo_strcasecmp(
         const char* s1, size_t l1,
         const char* s2, size_t l2

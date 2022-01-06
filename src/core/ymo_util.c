@@ -307,7 +307,7 @@ void ymo_ntoupper(char* dst, const char* src, size_t len)
 /*---------------------------------------------------------------*
  *  Base 64:
  *---------------------------------------------------------------*/
-const char YMO_BASE64_TABLE[] = {
+const unsigned char YMO_BASE64_TABLE[] = {
     'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
     'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
     'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X',
@@ -324,36 +324,38 @@ const char YMO_BASE64_TABLE[] = {
 
 
 ymo_status_t ymo_base64_encode(
-        char* dst, const unsigned char* src, size_t len)
+        char* dst, const char* src, size_t len)
 {
+    unsigned char* udst = (unsigned char*)dst;
+    const unsigned char* usrc = (const unsigned char*)src;
     while( len > 2 ) {
-        *dst++ = YMO_BASE64_TABLE[(src[0] >> 2) & 0x3f];
-        *dst++ = YMO_BASE64_TABLE[((src[0] & 0x03) << 4) | (src[1] >> 4)];
-        *dst++ = YMO_BASE64_TABLE[((src[1] & 0x0f) << 2) | (src[2] >> 6)];
-        *dst++ = YMO_BASE64_TABLE[(src[2] & 0x03f)];
-        src += 3;
+        *udst++ = YMO_BASE64_TABLE[(usrc[0] >> 2) & 0x3f];
+        *udst++ = YMO_BASE64_TABLE[((usrc[0] & 0x03) << 4) | (usrc[1] >> 4)];
+        *udst++ = YMO_BASE64_TABLE[((usrc[1] & 0x0f) << 2) | (usrc[2] >> 6)];
+        *udst++ = YMO_BASE64_TABLE[(usrc[2] & 0x03f)];
+        usrc += 3;
         len -= 3;
     }
 
     if( len ) {
-        *dst++ = YMO_BASE64_TABLE[(src[0] >> 2) & 0x3f];
+        *udst++ = YMO_BASE64_TABLE[(usrc[0] >> 2) & 0x3f];
 
         if( len == 1 ) {
-            *dst++ = YMO_BASE64_TABLE[(src[0] & 0x03) << 4];
-            *dst++ = '=';
+            *udst++ = YMO_BASE64_TABLE[(usrc[0] & 0x03) << 4];
+            *udst++ = '=';
         } else {
-            *dst++ = YMO_BASE64_TABLE[((src[0] & 0x03) << 4) | (src[1] >> 4)];
-            *dst++ = YMO_BASE64_TABLE[(src[1] & 0x0f) << 2];
+            *udst++ = YMO_BASE64_TABLE[((usrc[0] & 0x03) << 4) | (usrc[1] >> 4)];
+            *udst++ = YMO_BASE64_TABLE[(usrc[1] & 0x0f) << 2];
         }
 
-        *dst++ = '=';
+        *udst++ = '=';
     }
-    *dst++ = '\0';
+    *udst++ = '\0';
     return YMO_OKAY;
 }
 
 
-char* ymo_base64_encoded(const unsigned char* src, size_t len)
+char* ymo_base64_encoded(const char* src, size_t len)
 {
     char* dst = YMO_ALLOC( (4 * (len+2)) / 3);
     if( dst ) {
