@@ -87,7 +87,7 @@ static ymo_status_t ws_echo_cb(
 static ymo_status_t send_ws_close(ymo_ws_session_t* session, uint16_t reason);
 
 
-static ssize_t ws_err_close(
+static void ws_err_close(
         const char* cause,         /* <-- TEMP! Don't dig it... */
         ymo_status_t err_val,
         ymo_ws_session_t* session,
@@ -293,9 +293,10 @@ ws_parse_entry:
                 goto ws_parse_complete;
                 break;
             default:
-                return ws_err_close(
+                ws_err_close(
                         "Unknown parser state",
                         EBADMSG, session, 1002);
+                return len_in;
                 break;
         }
 
@@ -305,9 +306,8 @@ ws_parse_entry:
             PROTO_WS_TRACE("%i bytes parsed (remain=%lu)", (int)n, len);
         } else {
             uint16_t reason = reason_from_errno(errno);
-            return ws_err_close(
-                    "Parser error",
-                    errno, session, reason);
+            ws_err_close("Parser error", errno, session, reason);
+            return len_in;
         }
     } while( len );
 
@@ -351,9 +351,10 @@ ws_parse_complete:
                     break;
 
                 default:
-                    return ws_err_close(
+                    ws_err_close(
                             "Unknown op code",
                             EINVAL, session, 1002);
+                    return len_in;
                     break;
             }
 
@@ -366,9 +367,10 @@ ws_parse_complete:
                 session->frame_in.buffer = buffer;
                 session->frame_in.buf_len = buf_len;
             } else {
-                return ws_err_close(
+                ws_err_close(
                         "Callback returned an error",
                         cb_status, session, 1002);
+                return len_in;
             }
         }
     }
@@ -621,7 +623,7 @@ static ymo_status_t send_ws_close(ymo_ws_session_t* session, uint16_t reason)
 }
 
 
-static ssize_t ws_err_close(
+static void ws_err_close(
         const char* cause,         /* <-- TEMP! Don't dig it... */
         ymo_status_t err_val,
         ymo_ws_session_t* session,
@@ -635,11 +637,7 @@ static ssize_t ws_err_close(
         send_ws_close(session, reason);
     }
 
-    /* HACK: Since we're closing at the WS layer, we
-     * set errno = EAGAIN and return -1 to cause
-     * further reads...
-     */
-    return YMO_ERROR_SSIZE_T(EAGAIN);
+    return;
 }
 
 
@@ -714,8 +712,9 @@ static ssize_t handle_client_close(
                     YMO_WS_OP_CLOSE, reason);
 
             if( !is_reason_valid(reason) ) {
-                return ws_err_close("Invalid reason code on close",
+                ws_err_close("Invalid reason code on close",
                         EBADMSG, session, 1002);
+                return len;
             }
         } else {
             PROTO_WS_TRACE(

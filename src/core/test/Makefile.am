@@ -42,12 +42,14 @@ AM_DEFAULT_SOURCE_EXT=.c
 check_PROGRAMS=\
 	test_assert \
 	test_basic \
+	test_list \
 	test_util \
 	test_trie
 
 TESTS=\
 	test_assert \
 	test_basic \
+	test_list \
 	test_util \
 	test_trie
 

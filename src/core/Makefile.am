@@ -70,6 +70,7 @@ libyimmo_la_SOURCES=\
 	ymo_trie.c \
 	ymo_proto.c \
 	ymo_blalloc.c \
+	ymo_list.c \
 	ymo_queue.c \
 	yimmo.c
 

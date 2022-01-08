@@ -155,11 +155,19 @@ static ssize_t make_request(const char* r_data)
     /* Create a client socket/connection: */
     ymo_test_conn_t* test_conn = test_conn_create(test_server);
     if( !test_conn ) {
+        ymo_log_fatal(
+                "Unable to initialize test connection: %s",
+                strerror(errno));
         return -1;
     }
 
     ymo_http_session_t* session = ymo_proto_http_conn_init(
             test_server->proto_data, test_conn->conn);
+
+    if( !session ) {
+        ymo_log_fatal(
+                "Unable to init session: %s", strerror(errno));
+    }
     test_conn->conn->proto_data = session;
 
     /* We'll test the parser by instantiating a protocol object
@@ -184,13 +192,13 @@ static ssize_t make_request(const char* r_data)
                 test_conn->fd_read, r_info.response_data,
                 sizeof(r_info.response_data));
     } else {
-        ymo_log_debug("Not writing due to: %s", strerror(r_val));
+        ymo_log_warning("Not writing due to: %s", strerror(r_val));
     }
 
     /* Free the test protocol and return: */
     ymo_proto_http_conn_cleanup(
             test_server->proto_data, test_conn->conn, session);
-    ymo_conn_free(test_conn->conn);
+    test_conn_free(test_conn);
     YMO_FREE(test_conn);
     return r_val;
 }

@@ -30,21 +30,19 @@
  * =======
  */
 
-/*==================*
- *===-- Types: --===*
- *==================*/
+/**---------------------------------------------------------------
+ * Types
+ *---------------------------------------------------------------*/
 
 typedef int (*ymo_queue_cmp_fn)(void* l, void* r);
 
-/** .. c:type: ymo_queue_t
- *
+/**
  * Generic queue datastructure.
  */
 typedef struct ymo_queue ymo_queue_t;
 
 
-/** .. c:type: ymo_queue_node_t
- *
+/**
  * A queue node.
  */
 typedef struct ymo_queue_node ymo_queue_node_t;
@@ -66,9 +64,11 @@ struct ymo_queue_node {
 };
 
 
-/*======================*
- *===-- Functions: --===*
- *======================*/
+
+/**---------------------------------------------------------------
+ * Functions
+ *---------------------------------------------------------------*/
+
 /** Allocate an initialize a new ymo queue. */
 ymo_queue_t* ymo_queue_create(void);
 

@@ -85,11 +85,7 @@ struct ymo_http_exchange {
             char*              hdr_value;
             ymo_http_hdr_id_t  h_id;
         };
-        struct {
-            char*   chunk_current;
-            char    chunk_hdr[6];
-            size_t  body_remain;
-        };
+        size_t  body_remain;
     };
 
     http_state_t  state;

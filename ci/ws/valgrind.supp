@@ -1,0 +1,24 @@
+# Suppress leak checks for bash, valgrind, and libev:
+{
+   <no_leak_valgrind_bash_libev>
+   Memcheck:Leak
+   ...
+   obj:/usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so
+   ...
+}
+# Suppress conditional initialization checks for bash, valgrind, and libev:
+{
+   <no_cond_valgrind_bash_libev>
+   Memcheck:Cond
+   ...
+   obj:/usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so
+   ...
+}
+# Suppress...Addr8...checks for bash, valgrind, and libev:
+{
+   <no_addr8_valgrind_bash_libev>
+   Memcheck:Addr8
+   ...
+   obj:/usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so
+   ...
+}

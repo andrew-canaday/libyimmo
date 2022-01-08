@@ -32,6 +32,7 @@ docs-local:
 		@top_srcdir@/include/ymo_blalloc.h \
 		@top_srcdir@/include/ymo_log.h \
 		@top_srcdir@/include/ymo_queue.h \
+		@top_srcdir@/include/ymo_list.h \
 		@top_srcdir@/include/ymo_util.h
 	$(C2SPHINX) \
 		-s \

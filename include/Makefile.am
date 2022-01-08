@@ -30,6 +30,7 @@ yimmo_HEADERS=\
 	ymo_attrs.h \
 	ymo_blalloc.h \
 	ymo_env.h \
+	ymo_list.h \
 	ymo_log.h \
 	ymo_queue.h \
 	ymo_util.h

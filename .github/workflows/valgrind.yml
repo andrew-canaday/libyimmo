@@ -1,0 +1,104 @@
+name: Leak Checks
+on:
+  push:
+    branches:
+      - not-a-branch
+jobs:
+  leak_checks:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    env:
+      LD_LIBRARY_PATH: /usr/local/lib
+    steps:
+      #------------------------------------
+      # Setup:
+      #------------------------------------
+      - name: Set up base system
+        run: |
+          sudo apt update
+          sudo apt-get -qq install -y \
+            libev-dev \
+            apache2-utils \
+            valgrind
+          mkdir -p ./build/bsat
+          mkdir -p ./build/yimmo
+
+
+      #------------------------------------
+      # Dependencies:
+      #------------------------------------
+      - name: Checkout libbsat
+        uses: actions/checkout@v2
+        with:
+          repository: 'andrew-canaday/libbsat'
+          path: 'libbsat'
+
+      - name: Generate BSAT Configuration
+        run: ./autogen.sh
+        working-directory: ./libbsat
+
+      - name: Install libbsat
+        run: |
+          ../../libbsat/configure \
+            --enable-silent-rules \
+            --silent
+          sudo make install
+          sudo ldconfig -v || echo "FYI: ldconfig failed"
+        working-directory: ./build/bsat
+
+
+      #--------------------------------------------------------------------
+      # Build libyimmo:
+      #--------------------------------------------------------------------
+      - name: Checkout libyimmo
+        uses: actions/checkout@v2
+        with:
+          repository: ${{ github.repository }}
+          path: 'libyimmo'
+
+      - name: Generate Configuration
+        run: ./autogen.sh
+        working-directory: ./libyimmo
+
+      - name: Configure
+        run: |
+          ../../libyimmo/configure \
+          --enable-maintainer-debug \
+          --enable-examples \
+          --enable-wsgi \
+          --enable-silent-rules \
+          CFLAGS=-fdiagnostics-color=always
+        working-directory: ./build/yimmo
+
+      - name: Install
+        run: |
+          sudo make install
+        working-directory: ./build/yimmo
+
+
+      #--------------------------------------------------------------------
+      # Valgrind leak check:
+      #--------------------------------------------------------------------
+      - name: valgrind_leak_check
+        run: |
+          export YIMMO_CI_PIDFILE=${PWD}/ws-echo.pid
+          export YIMMO_LOG_LEVEL=WARNING
+
+          valgrind \
+              --trace-children=yes \
+              --track-origins=yes \
+              --leak-check=full \
+              --show-leak-kinds=all \
+              --suppressions=../../libyimmo/ci/ws/valgrind.supp \
+              ./ci/ws/yimmo-ws-echo >./valgrind.out 2>&1
+
+          ../../libyimmo/ci/ws/autobahn-local.sh >/dev/null 2>&1
+
+          kill -s INT $( cat ./ws-echo.pid )
+
+          cat ./valgrind.out
+        working-directory: ./build/yimmo
+
+

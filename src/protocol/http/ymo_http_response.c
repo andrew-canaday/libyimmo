@@ -329,7 +329,7 @@ int ymo_http_response_finished(const ymo_http_response_t* response)
 static int should_buffer_body(ymo_http_response_t* response)
 {
     const char* app_hdr_cl = ymo_http_hdr_table_get_id(
-            &response->headers, HDR_ID_CONTENT_LENGTH);
+            &response->headers, YMO_HTTP_HID_CONTENT_LENGTH);
 
     /* If the app set the content length, we don't need to buffer: */
     if( app_hdr_cl ) {
@@ -352,7 +352,7 @@ static int should_buffer_body(ymo_http_response_t* response)
 #ifdef USE_PRECOMPUTE
         ymo_http_hdr_table_insert_precompute(
                 &response->headers,
-                HDR_ID_CONTENT_LENGTH,
+                YMO_HTTP_HID_CONTENT_LENGTH,
                 "Content-Length",
                 sizeof("Content-Length")-1,
                 response->content_len_str);

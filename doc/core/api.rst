@@ -18,6 +18,7 @@ API documentation for libyimmo.
    ymo_blalloc_h
    ymo_log_h
    ymo_queue_h
+   ymo_list_h
    ymo_util_h
 
 

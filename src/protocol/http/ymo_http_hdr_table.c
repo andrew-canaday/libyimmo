@@ -238,9 +238,9 @@ ymo_http_hdr_id_t ymo_http_hdr_table_add(
 #if defined(YMO_HTTP_HDR_SET_COOKIE_HACK) && YMO_HTTP_HDR_SET_COOKIE_HACK
             /* HACK HACK HACK: This will break if the hash function is
              * overridden! */
-            if( current->h_id == HDR_ID_SET_COOKIE ) {
+            if( current->h_id == YMO_HTTP_HID_SET_COOKIE ) {
                 return table_insert_first(
-                        table, HDR_ID_SET_COOKIE, index,
+                        table, YMO_HTTP_HID_SET_COOKIE, index,
                         hdr_len, hdr, value);
             }
 #endif /* YMO_HTTP_HDR_SET_COOKIE_HACK */

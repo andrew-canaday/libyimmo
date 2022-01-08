@@ -134,11 +134,13 @@ const char* ymo_tap_indent(const char* fmt, ...)
     do { \
         const char* msg = ymo_tap_indent(fmt, __VA_ARGS__); \
         fprintf(YMO_TAP_STREAM_OUT, \
-        "not ok %zu - assertion failed!\n" \
-        "  assertion: %s\n" \
-        "  location:  %s:%s:%i\n", \
-        tap_test_num, msg, \
-        YMO_SOURCE, __func__, __LINE__); \
+            "not ok %zu - assertion failed!\n" \
+            "  location:  %s:%s:%i\n" \
+            "  assertion: %s\n\n", \
+        tap_test_num, \
+        YMO_SOURCE, __func__, __LINE__, \
+        msg \
+        ); \
     } while( 0 ); \
     return YMO_TAP_STATUS_FAIL
 

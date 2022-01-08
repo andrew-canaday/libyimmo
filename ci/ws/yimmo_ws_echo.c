@@ -132,11 +132,49 @@ static void echo_sig_handler(struct ev_loop* loop, ev_signal* w, int w_sig)
 /*----------------------------------------------------
  * Entrypoint:
  *----------------------------------------------------*/
+
+/* HACK: go into the background (shell-style) if
+ *       we're expected to write a pid file.
+ */
+static void shell_bg(void)
+{
+    char* pidfile_path = getenv("YIMMO_CI_PIDFILE");
+    if( !pidfile_path ) {
+        return;
+    }
+
+    setpgid(0,0);
+
+    pid_t child_id = fork();
+    if( child_id ) {
+        FILE* pidfile = fopen(pidfile_path, "w");
+        if( !pidfile ) {
+            fprintf(stderr,
+                    "Unable to go into shell bg mode: %s",
+                    strerror(errno));
+            fflush(stderr);
+            exit(1);
+        }
+
+        fprintf(pidfile, "%i", (int)child_id);
+        fclose(pidfile);
+        exit(0);
+    }
+
+    /* In the child, disconnect from the shell's process group
+     * to effectively emulate a '&' invocation:
+     */
+    setpgid(0,0);
+    return;
+}
+
+
 int main(int argc, char** argv)
 {
     e_name = basename(argv[0]);
 
     OUT_MSG("\n\n----- Yimmo WS Echo Server -----");
+    shell_bg();
 
     struct ev_loop* loop = ev_default_loop(0);
     ymo_log_init();

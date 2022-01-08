@@ -152,4 +152,12 @@ static ymo_test_conn_t* test_conn_create(ymo_test_server_t* test_server)
 }
 
 
+static void test_conn_free(ymo_test_conn_t* test_conn)
+{
+    close(test_conn->fd_send);
+    close(test_conn->fd_read);
+    ymo_conn_free(test_conn->conn);
+}
+
+
 #endif /* YMO_PROTO_TEST_H */

@@ -25,3 +25,7 @@
 .. |X| raw:: html
 
    ❎
+
+.. |w| raw:: html
+
+   🚧

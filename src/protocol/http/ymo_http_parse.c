@@ -58,7 +58,6 @@
 
 #define HTTP_PARSE_STATE_NAME(x) ymo_http_state_names[x]
 
-
 #else
 #define HTTP_PARSE_TRACE(fmt, ...)
 #define HTTP_PARSE_STATE_NAME(x)
@@ -68,6 +67,24 @@
 #define HACK_HTTP_V(c1, c2)  ((c1<<8)  | c2)
 #define HACK_HTTP_10         (('1'<<8) | '0')
 #define HACK_HTTP_11         (('1'<<8) | '1')
+
+/* Technically, this can be composed of any "tchars", but
+ * we stick to the conventions from the following:
+ * - https://datatracker.ietf.org/doc/html/rfc7231#section-4
+ * - https://www.iana.org/assignments/http-methods/http-methods.xhtml
+ */
+#define IS_HTTP_METHOD_TOKEN(c) ( \
+            (((uint8_t)c) >= 'A' && ((uint8_t)c) <= 'Z') || \
+            (((uint8_t)c) == '-') \
+        )
+
+
+#define IS_HTTP_HDR_FIELD_TOKEN(c) ( \
+            (((uint8_t)c) >= '0' && ((uint8_t)c) <= '9') || \
+            (((uint8_t)c) >= 'A' && ((uint8_t)c) <= 'Z') || \
+            (((uint8_t)c) >= 'a' && ((uint8_t)c) <= 'z') || \
+            (((uint8_t)c) == '-') \
+        )
 
 
 /*---------------------------------------------------------------*
@@ -135,7 +152,6 @@ static ymo_status_t check_request(
     return YMO_OKAY;
 
 bail_malformed_http_status:
-    /* TODO: HTTP 505 right here */
     ymo_log_debug("Malformed HTTP version string: \"%s\" (%zu)",
             exchange->request.version, version_len);
     return EINVAL;
@@ -160,9 +176,14 @@ static ssize_t parse_http_header_name(
         if( c != ':' ) {
             /* When it's not ':', most of the time it's not '\r'. */
             if( c != '\r' ) {
-                exchange->h_id = YMO_HDR_HASH_CH(exchange->h_id, c);
-                *(buff_wr++) = c;
-                --remain;
+                if( IS_HTTP_HDR_FIELD_TOKEN(c) ) {
+                    exchange->h_id = YMO_HDR_HASH_CH(exchange->h_id, c);
+                    *(buff_wr++) = c;
+                    --remain;
+                } else {
+                    HTTP_PARSE_TRACE("Got bad header character: 0x%02x", (int)c);
+                    return YMO_ERROR_SSIZE_T(EBADMSG);
+                }
             } else {
                 /* If we see CR, we're done with headers.*/
                 buff_rd += parser_saw_cr(exchange, HTTP_STATE_HEADERS_COMPLETE);
@@ -206,7 +227,7 @@ static void http_header_got_value(
             hdr_value);
 
     switch( exchange->h_id ) {
-        case HDR_ID_CONNECTION:
+        case YMO_HTTP_HID_CONNECTION:
             /* 1.1: default to keep-alive unless "close": */
             if( exchange->request.flags & YMO_HTTP_FLAG_VERSION_1_1 ) {
                 /* TODO: we know the lengths of these. Use
@@ -232,7 +253,7 @@ static void http_header_got_value(
                 }
             }
             break;
-        case HDR_ID_CONTENT_LENGTH:
+        case YMO_HTTP_HID_CONTENT_LENGTH:
         {
             long content_length;
             char* end_ptr;
@@ -244,15 +265,15 @@ static void http_header_got_value(
             }
         }
         break;
-        case HDR_ID_EXPECT:
+        case YMO_HTTP_HID_EXPECT:
             if( !ymo_strcasecmp(hdr_value, value_len, "100-continue", 12) ) {
                 exchange->request.flags |= YMO_HTTP_FLAG_EXPECT;
             }
             break;
-        case HDR_ID_UPGRADE:
+        case YMO_HTTP_HID_UPGRADE:
             exchange->request.flags |= YMO_HTTP_FLAG_UPGRADE;
             break;
-        case HDR_ID_TRANSFER_ENCODING:
+        case YMO_HTTP_HID_TRANSFER_ENCODING:
             if( !ymo_strcasecmp(hdr_value, value_len, "chunked", 7) ) {
                 exchange->request.flags |= YMO_HTTP_REQUEST_CHUNKED;
             }
@@ -334,12 +355,7 @@ ssize_t ymo_parse_http_request_line(
 
         switch( state ) {
             case HTTP_STATE_REQUEST_METHOD:
-                /* Technically, this can be composed of any "tchars", but
-                 * we stick to the conventions from the following:
-                 * - https://datatracker.ietf.org/doc/html/rfc7231#section-4
-                 * - https://www.iana.org/assignments/http-methods/http-methods.xhtml
-                 */
-                if( (c >= 'A' && c <= 'Z') || c == '-' ) {
+                if( IS_HTTP_METHOD_TOKEN(c) ) {
                     break;
                 } else {
                     if( c == ' ' ) {
@@ -582,22 +598,11 @@ ssize_t ymo_parse_http_body(
         switch( exchange->state ) {
             case HTTP_STATE_BODY_CHUNK_HEADER:
                 do {
-                    switch( *current ) {
+                    char c = *current++;
+                    switch( c ) {
                         case '\r':
-                            ++current;
-                            --len;
-                            *exchange->chunk_current++ = '\0';
                             break;
                         case '\n':
-                            ++current;
-                            --len;
-                            exchange->body_remain =
-                                (size_t)strtol(exchange->chunk_hdr, NULL, 16);
-
-                            HTTP_PARSE_TRACE("Got chunk header: %s (%zu)",
-                                    exchange->chunk_hdr, exchange->body_remain);
-                            exchange->chunk_current = exchange->chunk_hdr;
-
                             if( exchange->body_remain ) {
                                 exchange->state = HTTP_STATE_BODY;
                                 exchange->next_state = HTTP_STATE_BODY_CHUNK_TRAILER;
@@ -611,12 +616,12 @@ ssize_t ymo_parse_http_body(
                             goto body_hdr_done;
                             break;
                         default:
-                            *exchange->chunk_current++ = *current;
-                            ++current;
-                            --len;
+                            exchange->body_remain =
+                                (exchange->body_remain << 4)
+                                | (c & 0xF) + (c >> 6) | ((c >> 3) & 0x8);
                             break;
                     }
-                } while( len );
+                } while( --len );
 body_hdr_done:
                 break;
             case HTTP_STATE_BODY:

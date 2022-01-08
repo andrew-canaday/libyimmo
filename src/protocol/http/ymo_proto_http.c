@@ -285,7 +285,7 @@ static ymo_status_t ymo_http_handler(
     if( exchange->request.flags & YMO_HTTP_FLAG_UPGRADE ) {
         const char* hdr_upgrade = NULL;
         hdr_upgrade = ymo_http_hdr_table_get_id(
-                &exchange->request.headers, HDR_ID_UPGRADE);
+                &exchange->request.headers, YMO_HTTP_HID_UPGRADE);
         HTTP_PROTO_TRACE("Got upgrade exchange: \"%s\"", hdr_upgrade);
 
         /* Check for upgrade handlers: */
@@ -607,7 +607,7 @@ http_headers_complete:
                 }
 
             } else if( exchange->request.flags & YMO_HTTP_REQUEST_CHUNKED ) {
-                exchange->chunk_current = exchange->chunk_hdr;
+                exchange->body_remain = 0;
                 exchange->state = exchange->next_state = HTTP_STATE_BODY;
                 exchange->state = exchange->state = HTTP_STATE_BODY_CHUNK_HEADER;
 
