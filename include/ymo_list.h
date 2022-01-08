@@ -109,7 +109,8 @@ static inline ymo_list_head_t* ymo_list_prev(ymo_list_head_t* head)
 
 /** Insert a list into a structure, using a specific name.
  *
- * .. code-block::
+ * .. code-block:: c
+ *    :caption: Example
  *
  *    typedef struct my_type {
  *        YMO_LIST_HEAD_M(head);
@@ -130,7 +131,8 @@ static inline ymo_list_head_t* ymo_list_prev(ymo_list_head_t* head)
 
 /** Initialize a list head object.
  *
- * .. code-block::
+ * .. code-block:: c
+ *    :caption: Example
  *
  *    my_type_t my_obj;
  *    YMO_LIST_INIT_M(&my_obj, head);
@@ -150,7 +152,8 @@ static inline ymo_list_head_t* ymo_list_prev(ymo_list_head_t* head)
 
 /** Append an item to a list.
  *
- * .. code-block::
+ * .. code-block:: c
+ *    :caption: Example
  *
  *    my_type_t a;
  *    my_type_t b;
