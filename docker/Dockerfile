@@ -96,6 +96,7 @@ RUN cd /opt/build/yimmo \
 		YMO_ALLOC_ALLOW_ALIAS=0 \
 		YMO_HDR_HASH_ALLOW_WEAK=0 \
 		YMO_HTTP_RECV_BUF_SIZE=4096 \
+		YMO_HTTP_MAX_BODY=0x1000000 \
 		--silent \
 		--enable-wsgi \
 		--enable-silent-rules \
