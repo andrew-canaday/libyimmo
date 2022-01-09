@@ -75,9 +75,12 @@ static ymo_status_t buffer_body_cb(
          * request->body_remain).
          */
         request->content_length = 0;
-        /* HACK: make the limit configurable! */
         if( request->content_length <= YMO_HTTP_MAX_BODY ) {
-            request->body = YMO_ALLOC(YMO_HTTP_MAX_BODY);
+            if( request->content_length ) {
+                request->body = YMO_ALLOC(request->content_length);
+            } else {
+                request->body = YMO_ALLOC(YMO_HTTP_MAX_BODY);
+            }
         }
 
         if( !request->body ) {
