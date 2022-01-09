@@ -70,15 +70,12 @@ static ymo_status_t buffer_body_cb(
         void* user)
 {
     if( !request->body ) {
-        /* If we're buffering the body, reset content length to zero here
-         * and increment it as we accumulate (the parser is tracking using
-         * request->body_remain).
-         */
-        request->content_length = 0;
         if( request->content_length <= YMO_HTTP_MAX_BODY ) {
             if( request->content_length ) {
+                HTTP_PROTO_TRACE("Allocating %zu bytes for request", request->content_length);
                 request->body = YMO_ALLOC(request->content_length);
             } else {
+                HTTP_PROTO_TRACE("Allocating %zu bytes for request", YMO_HTTP_MAX_BODY);
                 request->body = YMO_ALLOC(YMO_HTTP_MAX_BODY);
             }
         }
@@ -89,6 +86,12 @@ static ymo_status_t buffer_body_cb(
                     YMO_HTTP_MAX_BODY);
             return ENOMEM;
         }
+
+        /* If we're buffering the body, reset content length to zero here
+         * and increment it as we accumulate (the parser is tracking using
+         * request->body_remain).
+         */
+        request->content_length = 0;
     }
 
     size_t buf_remain = YMO_HTTP_MAX_BODY - request->body_received;
