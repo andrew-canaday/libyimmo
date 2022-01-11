@@ -75,3 +75,6 @@ local_dev
 # TAP test files:
 *.err
 *.trs
+
+# OS X Garbage
+.DS_Store

@@ -460,6 +460,7 @@ ymo_http_upgrade_status_t ymo_ws_upgrade_cb(
     /* Error 400, on invalid header data (RFC6455 4.2.1.): */
     if( strcasecmp(request->method, "get")
 #ifdef TODO_REQUEST_FLAGS_NOT_EXPOSED
+        /* TODO: the request flags aren't publicly exposed... */
         || !(request->flags & YMO_HTTP_FLAG_VERSION_1_1)
 #endif
         || (!host)
@@ -601,7 +602,6 @@ static ymo_status_t ws_echo_cb(
 }
 
 
-/* TODO: once the close packet is sent...we need to close. */
 static ymo_status_t send_ws_close(ymo_ws_session_t* session, uint16_t reason)
 {
     char data[2];

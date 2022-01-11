@@ -277,7 +277,6 @@ struct ev_loop* ymo_server_loop(ymo_server_t* server)
 }
 
 
-/* TODO: sendmsg on accept instead of accept. */
 ymo_status_t ymo_server_stop_graceful(ymo_server_t* server)
 {
     int my_pid = (int)getpid();
@@ -335,8 +334,7 @@ void ymo_server_free(ymo_server_t* server)
 }
 
 
-/*------------------------------------------*
- * TODO: move to ymo_proto.c or ymo_conn.c: */
+/* TODO: move to ymo_proto.c or ymo_conn.c: */
 ymo_status_t ymo_conn_transition_proto(
         ymo_conn_t* conn, ymo_proto_t* proto_new)
 {
@@ -607,7 +605,6 @@ static void ymo_conn_accept(ymo_server_t* server, int client_fd)
 
     /* Issue user-level connection initialization callback.
      * TODO: Remove user-level CONNECTION data? (i.e. use proto instead?)
-     * TODO: Otherwise...double check your API. Can they swap it?
      */
     if( server->config.user_init ) {
         conn->user = server->config.user_init(server, conn);
@@ -662,12 +659,16 @@ static inline void close_and_free_connection(
 {
 #if YMO_ENABLE_TLS
     /* If the connection had SSL, let's clean that up now: */
-    if( conn->ssl && conn->state == YMO_CONN_TLS_ESTABLISHED ) {
-        /* TODO: check for error? */
-        SERVER_TRACE("Cleaning up SSL for %i", conn->fd);
-        SSL_shutdown(conn->ssl);
+    if( conn->ssl ) {
+        if ( conn->state == YMO_CONN_TLS_ESTABLISHED ) {
+            SERVER_TRACE("Cleaning up SSL for %i", conn->fd);
+            SSL_shutdown(conn->ssl);
+        }
+
         SSL_free(conn->ssl);
+        conn->ssl = NULL;
     }
+
 #endif /* YMO_ENABLE_TLS */
 
     /* If we're mid shutdown sequence, wait on another read sec: */

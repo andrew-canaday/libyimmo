@@ -25,7 +25,9 @@ jobs:
       - name: Log in to GHCR
         run: |
           echo ${{ secrets.GITHUB_TOKEN }} \
-            | docker login ghcr.io -u "${{ github.repository_owner }}" --password-stdin
+            | docker login ghcr.io \
+              -u "${{ github.repository_owner }}" \
+              --password-stdin
 
       - name: Pull test image, if available
         continue-on-error: true
@@ -70,14 +72,15 @@ jobs:
       - name: Log in to GHCR
         run: |
           echo ${{ secrets.GITHUB_TOKEN }} \
-            | docker login ghcr.io -u "${{ github.repository_owner }}" --password-stdin
+            | docker login ghcr.io \
+              -u "${{ github.repository_owner }}" \
+              --password-stdin
 
       - name: Set up base system
         run: |
           sudo apt update
           sudo apt-get -qq install -y \
-            apache2-utils \
-            jq
+            apache2-utils
 
           # Sorry. Very hacky:
           sudo pip3 install -r ./ci/http/requirements.txt
@@ -87,7 +90,7 @@ jobs:
         run: |
           docker run \
             --detach \
-            --name yimmo-http-server \
+            --name yimmo-wsgi-server \
             -e YIMMO_LOG_LEVEL=WARNING \
             -e YIMMO_WSGI_NO_PROC=2 \
             -e YIMMO_WSGI_NO_THREADS=2 \
@@ -112,19 +115,11 @@ jobs:
           pytest -v --disable-warnings ./ci/http
         working-directory: ./libyimmo
 
-      - name: Run Apache Bench
-        run: |
-          # Hit it with some load (hacky / not a load test!):
-          YMO_NO_CLIENTS=5000 \
-          YMO_TEST_URL='http://127.0.0.1:8081/echo/headers' \
-          ./util/clients/run-ab.sh
-        working-directory: ./libyimmo
-
       - name: Stop HTTP Server
         run: |
           # Shut down the test server:
-          docker stop yimmo-http-server
-          docker rm yimmo-http-server
+          docker stop yimmo-wsgi-server
+          docker rm yimmo-wsgi-server
         working-directory: ./libyimmo
 
 
@@ -153,7 +148,9 @@ jobs:
       - name: Log in to GHCR
         run: |
           echo ${{ secrets.GITHUB_TOKEN }} \
-            | docker login ghcr.io -u "${{ github.repository_owner }}" --password-stdin
+            | docker login ghcr.io \
+              -u "${{ github.repository_owner }}" \
+              --password-stdin
 
       - name: Set up base system
         run: |
@@ -172,8 +169,149 @@ jobs:
         working-directory: ./libyimmo/ci/ws
 
       - name: Autobahn Results
-        #continue-on-error: true
         run: |
           ./autobahn-json-summary.sh ./reports/servers/index.json
         working-directory: ./libyimmo/ci/ws
+
+
+  #=========================================================================
+  # K6 pseudo-load test:
+  #-------------------------------------------------------------------------
+  run_k6_tests:
+    runs-on: ubuntu-latest
+    needs: create_and_push_ci_image
+    permissions:
+      contents: read
+      packages: read
+    defaults:
+      run:
+        shell: bash
+    env:
+      LD_LIBRARY_PATH: /usr/local/lib
+      IMAGE_NAME: "ghcr.io/${{ github.repository }}-ci:${{ github.ref_name }}"
+    steps:
+      - name: Checkout libyimmo
+        uses: actions/checkout@v2
+        with:
+          repository: ${{ github.repository }}
+          path: 'libyimmo'
+
+      - name: Log in to GHCR
+        run: |
+          echo ${{ secrets.GITHUB_TOKEN }} \
+            | docker login ghcr.io \
+              -u "${{ github.repository_owner }}" \
+              --password-stdin
+
+      - name: Set up base system
+        run: |
+          sudo apt-key adv \
+            --keyserver hkp://keyserver.ubuntu.com:80 \
+            --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+          echo "deb https://dl.k6.io/deb stable main" \
+            | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update
+          sudo apt-get install k6
+        working-directory: ./libyimmo
+
+      - name: Start WS Server
+        run: |
+          docker run \
+            --detach \
+            --name yimmo-ws-server \
+            --entrypoint /opt/build/yimmo/ci/ws/yimmo-ws-echo \
+            -e YIMMO_LOG_LEVEL=WARNING \
+            -p 8081:8081 \
+            $IMAGE_NAME
+
+          # HACK: wait for the server to come up:
+          ./util/wait-for-svc.sh \
+            '127.0.0.1' 8081 'status' \
+            30 1
+        working-directory: ./libyimmo
+
+      - name: Run K6 Tests (experimental)
+        timeout-minutes: 3
+        continue-on-error: true
+        run: |
+          k6 run -q ./k6-ws-client.js
+        working-directory: ./libyimmo/ci/ws
+
+      - name: Stop WS Server
+        run: |
+          # Shut down the test server:
+          docker stop yimmo-ws-server
+          docker rm yimmo-ws-server
+        working-directory: ./libyimmo
+
+
+  #=========================================================================
+  # Apache Bench pseudo-load test:
+  #-------------------------------------------------------------------------
+  run_apache_bench_tests:
+    runs-on: ubuntu-latest
+    needs: create_and_push_ci_image
+    permissions:
+      contents: read
+      packages: read
+    defaults:
+      run:
+        shell: bash
+    env:
+      LD_LIBRARY_PATH: /usr/local/lib
+      IMAGE_NAME: "ghcr.io/${{ github.repository }}-ci:${{ github.ref_name }}"
+    steps:
+      - name: Checkout libyimmo
+        uses: actions/checkout@v2
+        with:
+          repository: ${{ github.repository }}
+          path: 'libyimmo'
+
+      - name: Log in to GHCR
+        run: |
+          echo ${{ secrets.GITHUB_TOKEN }} \
+            | docker login ghcr.io \
+              -u "${{ github.repository_owner }}" \
+              --password-stdin
+
+      - name: Set up base system
+        run: |
+          sudo apt update
+          sudo apt-get -qq install -y \
+            apache2-utils
+          sudo apt update
+          sudo snap install k6
+        working-directory: ./libyimmo
+
+      - name: Start HTTP Server
+        run: |
+          docker run \
+            --detach \
+            --name yimmo-http-server \
+            --entrypoint /opt/build/yimmo/examples/yimmo-example-http \
+            -e YIMMO_LOG_LEVEL=WARNING \
+            -p 8081:8081 \
+            $IMAGE_NAME
+
+          # HACK: wait for the server to come up:
+          ./util/wait-for-svc.sh \
+            '127.0.0.1' 8081 'status' \
+            30 1
+        working-directory: ./libyimmo
+
+      - name: Run Apache Bench
+        run: |
+          # Hit it with some load (hacky / not a load test!):
+          YMO_NO_CLIENTS=5000 \
+          YMO_TEST_URL='http://127.0.0.1:8081/status' \
+          ./util/clients/run-ab.sh
+        working-directory: ./libyimmo
+
+      - name: Stop HTTP Server
+        run: |
+          # Shut down the test server:
+          docker stop yimmo-http-server
+          docker rm yimmo-http-server
+        working-directory: ./libyimmo
+
 

@@ -330,9 +330,13 @@ static int should_buffer_body(ymo_http_response_t* response)
 {
     const char* app_hdr_cl = ymo_http_hdr_table_get_id(
             &response->headers, YMO_HTTP_HID_CONTENT_LENGTH);
+    const char* app_hdr_te = ymo_http_hdr_table_get_id(
+            &response->headers, YMO_HTTP_HID_TRANSFER_ENCODING);
 
-    /* If the app set the content length, we don't need to buffer: */
-    if( app_hdr_cl ) {
+    /* If the app set the content length or is applying transfer encoding, we
+     * don't need to calculate the buffer or set either header:
+     */
+    if( app_hdr_cl || app_hdr_te ) {
         return 0;
     }
 
@@ -384,19 +388,18 @@ static int should_buffer_body(ymo_http_response_t* response)
 ymo_bucket_t* ymo_http_response_start(
         ymo_conn_t* conn, ymo_http_response_t* response)
 {
-    /* If we don't have an HTTP status, bail with invalid.
-     * TODO: this should HTTP 5xx something.
-     */
+    /* If we don't have an HTTP status, bail with invalid. */
     if( response->status_str[0] == '\0' || !response->status_len ) {
-        errno = EINVAL;
-        return NULL;
+        return YMO_ERROR_PTR(EINVAL);
     }
 
     if( should_buffer_body(response) ) {
         ymo_log_debug("Buffering body data before serialization on %p",
                 (void*)conn);
-        errno = YMO_OKAY;
-        return NULL;
+#if 0
+        return YMO_ERROR_PTR(YMO_WOULDBLOCK); /* tx enabled? */
+#endif
+        return YMO_ERROR_PTR(YMO_OKAY); /* tx disabled */
     }
 
     /* TODO: we can do better than this. */
@@ -423,12 +426,6 @@ ymo_bucket_t* ymo_http_response_start(
     (*insert++) = '\n';
     remain -= (11 + response->status_len);
 
-    /* Headers:
-     * TODO: ...it might be faster/cheaper just to make a bucket out of each,
-     *       despite the waste for ':' and CRLF — ELSE, maybe have a padded
-     *       bucket type with a header/trailer; ELSE, maybe store the ':' and
-     *       CRLF at the time of key insertion in the header table.
-     */
     const char* key;
     size_t key_len;
     const char* value;
@@ -498,8 +495,7 @@ serialize_nomem:
     if( response_buf ) {
         YMO_FREE(response_buf);
     }
-    errno = ENOMEM;
-    return NULL;
+    return YMO_ERROR_PTR(ENOMEM);
 }
 
 
@@ -510,10 +506,10 @@ ymo_bucket_t* ymo_http_response_body_get(
     static const char* chunk_term = "\r\n";
     ymo_bucket_t* bucket_out = NULL;
 
-    /* TODO: memory allocation/checking! ALSO: check for chunked support! */
+    /* TODO: memory allocation/checking! */
     /* If the response isn't done, we're using transfer encoding chunked: */
-    /* Move the body onto the outgoing buffer and set pointers to NULL. */
     if( response->body_head ) {
+        /* Move the body onto the outgoing bufer and set pointers to NULL. */
         int no_chars;
         if( response->flags & YMO_HTTP_RESPONSE_CHUNKED ) {
             ymo_log_trace("Chunked response for %p",

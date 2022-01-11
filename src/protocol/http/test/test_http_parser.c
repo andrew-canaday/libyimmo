@@ -165,7 +165,7 @@ static int test_400_on_bad_header_field(void)
     char r_data[512];
 
     /* TODO: why does it fail for c >= 0x7f!? */
-    for( uint8_t c=0; c < 0xff; c++)
+    for( uint8_t c = 0; c < 0xff; c++ )
     {
         /* TODO: (full disclosure: not catching these, at the moment) */
         if( c == '\0' || c == ':' ) {
@@ -203,6 +203,7 @@ static int test_400_on_bad_header_field(void)
     YMO_TAP_PASS(__func__);
 }
 
+
 #if 0
 static int test_400_on_header_field_trailing_space(void)
 {
@@ -214,6 +215,7 @@ static int test_400_on_header_field_trailing_space(void)
     ymo_assert_str_eq(r_info.response_data, TEST_HTTP_400);
     YMO_TAP_PASS(__func__);
 }
+
 
 static int test_400_on_missing_header_value(void)
 {
@@ -305,8 +307,6 @@ YMO_TAP_RUN(&setup_suite, &setup_test, &cleanup,
         YMO_TAP_TEST_FN(test_400_on_bad_version),
         YMO_TAP_TEST_FN(test_400_on_bad_uri),
         YMO_TAP_TEST_FN(test_400_on_bad_header_field),
-        /* YMO_TAP_TEST_FN(test_400_on_header_field_trailing_space), */
-        /* YMO_TAP_TEST_FN(test_400_on_missing_header_value), */
         YMO_TAP_TEST_FN(test_501_on_bad_upgrade),
         YMO_TAP_TEST_END()
         )

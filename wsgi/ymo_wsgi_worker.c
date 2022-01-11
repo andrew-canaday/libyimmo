@@ -266,8 +266,8 @@ static ymo_status_t ymo_wsgi_worker_issue_request(
     pClose = PyObject_GetAttr(r_val, pAttrClose);
     if( pClose ) {
         if( PyCallable_Check(pClose) ) {
-            Py_CLEAR(r_val); /* Reuse */
             YMO_WSGI_TRACE("WSGI: invoking close() on %p", (void*)r_val);
+            Py_CLEAR(r_val); /* Reuse */
 #if PY_VERSION_HEX >= 0x03090000
             r_val = PyObject_CallNoArgs(pClose);
 #else

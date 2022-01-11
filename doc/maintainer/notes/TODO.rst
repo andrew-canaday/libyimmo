@@ -411,6 +411,7 @@ WebSockets
 - |/| Write
 - |_| Extensions
     - |_| ``permessage-deflate``
+- |_| Implement (or use) a simple SHA1 lib so that WS can work without OpenSSL.
 
 MQTT
 ....

@@ -90,6 +90,8 @@ void ymo_http_exchange_reset(ymo_http_exchange_t* exchange)
     exchange->request.query = NULL;
     exchange->request.fragment = NULL;
     exchange->request.content_length = 0;
+    exchange->request.body_received = 0;
+    exchange->request.flags = 0;
     ymo_http_hdr_table_clear(&exchange->request.headers);
 
     if( exchange->request.ws ) {
@@ -99,12 +101,9 @@ void ymo_http_exchange_reset(ymo_http_exchange_t* exchange)
     /* ymo_http_exchange_t: */
     exchange->hdr_name = exchange->hdr_value = NULL;
     exchange->h_id = YMO_HTTP_HDR_HASH_INIT();
-    exchange->request.content_length = 0;
-    exchange->request.body_received = 0;
-    exchange->recv_current = exchange->recv_buf;
-    exchange->request.flags = 0;
     exchange->state = HTTP_STATE_CONNECTED;
     exchange->next_state = 0;
+    exchange->recv_current = exchange->recv_buf;
     exchange->remain = YMO_HTTP_RECV_BUF_SIZE;
     return;
 }

@@ -42,23 +42,11 @@
 #include "ymo_wsgi_session.h"
 #include "ymo_wsgi_proc.h"
 #include "ymo_wsgi_util.h"
+#include "ymo_wsgi_proc_main.h"
+#include "ymo_wsgi_proc_worker.h"
 
 
 /* TODO: tidy tidy tidy! */
-static void main_proc_init(ymo_wsgi_proc_t* w_proc);
-static int main_proc_teardown(ymo_wsgi_proc_t* w_proc);
-static int worker_proc_init(
-        PyThreadState** _py_ts_save, ymo_wsgi_proc_t* w_proc);
-static int worker_proc_teardown(
-        PyThreadState** _py_ts_save, ymo_wsgi_proc_t* w_proc);
-static void ymo_wsgi_main_pkill(
-        struct ev_loop* loop, ev_timer* w, int revents);
-static void ymo_wsgi_worker_tkill(
-        struct ev_loop* loop, ev_timer* w, int revents);
-static void ymo_wsgi_main_shutdown(
-        ymo_wsgi_proc_t* w_proc, int my_pid);
-static void ymo_wsgi_worker_shutdown(
-        ymo_wsgi_proc_t* w_proc, int my_pid);
 static void ymo_wsgi_sig_shutdown(
         ymo_wsgi_proc_t* w_proc, int w_sig);
 
@@ -67,10 +55,14 @@ static void ymo_wsgi_sig_shutdown(
  *---------------------------------*/
 pid_t ymo_wsgi_proc_fork_new(ymo_wsgi_proc_t* w_proc, int worker_id)
 {
+    /* OPENSSL_fork_prepare(); */
     pid_t child_id = fork();
     if( child_id ) {
+        /* OPENSSL_fork_parent(); */
         return child_id;
     }
+
+    /* OPENSSL_fork_child(); */
 
     /* Block SIGINT in child processes. */
     ymo_wsgi_signal_mask(SIGINT, SIG_BLOCK);
@@ -160,137 +152,6 @@ ymo_wsgi_worker_t* ymo_wsgi_proc_assign_worker(ymo_wsgi_proc_t* w_proc, size_t s
 }
 
 
-/*---------------------------------*
- *       Main Init/Shutdown:
- *---------------------------------*/
-static void ymo_wsgi_main_pkill(struct ev_loop* loop, ev_timer* w, int revents)
-{
-    int my_pid = (int)getpid();
-    ymo_log_notice("Main %i kill timer fired after %.3f seconds.",
-            my_pid, YMO_WSGI_PKILL_TIMEOUT);
-
-    ev_break(loop, EVBREAK_ALL);
-    if( w->data ) {
-        ymo_wsgi_proc_t* w_proc = w->data;
-        ymo_log_trace("Proc: %p", w->data);
-
-        for( int i = 0; i < w_proc->no_wsgi_proc; i++ ) {
-            ymo_log_notice(
-                    "%i sending SIGTERM to %i", my_pid, (int)w_proc->children[i]);
-            kill(w_proc->children[i], SIGKILL);
-        }
-    } else {
-        ymo_log_debug("Got %p proc. Bailing.", w->data);
-    }
-}
-
-
-static void main_proc_init(ymo_wsgi_proc_t* w_proc)
-{
-    /* Set up signal handlers: */
-    ev_signal_init(&(w_proc->sigint_watcher), ymo_wsgi_proc_sigint, SIGINT);
-    ev_signal_init(&(w_proc->sigchld_watcher), ymo_wsgi_proc_sigchld, SIGCHLD);
-    w_proc->sigint_watcher.data = w_proc;
-    w_proc->sigchld_watcher.data = w_proc;
-    ev_signal_start(w_proc->loop, &(w_proc->sigint_watcher));
-    ev_signal_start(w_proc->loop, &(w_proc->sigchld_watcher));
-    return;
-}
-
-
-static int main_proc_teardown(ymo_wsgi_proc_t* w_proc)
-{
-    ymo_log_notice("Main process waiting on children.");
-    int child_pid;
-    while( (child_pid = (int)waitpid(-1, 0, 0)) > 0 )
-    {
-        ymo_log_notice("Child %i shut down", child_pid);
-    }
-    ymo_log_notice("Main process shutting down.");
-    return 0;
-}
-
-
-/*---------------------------------*
- *      Worker Init/Shutdown:
- *---------------------------------*/
-static void ymo_wsgi_worker_tkill(struct ev_loop* loop, ev_timer* w, int revents)
-{
-    ymo_wsgi_proc_t* w_proc = w->data;
-    ymo_log_notice("Thread timer fired after %.3f seconds.",
-            YMO_WSGI_TKILL_TIMEOUT);
-    for( int thread_id = 0; thread_id < w_proc->no_wsgi_threads; thread_id++ ) {
-        ymo_log_notice("Cancelling worker thread %i/%i",
-                thread_id+1, w_proc->no_wsgi_threads);
-        pthread_cancel(w_proc->w_threads[thread_id].thread);
-        ymo_log_notice("Worker thread %i/%i cancelled.",
-                thread_id+1, w_proc->no_wsgi_threads);
-    }
-}
-
-
-static int worker_proc_init(
-        PyThreadState** _py_ts_save, ymo_wsgi_proc_t* w_proc)
-{
-#if YMO_WSGI_REUSEPORT
-    errno = 0;
-    w_proc->http_srv = ymo_wsgi_server_init(
-            w_proc->loop, w_proc->port, &w_proc);
-    if( !w_proc->http_srv ) {
-        ymo_log_fatal("Failed to create HTTP server: %s", strerror(errno));
-        return -1;
-    }
-#endif /* YMO_WSGI_REUSEPORT */
-
-    /* Initialize python interpretter and load w_proc->module: */
-    if( ymo_wsgi_init(w_proc) != YMO_OKAY ) {
-        return -1;
-    }
-
-    /* Save the current signal mask, then block SIGTERM and SIGINT: */
-    sigset_t proc_mask;
-    int r_val;
-    if( (r_val = ymo_wsgi_signal_get_mask(&proc_mask)) ) {
-        ymo_log_error("%i: error getting signal mask: %s",
-                (int)getpid(), strerror(r_val));
-    }
-    ymo_wsgi_signal_mask(SIGINT, SIG_BLOCK);
-    ymo_wsgi_signal_mask(SIGTERM, SIG_BLOCK);
-
-    /* TODO: it's a bit hairy asking for an array of workers here... */
-    /* Initialize the thread workers: */
-    w_proc->w_threads = ymo_wsgi_init_workers(
-            w_proc->no_wsgi_threads, w_proc->loop);
-
-    /* Restore the signal mask and start the server: */
-    ymo_wsgi_signal_set_mask(&proc_mask);
-    ymo_wsgi_server_start(w_proc->loop);
-    ymo_server_start(w_proc->http_srv, w_proc->loop);
-    *_py_ts_save = PyEval_SaveThread();
-    return 0;
-}
-
-
-static int worker_proc_teardown(
-        PyThreadState** _py_ts_save, ymo_wsgi_proc_t* w_proc)
-{
-    PyEval_RestoreThread(*_py_ts_save);
-
-    ymo_wsgi_stop_workers(w_proc->no_wsgi_threads, w_proc->w_threads);
-    for( int thread_id = 0; thread_id < w_proc->no_wsgi_threads; thread_id++ ) {
-        ymo_log_notice("Waiting on worker thread %i/%i",
-                thread_id+1, w_proc->no_wsgi_threads);
-        ymo_wsgi_worker_join(&(w_proc->w_threads[thread_id]));
-        ymo_log_notice("Worker thread %i/%i done",
-                thread_id+1, w_proc->no_wsgi_threads);
-    }
-    int rc = ymo_wsgi_shutdown();
-    ymo_server_free(w_proc->http_srv);
-
-    return rc;
-}
-
-
 ymo_status_t ymo_wsgi_stop_workers(int no_wsgi_threads, ymo_wsgi_worker_t* workers)
 {
     for( int thread_id = 0; thread_id < no_wsgi_threads; thread_id++ ) {
@@ -307,50 +168,6 @@ ymo_status_t ymo_wsgi_stop_workers(int no_wsgi_threads, ymo_wsgi_worker_t* worke
     }
 
     return YMO_OKAY;
-}
-
-
-static void ymo_wsgi_main_shutdown(ymo_wsgi_proc_t* w_proc, int my_pid)
-{
-    ymo_log_notice(
-            "%i: shutting down %i child processes",
-            my_pid, w_proc->no_wsgi_proc);
-    for( int i = 0; i < w_proc->no_wsgi_proc; i++ ) {
-        ymo_log_notice(
-                "%i sending SIGTERM to %i", my_pid, (int)w_proc->children[i]);
-        kill(w_proc->children[i], SIGTERM);
-    }
-
-    /* Start the kill timer: */
-    ev_timer_init(&(w_proc->pkill_timer), &ymo_wsgi_main_pkill,
-            YMO_WSGI_PKILL_TIMEOUT, 0.0);
-    ev_timer_start(w_proc->loop, &w_proc->pkill_timer);
-}
-
-
-static void ymo_wsgi_worker_shutdown(ymo_wsgi_proc_t* w_proc, int my_pid)
-{
-    /* Check to see if parent is dead. If so, something went wrong and
-     * the user is probably trying to terminate the workers.
-     * In this case, be polite to the user vs the clients.
-     */
-    if( 0 && waitpid(w_proc->ppid, 0, WNOHANG) <= 0 ) {
-        ymo_log_notice("%i: parent process (%i) is dead. Exiting NOW.",
-                my_pid, (int)w_proc->ppid);
-        ev_break(w_proc->loop, EVBREAK_ALL);
-        exit(0);
-    }
-
-    /* Otherwise, we'll try to shut down gracefully: */
-    ymo_log_notice("%i got SIGTERM. Starting shutdown.", my_pid);
-    ymo_server_stop_graceful(w_proc->http_srv);
-    ymo_wsgi_stop_workers(w_proc->no_wsgi_threads, w_proc->w_threads);
-
-    /* Start the kill timer: */
-    ev_timer_init(&(w_proc->tkill_timer), &ymo_wsgi_worker_tkill,
-            YMO_WSGI_TKILL_TIMEOUT, 0.0);
-    ev_timer_start(w_proc->loop, &w_proc->tkill_timer);
-    return;
 }
 
 

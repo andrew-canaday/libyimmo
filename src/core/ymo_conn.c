@@ -165,9 +165,6 @@ void ymo_conn_reset_idle_timeout(
 }
 
 
-/* TODO: (server internals) Should we just pass idle_toq as a param?
- * Is user code ever going to call this directly?
- */
 void ymo_conn_cancel_idle_timeout(ymo_conn_t* conn)
 {
     if( conn->toq ) {
@@ -183,7 +180,6 @@ static ymo_ev_io_toggle io_toggle[2] = {
 };
 
 
-/* TODO: (server internals) This can be done more concisely: */
 void ymo_conn_rx_enable(ymo_conn_t* conn, int flag)
 {
     CONN_TRACE("RX-->%i; State at invocation: %s (conn: %p, fd: %i)",
@@ -193,7 +189,6 @@ void ymo_conn_rx_enable(ymo_conn_t* conn, int flag)
 }
 
 
-/* TODO: (server internals) */
 void ymo_conn_tx_enable(ymo_conn_t* conn, int flag)
 {
     CONN_TRACE("TX-->%i; State at invocation: %s (conn: %p, fd: %i)",
@@ -282,7 +277,6 @@ ymo_status_t ymo_conn_shutdown(ymo_conn_t* conn)
     ymo_status_t rc = YMO_OKAY;
     switch( conn->state ) {
         case YMO_CONN_TLS_ESTABLISHED:
-        /* TODO: SSL_shutdown / SSL_free */
         /* fallthrough */
         case YMO_CONN_TLS_CLOSING:
         /* fallthrough */
@@ -330,7 +324,6 @@ ymo_conn_state_t ymo_conn_close(ymo_conn_t* conn, int clean)
 
     switch( conn->state ) {
         case YMO_CONN_TLS_ESTABLISHED:
-        /* TODO: SSL_shutdown / SSL_free */
         /* fallthrough */
         case YMO_CONN_TLS_CLOSING:
         /* fallthrough */

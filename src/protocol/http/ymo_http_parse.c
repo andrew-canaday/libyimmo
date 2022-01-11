@@ -74,16 +74,16 @@
  * - https://www.iana.org/assignments/http-methods/http-methods.xhtml
  */
 #define IS_HTTP_METHOD_TOKEN(c) ( \
-            (((uint8_t)c) >= 'A' && ((uint8_t)c) <= 'Z') || \
-            (((uint8_t)c) == '-') \
+        (((uint8_t)c) >= 'A' && ((uint8_t)c) <= 'Z') || \
+        (((uint8_t)c) == '-') \
         )
 
 
 #define IS_HTTP_HDR_FIELD_TOKEN(c) ( \
-            (((uint8_t)c) >= '0' && ((uint8_t)c) <= '9') || \
-            (((uint8_t)c) >= 'A' && ((uint8_t)c) <= 'Z') || \
-            (((uint8_t)c) >= 'a' && ((uint8_t)c) <= 'z') || \
-            (((uint8_t)c) == '-') \
+        (((uint8_t)c) >= '0' && ((uint8_t)c) <= '9') || \
+        (((uint8_t)c) >= 'A' && ((uint8_t)c) <= 'Z') || \
+        (((uint8_t)c) >= 'a' && ((uint8_t)c) <= 'z') || \
+        (((uint8_t)c) == '-') \
         )
 
 
@@ -228,6 +228,7 @@ static void http_header_got_value(
 
     switch( exchange->h_id ) {
         case YMO_HTTP_HID_CONNECTION:
+            HTTP_PARSE_TRACE("Got connection header: %.*s", (int)value_len, hdr_value);
             /* 1.1: default to keep-alive unless "close": */
             if( exchange->request.flags & YMO_HTTP_FLAG_VERSION_1_1 ) {
                 /* TODO: we know the lengths of these. Use
@@ -254,6 +255,7 @@ static void http_header_got_value(
             }
             break;
         case YMO_HTTP_HID_CONTENT_LENGTH:
+        HTTP_PARSE_TRACE("Got content length header: %.*s", (int)value_len, hdr_value);
         {
             long content_length;
             char* end_ptr;

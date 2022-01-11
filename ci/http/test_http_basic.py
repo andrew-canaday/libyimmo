@@ -42,6 +42,12 @@ def test_status():
     assert resp.status_code == 200
 
 
+def test_chunked():
+    """Test chunked responses"""
+    resp = requests.get(f'{YMO_HTTP_TEST_URL_ROOT}/chunked')
+    assert resp.status_code == 200
+
+
 def test_echo_headers():
     """
     Confirm that all the headers are parsed correctly,

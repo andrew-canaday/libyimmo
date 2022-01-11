@@ -22,6 +22,11 @@
 
 
 
+/** Python Websockets
+ * ===================
+ *
+ */
+
 #ifndef YMO_PY_WEBSOCKETS_H
 #define YMO_PY_WEBSOCKETS_H
 

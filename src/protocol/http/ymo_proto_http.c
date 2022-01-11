@@ -342,8 +342,6 @@ handle_callback_result:
         http_session->exchange = NULL;
         ymo_http_session_add_response(http_session, response);
     } else {
-        /* TODO, we need to figure out *why* we bailed here and then
-         * decide if it's 4xx/5xx or just terminate conn. */
         goto bail_free_response;
     }
 
@@ -416,8 +414,7 @@ void ymo_proto_http_conn_cleanup(
  *  Yimmo HTTP Protocol Read Callback:
  *---------------------------------------------------------------*/
 
-/* TODO: move this to user code now that we have header_cb?
- */
+/* TODO: move this to user code now that we have header_cb? */
 static ymo_status_t send_100_continue(
         ymo_conn_t* conn,
         ymo_http_session_t* http_session,
@@ -599,6 +596,7 @@ http_headers_complete:
                 return YMO_ERROR_SSIZE_T(hdr_status);
             }
 
+            /* HACK: auto handle Expect, if set (TODO: move to header_cb): */
             if( exchange->request.content_length > 0 ) {
                 exchange->state = exchange->next_state = HTTP_STATE_COMPLETE;
                 exchange->state = exchange->state = HTTP_STATE_BODY;
@@ -608,7 +606,6 @@ http_headers_complete:
                     HTTP_PROTO_TRACE(
                             "Expect with content-length: %zu",
                             exchange->request.content_length);
-                    /* HACK: auto handle Expect (TODO: move to header_cb): */
                     hdr_status = send_100_continue(conn, http_session, exchange);
                 }
 
@@ -622,7 +619,6 @@ http_headers_complete:
                             "Expect with content-length: %zu (chunked)",
                             exchange->request.content_length);
 
-                    /* HACK: auto handle Expect (TODO: move to header_cb): */
                     hdr_status = send_100_continue(conn, http_session, exchange);
                 }
             }
@@ -690,18 +686,13 @@ ymo_status_t ymo_proto_http_write(
         return YMO_OKAY;
     }
 
-    /* TODO: fold this into the clause above or below. */
-    if( !(r_flags & (YMO_HTTP_FLAG_SUPPORTS_CHUNKED|YMO_HTTP_RESPONSE_COMPLETE)) ) {
-        HTTP_PROTO_TRACE("Have body data, but connection doesn't support transfer-encoding-chunked on %i. Response will be buffered.", socket);
-        return YMO_OKAY;
-    }
-
     if( !(r_flags & YMO_HTTP_RESPONSE_STARTED) ) {
         errno = 0;
         http_session->send_buffer = ymo_http_response_start(conn, response);
         if( !http_session->send_buffer ) {
-            ymo_log_debug("Error serializing response: %s", strerror(errno));
-            return errno;
+            int s_err = errno;
+            ymo_log_debug("Unable to serialize response: %s", strerror(s_err));
+            return s_err;
         }
 
         HTTP_PROTO_TRACE("Response started on %i", socket);

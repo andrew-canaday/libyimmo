@@ -11,6 +11,8 @@ Developer documentation for yimmo-wsgi.
 
    yimmo_wsgi_h
    ymo_wsgi_proc_h
+   ymo_wsgi_proc_main_h
+   ymo_wsgi_proc_worker_h
    ymo_wsgi_worker_h
    ymo_wsgi_server_h
    ymo_wsgi_exchange_h
@@ -19,6 +21,7 @@ Developer documentation for yimmo-wsgi.
    ymo_wsgi_mod_h
    ymo_wsgi_util_h
    ymo_wsgi_cli_h
+   ymo_py_websockets_h
 
 .. contents:: Contents
    :local:

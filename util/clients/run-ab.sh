@@ -34,13 +34,14 @@ function run_cmd() {
     ${DRY} ${cmd} "$@"
 }
 
-if [ -z ${YMO_NO_KEEPALIVE} ]; then
+if [ -z "${YMO_NO_KEEPALIVE}" ]; then
     YMO_KEEPALIVE="-k"
 fi
 
 run_cmd ab \
     ${YMO_KEEPALIVE} \
     ${YMO_AB_VERBOSITY} \
+    $@ \
     -r \
     -n ${YMO_NO_CLIENTS:-"100000"} \
     -c ${YMO_NO_CONCURRENT:-"32"} \

@@ -40,7 +40,10 @@
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 
-#define CONN_SSL(conn) (conn->ssl)
+#define CONN_SSL(conn) (conn->ssl && ( \
+            conn->state == YMO_CONN_OPEN || \
+            conn->state == YMO_CONN_TLS_ESTABLISHED \
+        ))
 
 /*---------------------------------------------------------------*
  *  Yimmo Server TLS Functions (HACK/POC):

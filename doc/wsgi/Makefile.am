@@ -26,16 +26,19 @@ docs-local:
 		-e "EXT=rst" \
 		-e "DOCDIR=@builddir@" \
 		-p @top_srcdir@/util/c2sphinx-post.sh \
-		@top_srcdir@/wsgi/ymo_wsgi_worker.h \
-		@top_srcdir@/wsgi/ymo_wsgi_context.h \
-		@top_srcdir@/wsgi/ymo_wsgi_mod.h \
 		@top_srcdir@/wsgi/yimmo_wsgi.h \
-		@top_srcdir@/wsgi/ymo_wsgi_util.h \
-		@top_srcdir@/wsgi/ymo_wsgi_server.h \
+		@top_srcdir@/wsgi/ymo_py_websockets.h \
 		@top_srcdir@/wsgi/ymo_wsgi_cli.h \
+		@top_srcdir@/wsgi/ymo_wsgi_context.h \
+		@top_srcdir@/wsgi/ymo_wsgi_exchange.h \
+		@top_srcdir@/wsgi/ymo_wsgi_mod.h \
 		@top_srcdir@/wsgi/ymo_wsgi_proc.h \
+		@top_srcdir@/wsgi/ymo_wsgi_proc_main.h \
+		@top_srcdir@/wsgi/ymo_wsgi_proc_worker.h \
+		@top_srcdir@/wsgi/ymo_wsgi_server.h \
 		@top_srcdir@/wsgi/ymo_wsgi_session.h \
-		@top_srcdir@/wsgi/ymo_wsgi_exchange.h
+		@top_srcdir@/wsgi/ymo_wsgi_util.h \
+		@top_srcdir@/wsgi/ymo_wsgi_worker.h
 	cp -v \
 		@srcdir@/*.rst \
 		@builddir@
