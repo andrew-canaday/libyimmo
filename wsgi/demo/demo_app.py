@@ -109,9 +109,11 @@ def get_chunks():
     # ----------------------
     # Create the response:
     def create_chunked_response():
-        for i in range(no_chunks):
-            y_str = f'Chunk#: {i: 4d}\n'
-            time.sleep(delay_ms)
+        for i in range(1,no_chunks+1):
+            y_str = f'Chunk#: {i: 4d}\n' + ('#' * (i%80)) + '\n'
+            # print(f'\033[00;32;mNext chunk: {y_str}\033[00;m', end='')
+            if delay_ms:
+                time.sleep(delay_ms)
             yield y_str
         # TODO: chunk terminal not sent without this None return.
         #       (Probably, that means we're not catching StopIteration).

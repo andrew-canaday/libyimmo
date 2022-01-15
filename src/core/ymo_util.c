@@ -28,7 +28,7 @@
 #include "ymo_util.h"
 #include "ymo_alloc.h"
 
-#define YMO_UTIL_TRACE 1
+#define YMO_UTIL_TRACE 0
 #if defined(YMO_UTIL_TRACE) && YMO_UTIL_TRACE == 1
 # include "ymo_log.h"
 # define UTIL_TRACE(fmt, ...) ymo_log_trace(fmt, __VA_ARGS__);

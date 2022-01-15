@@ -30,6 +30,7 @@ Next Up
 - |w| HTTP header compare override
 - |_| Provide faster file handling (sendfile or caching)
 - |_| WSGI code cleanup / PEP3333 compliance check
+- |_| WSGI: don't user buffered HTTP mode (avoid allocating payload size since it's read as an iterator).
 - |_| ``EV_EMBED``, ``ev_realloc``, and faux-slab allocator example
 - |_| WSGI example needed!
 - |/| WSGI startup configuration is inflexible (2nd arg can now be an arbitrary python statement).
@@ -244,6 +245,7 @@ Core Architecture
 
 Concurrency
 ...........
+- |_| HTTP: document EAGAIN behavior and add thread-safe ev_sync requeue util
 - |_| Thread pools (|/| for WSGI — *hacky, though*)
 - |_| Create utility function to run a function in a thread with automatic
       ev_async cb

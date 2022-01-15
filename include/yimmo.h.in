@@ -283,28 +283,27 @@ typedef void (*ymo_bucket_free_fn)(ymo_bucket_t* bucket);
  * :param len: the length of the data to be sent
  * :returns: a new bucket created from the input parameters
  *
- * **Example**:
+ * .. code-block:: c
+ *    :caption: Example
  *
- * ```C
- * // hello is not freed after send, because we just provide "data":
- * ymo_bucket_t* hello = ymo_bucket_create(
- *     NULL, NULL,    // don't bother with next/prev for first item
- *     NULL, 0,       // no "buf" set here
- *     "Hello, ", 7   // data to be sent is here
- *     );
+ *    // hello is not freed after send, because we just provide "data":
+ *    ymo_bucket_t* hello = ymo_bucket_create(
+ *        NULL, NULL,    // don't bother with next/prev for first item
+ *        NULL, 0,       // no "buf" set here
+ *        "Hello, ", 7   // data to be sent is here
+ *        );
  *
- * // world is freed after send because we provided the "data" (item to be
- * // sent), as well as "buf" (the underlying buffer):
- * char* world = strdup("World!");
- * ymo_bucket_t* world = ymo_bucket_create(
- *     hello, NULL,   // world is part of a chain; hello is before it
- *     world, 7,      // this is the buffer containing the payload
- *     world, 6       // this is the payload
- *     );
+ *    // world is freed after send because we provided the "data" (item to be
+ *    // sent), as well as "buf" (the underlying buffer):
+ *    char* world = strdup("World!");
+ *    ymo_bucket_t* world = ymo_bucket_create(
+ *        hello, NULL,   // world is part of a chain; hello is before it
+ *        world, 7,      // this is the buffer containing the payload
+ *        world, 6       // this is the payload
+ *        );
  *
- * // send "Hello, world!" somewhere:
- * some_send_function(fd, hello);
- * ```
+ *    // send "Hello, world!" somewhere:
+ *    some_send_function(fd, hello);
  *
  */
 ymo_bucket_t* ymo_bucket_create(

@@ -317,6 +317,10 @@ ymo_bucket_t* ymo_bucket_append(
 
 void ymo_bucket_free(ymo_bucket_t* bucket)
 {
+    if( !bucket ) {
+        return;
+    }
+
     if( bucket->cleanup_cb ) {
         bucket->cleanup_cb(bucket);
     }

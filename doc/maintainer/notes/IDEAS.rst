@@ -10,6 +10,7 @@ Scratch pad of design ideas and considerations (**needs pruning!**)
 Misc
 ----
 
+- |_| Python `ASGI <https://asgi.readthedocs.io/en/latest/>`_
 - |_| Use `ecb.h <http://cvs.schmorp.de/libecb/ecb.h>`_?
 - |_| Timed-idle watchers — do stuff at least-so often, if not sooner.
 - |_| Dynamic loader for pluggable protocols

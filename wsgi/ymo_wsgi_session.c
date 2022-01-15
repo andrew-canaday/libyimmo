@@ -43,14 +43,15 @@
 #endif
 
 
-
 /* Prototypes: */
 static void ymo_wsgi_session_free(ymo_wsgi_session_t* session);
+
 
 /*---------------------------------*
  *           Functions:
  *---------------------------------*/
-ymo_status_t ymo_wsgi_session_init(void* server_data, ymo_http_session_t* http_session)
+ymo_status_t ymo_wsgi_session_init(
+        void* server_data, ymo_http_session_t* http_session)
 {
     static size_t session_id = 1;
     ymo_wsgi_proc_t* w_proc = server_data;
@@ -70,7 +71,9 @@ ymo_status_t ymo_wsgi_session_init(void* server_data, ymo_http_session_t* http_s
 
         ymo_http_session_set_userdata(http_session, session);
     } else {
-        ymo_log_warning("Failed to create WSGI session for http: %p", (void*)http_session);
+        ymo_log_warning(
+                "Failed to create WSGI session for http: %p",
+                (void*)http_session);
         return ENOMEM;
     }
 
@@ -101,11 +104,11 @@ void ymo_wsgi_session_cleanup(
         no_ex++;
         session->head->done = 1;
         ymo_wsgi_exchange_t* next = session->head->next;
-        ymo_wsgi_exchange_decref(session->head);
+        WSGI_EXCHANGE_DECREF(session->head);
         session->head = next;
     }
     session->head = NULL;
-    YMO_WSGI_TRACE("Session cleanup with %zu exchanges present.", no_ex);
+    YMO_WSGI_TRACE("Session cleanup with %zi exchanges present.", no_ex);
     ymo_wsgi_session_unlock(session);
     ymo_wsgi_session_decref(session);
     return;
@@ -114,7 +117,8 @@ void ymo_wsgi_session_cleanup(
 
 ymo_wsgi_worker_t* ymo_wsgi_session_worker(ymo_wsgi_session_t* session)
 {
-    YMO_WSGI_TRACE("Worker for session %p: %zu", (void*)session, session->worker);
+    YMO_WSGI_TRACE("Worker for session %p: %p",
+            (void*)session, (void*)session->worker);
     return session->worker;
 }
 
@@ -143,7 +147,7 @@ int ymo_wsgi_session_unlock(ymo_wsgi_session_t* session)
 size_t ymo_wsgi_session_incref(ymo_wsgi_session_t* session)
 {
     size_t refcnt = atomic_fetch_add(&(session->refcnt), 1) + 1;
-    YMO_WSGI_TRACE("WSGI session %p refcnt: %zu", (void*)session, refcnt);
+    YMO_WSGI_TRACE("WSGI session %p refcnt: %u", (void*)session, refcnt);
     return refcnt;
 }
 
@@ -151,10 +155,18 @@ size_t ymo_wsgi_session_incref(ymo_wsgi_session_t* session)
 size_t ymo_wsgi_session_decref(ymo_wsgi_session_t* session)
 {
     size_t refcnt = atomic_fetch_sub(&(session->refcnt), 1) - 1;
-    YMO_WSGI_TRACE("WSGI session %p refcnt: %zu", (void*)session, refcnt);
+    YMO_WSGI_TRACE("WSGI session %p refcnt: %u", (void*)session, refcnt);
+
+#if defined(YIMMO_WSGI_TRACE_REFCNT) && (YIMMO_WSGI_TRACE_REFCNT == 1)
+    if( refcnt < 0 ) {
+        ymo_log_error("Negative refcnt for session %p: %u", session, refcnt);
+    }
+#endif
+
     if( refcnt == 0 ) {
         ymo_wsgi_session_free(session);
     }
+
     return refcnt;
 }
 
@@ -173,6 +185,12 @@ int ymo_wsgi_session_is_closed(ymo_wsgi_session_t* session)
 }
 
 
+int ymo_wsgi_session_maybe_closed(ymo_wsgi_session_t* session)
+{
+    return session->closed;
+}
+
+
 /*=====================================================
  * Exchange Functions:
  *-----------------------------------------------------*/
@@ -182,22 +200,18 @@ ymo_wsgi_exchange_t* ymo_wsgi_session_create_exchange(
         ymo_http_response_t* response
         )
 {
-    ymo_wsgi_exchange_t* exchange = ymo_wsgi_exchange_create(session);
-    if( !exchange ) {
-        return NULL;
+    ymo_wsgi_exchange_t* exchange;
+    if( session->pool.head ) {
+        exchange = session->pool.head;
+        session->pool.head = exchange->next;
+    } else {
+        exchange = ymo_wsgi_exchange_create();
+        if( !exchange ) {
+            return YMO_ERROR_PTR(ENOMEM);
+        }
     }
 
-#if YMO_WSGI_EXCHANGE_ATOMIC
-    atomic_init(&(exchange->refcnt), 1);
-#else /* !YMO_WSGI_EXCHANGE_ATOMIC */
-    exchange->refcnt = 1;
-#endif /* YMO_WSGI_EXCHANGE_ATOMIC */
-
-    /* The exchange holds a reference to the session: */
-    ymo_wsgi_session_incref(session);
-    exchange->request = request;
-    exchange->response = response;
-
+    ymo_wsgi_exchange_init(exchange, session, request, response);
     if( session->head ) {
         ymo_wsgi_exchange_t* last = session->head;
         while( last->next ) { last = last->next; }
@@ -217,7 +231,8 @@ void ymo_wsgi_session_exchange_done(ymo_wsgi_session_t* session)
     }
 
     ymo_wsgi_exchange_t* next = session->head->next;
-    ymo_wsgi_exchange_decref(session->head);
+    WSGI_EXCHANGE_DECREF(session->head);
     session->head = next;
 }
+
 

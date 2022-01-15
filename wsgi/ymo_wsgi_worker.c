@@ -50,7 +50,7 @@ ymo_status_t ymo_wsgi_worker_add_exchange(
         ymo_wsgi_worker_t* worker, ymo_wsgi_exchange_t* exchange)
 {
     /* Add one reference that the yimm_Context_t will end up owning: */
-    ymo_wsgi_exchange_incref(exchange); /* +1 for worker */
+    WSGI_EXCHANGE_INCREF(exchange); /* +1 for worker */
     return ymo_queue_append(&worker->queue_in, exchange);
 }
 
@@ -172,9 +172,16 @@ ymo_status_t ymo_wsgi_worker_response_body_append(
         int done
         )
 {
+    /* If the session's closed, stop appending: */
+    if( ymo_wsgi_session_maybe_closed(exchange->session) && !done ) {
+        ymo_bucket_free(body_item);
+        return EPIPE;
+    }
+
     ymo_wsgi_worker_t* worker = exchange->session->worker;
     Py_BEGIN_ALLOW_THREADS
     pthread_mutex_lock(&worker->lock_out);
+    WSGI_EXCHANGE_INCREF(exchange); /* +1 for queue */
     YMO_WSGI_TRACE("Queuing body data for %p", (void*)exchange);
     if( exchange->body_data ) {
         ymo_bucket_append(exchange->body_data, body_item);
@@ -185,10 +192,15 @@ ymo_status_t ymo_wsgi_worker_response_body_append(
         YMO_WSGI_TRACE("Body data done for %p", (void*)exchange);
     }
     exchange->done = done;
+
     ymo_queue_append(&worker->queue_out, exchange);
     ev_async_send(EV_DEFAULT_ &worker->event_out);
     pthread_mutex_unlock(&worker->lock_out);
     Py_END_ALLOW_THREADS
+
+    if( done ) {
+        WSGI_EXCHANGE_DECREF(exchange); /* -1 for worker */
+    }
     return YMO_OKAY;
 }
 
@@ -197,6 +209,7 @@ static ymo_status_t ymo_wsgi_worker_issue_request(
         PyObject* pArgs,
         yimmo_context_t* ctx)
 {
+    int is_open = 1;
     ymo_status_t status = YMO_WOULDBLOCK;
     ymo_wsgi_exchange_t* exchange = ymo_wsgi_ctx_exchange(ctx);
     exchange->done = 0;
@@ -222,7 +235,7 @@ static ymo_status_t ymo_wsgi_worker_issue_request(
      *       object provides a "len" method and check that. Else, abide
      *       by the spec.
      */
-    while((item = PyIter_Next(r_val))) {
+    while( is_open && (item = PyIter_Next(r_val))) {
         /* So, here's the deal: the WSGI spec essentially says "any kind
          * of buffering is immoral; if you have it, send it," which is
          * somewhat reasonable, save for the fact that the whole network
@@ -248,7 +261,14 @@ static ymo_status_t ymo_wsgi_worker_issue_request(
              * latency add was so small (ns or ms) that no one will ever
              * know we were breaking the rules...
              */
-            ymo_wsgi_worker_response_body_append(exchange, body_item, 0);
+            status =
+                ymo_wsgi_worker_response_body_append(exchange, body_item, 0);
+
+            if( status != YMO_OKAY ) {
+                YMO_WSGI_TRACE("Whoops. Session closed with: %s",
+                        strerror(status));
+                is_open = 0;
+            }
             body_item = NULL;
         }
 
@@ -261,6 +281,7 @@ static ymo_status_t ymo_wsgi_worker_issue_request(
         Py_DECREF(item);
     }
 
+wsgi_response_cancel:
     /* Okay, send the last thing we've got: */
     status = ymo_wsgi_worker_response_body_append(exchange, body_item, 1);
     pClose = PyObject_GetAttr(r_val, pAttrClose);
@@ -335,7 +356,7 @@ static void* ymo_wsgi_worker_main(void* tdata)
             Py_DECREF(pEnviron);
             ymo_log_debug("Failed to create Context for exchange %p: %s",
                     (void*)exchange, strerror(r_val));
-            ymo_wsgi_exchange_decref(exchange); /* -1 for worker */
+            WSGI_EXCHANGE_DECREF(exchange); /* -1 for worker */
             goto worker_gil_release;
         }
 

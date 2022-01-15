@@ -46,23 +46,33 @@
  *           Functions:
  *---------------------------------*/
 
-ymo_wsgi_exchange_t* ymo_wsgi_exchange_create(ymo_wsgi_session_t* session)
+ymo_wsgi_exchange_t* ymo_wsgi_exchange_create(void)
 {
-    ymo_wsgi_exchange_t* exchange;
-    if( session->pool.head ) {
-        exchange = session->pool.head;
-        session->pool.head = exchange->next;
-        memset(exchange, 0, sizeof(ymo_wsgi_exchange_t));
-        exchange->session = session;
-    } else {
-        exchange = YMO_NEW0(ymo_wsgi_exchange_t);
-        if( exchange ) {
-            exchange->no_pool = 1;
-            exchange->session = session;
-        }
+    ymo_wsgi_exchange_t* exchange = YMO_NEW(ymo_wsgi_exchange_t);
+    if( exchange ) {
+        exchange->no_pool = 1;
     }
-
     return exchange;
+}
+
+
+void ymo_wsgi_exchange_init(
+        ymo_wsgi_exchange_t* exchange,
+        ymo_wsgi_session_t* session,
+        ymo_http_request_t* request,
+        ymo_http_response_t* response
+        )
+{
+    int no_pool = exchange->no_pool;
+    memset(exchange, 0, sizeof(ymo_wsgi_exchange_t));
+    exchange->session = session;
+    exchange->request = request;
+    exchange->response = response;
+    exchange->no_pool = no_pool;
+    atomic_init(&(exchange->refcnt), 1);
+
+    /* The exchange holds a reference to the session: */
+    ymo_wsgi_session_incref(session);
 }
 
 
@@ -77,34 +87,33 @@ void ymo_wsgi_exchange_free(
     }
 }
 
-
 size_t ymo_wsgi_exchange_incref(ymo_wsgi_exchange_t* exchange)
 {
-#if YMO_WSGI_EXCHANGE_ATOMIC
     size_t refcnt = atomic_fetch_add(&(exchange->refcnt), 1) + 1;
-#else /* !YMO_WSGI_EXCHANGE_ATOMIC */
-    size_t refcnt = ++exchange->refcnt;
-#endif /* YMO_WSGI_EXCHANGE_ATOMIC */
-    YMO_WSGI_TRACE("Exchange %p refcnt: %zu", (void*)exchange, refcnt);
+    YMO_WSGI_TRACE(_c_l "Exchange %p refcnt: %u" _c_r, (void*)exchange, refcnt);
     return refcnt;
 }
 
 
 size_t ymo_wsgi_exchange_decref(ymo_wsgi_exchange_t* exchange)
 {
-#if YMO_WSGI_EXCHANGE_ATOMIC
     size_t refcnt = atomic_fetch_sub(&(exchange->refcnt),1) - 1;
-#else /* !YMO_WSGI_EXCHANGE_ATOMIC */
-    size_t refcnt = --exchange->refcnt;
-#endif /* YMO_WSGI_EXCHANGE_ATOMIC */
 
-    YMO_WSGI_TRACE("Exchange %p refcnt: %zu", (void*)exchange, refcnt);
+    YMO_WSGI_TRACE(_c_l "Exchange %p refcnt: %u" _c_r, (void*)exchange, refcnt);
+
+#if defined(YIMMO_WSGI_TRACE_REFCNT) && (YIMMO_WSGI_TRACE_REFCNT == 1)
+    if( refcnt < 0 ) {
+        ymo_log_error(_c_l "Negative refcnt for exchange %p: %u" _c_r, exchange, refcnt);
+    }
+#endif
+
     if( refcnt == 0 ) {
         /* Each exchange holds a reference to the owning session: */
         ymo_wsgi_session_decref(exchange->session);
-        YMO_WSGI_TRACE("Deleting exchange: %p", (void*)exchange);
+        YMO_WSGI_TRACE(_c_l "Freeing exchange: %p" _c_r, (void*)exchange);
         ymo_wsgi_exchange_free(exchange->session, exchange);
     }
     return refcnt;
 }
+
 

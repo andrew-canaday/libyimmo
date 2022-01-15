@@ -96,6 +96,9 @@ void ymo_wsgi_session_close(ymo_wsgi_session_t* session);
 int ymo_wsgi_session_is_closed(ymo_wsgi_session_t* session);
 
 /** */
+int ymo_wsgi_session_maybe_closed(ymo_wsgi_session_t* session);
+
+/** */
 int ymo_wsgi_session_lock(ymo_wsgi_session_t* session);
 
 /** */

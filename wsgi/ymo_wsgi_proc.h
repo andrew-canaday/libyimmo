@@ -128,7 +128,7 @@ void ymo_wsgi_proc_sigterm(struct ev_loop* loop, ev_signal* w, int revents);
  * Returns a pointer to an array of works.
  *
  * .. warning::
- *   This is a HACK.
+ *    This is a HACK.
  *
  */
 ymo_wsgi_worker_t* ymo_wsgi_init_workers(
@@ -138,7 +138,7 @@ ymo_wsgi_worker_t* ymo_wsgi_init_workers(
 /** Stop the WSGI worker threads in the the ``workers`` array.
  *
  * .. warning::
- *   This is a HACK.
+ *    This is a HACK.
  */
 ymo_status_t ymo_wsgi_stop_workers(
         int no_wsgi_threads, ymo_wsgi_worker_t* workers);

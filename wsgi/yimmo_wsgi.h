@@ -77,6 +77,8 @@
 #define YMO_WSGI_TRACE(fmt, ...) ((void)(0))
 #endif /* YMO_WSGI_TRACE_WSGI */
 
+
+
 /** Number of queue nodes preallocated per thread worker.
  */
 #define YMO_WSGI_WORKER_QUEUE_POOL_SIZE 100
@@ -101,7 +103,6 @@
  */
 #define YIMMO_WEBSOCKET_C(ptr) ((yimmo_websocket_t*)(ptr))
 
-#define YMO_WSGI_EXCHANGE_ATOMIC 1
 
 /**---------------------------------
  *           Types

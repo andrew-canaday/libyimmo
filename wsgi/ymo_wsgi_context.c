@@ -66,8 +66,8 @@ struct yimmo_context {
  *---------------------------------------------------------------------------*/
 void yimmo_Context_dealloc(yimmo_context_t* self)
 {
-    YMO_WSGI_TRACE("Deleting yimmo.Context: %p", (void*)self);
-    ymo_wsgi_exchange_decref(self->exchange);
+    YMO_WSGI_TRACE("Freeing yimmo.Context: %p", (void*)self);
+    WSGI_EXCHANGE_DECREF(self->exchange);
     Py_TYPE(self)->tp_free(YIMMO_CONTEXT_PY(self));
 }
 
@@ -372,12 +372,11 @@ yimmo_context_t* ymo_wsgi_ctx_update_environ(PyObject* pEnviron, ymo_wsgi_exchan
 {
     yimmo_context_t* ctx = NULL;
 
-    ymo_wsgi_exchange_incref(exchange); /* +1 for context */
+    WSGI_EXCHANGE_INCREF(exchange); /* +1 for context */
     if( ymo_wsgi_session_trylock(exchange->session) || exchange->done ) {
         /* Release the ref held for us: */
-        ymo_wsgi_exchange_decref(exchange);
-        errno = EINVAL;
-        return NULL;
+        WSGI_EXCHANGE_DECREF(exchange);
+        return YMO_ERROR_PTR(ECONNRESET);
     }
 
     /* If we can't allocate the python type, just bail: */
@@ -385,9 +384,8 @@ yimmo_context_t* ymo_wsgi_ctx_update_environ(PyObject* pEnviron, ymo_wsgi_exchan
             yimmo_ContextType.tp_alloc(&yimmo_ContextType, 0));
     if( !ctx ) {
         /* Release the ref held for us: */
-        ymo_wsgi_exchange_decref(exchange);
-        errno = ENOMEM;
-        goto ymo_wsgi_ctx_update_bail;
+        WSGI_EXCHANGE_DECREF(exchange);
+        return YMO_ERROR_PTR(ENOMEM);
     }
 
     YMO_WSGI_TRACE("Created yimmo.Context: %p", (void*)ctx);

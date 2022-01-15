@@ -99,7 +99,7 @@ ymo_status_t ymo_wsgi_server_header_cb(
     ymo_wsgi_worker_lock_in(worker);
     ymo_wsgi_exchange_t* exchange = ymo_wsgi_session_create_exchange(
             wsgi_session, request, response);
-    ymo_wsgi_exchange_incref(exchange); /* +1 for server */
+    WSGI_EXCHANGE_INCREF(exchange); /* +1 for server */
     ymo_wsgi_worker_unlock_in(worker);
 
     if( !exchange ) {
@@ -169,10 +169,9 @@ ymo_server_t* ymo_wsgi_server_init(
         if( 1 /* TODO: proc->no_wsgi_proc */ ) {
             ymo_status_t mp_ok = ymo_server_pre_fork(http_srv);
             if( mp_ok ) {
-                errno = mp_ok;
                 ymo_log(YMO_LOG_ERROR, strerror(mp_ok));
                 ymo_server_free(http_srv);
-                return NULL;
+                return YMO_ERROR_PTR(mp_ok);
             }
         }
 
@@ -212,7 +211,7 @@ static void ymo_wsgi_server_queue_responses(
 
             /* TODO: HACK HACK HACK */
             if( !exchange->sent ) {
-                YMO_WSGI_TRACE("Exchange unset. Marking as sent and deleting ref: %p", (void*)exchange);
+                YMO_WSGI_TRACE("Exchange unset. Marking as sent and freeing ref: %p", (void*)exchange);
                 goto resp_sent;
             }
             goto resp_decref;
@@ -228,12 +227,14 @@ static void ymo_wsgi_server_queue_responses(
             YMO_WSGI_TRACE("Response finished for exchange: %p", (void*)exchange);
             ymo_http_response_finish(exchange->response);
 resp_sent:
+            YMO_WSGI_TRACE("Marking exchange %p as sent", (void*)exchange);
             exchange->sent = 1;
-            ymo_wsgi_exchange_decref(exchange); /* -1 for server */
+            WSGI_EXCHANGE_DECREF(exchange); /* -1 for server */
             ymo_wsgi_session_exchange_done(exchange->session);
         }
 resp_decref:
-        ymo_wsgi_exchange_decref(exchange); /* -1 for queue */
+        WSGI_EXCHANGE_DECREF(exchange); /* -1 for queue */
+        exchange = NULL;
     }
 response_cb_done:
     ymo_wsgi_worker_unlock_out(worker);

@@ -54,13 +54,11 @@
 
 #define YMO_HTTP_TRACE_PARSE 0
 #if defined(YMO_HTTP_TRACE_PARSE) && YMO_HTTP_TRACE_PARSE == 1
-#define HTTP_PARSE_TRACE(fmt, ...) ymo_log_trace(fmt, __VA_ARGS__);
-
-#define HTTP_PARSE_STATE_NAME(x) ymo_http_state_names[x]
-
+#  define HTTP_PARSE_TRACE(fmt, ...) ymo_log_trace(fmt, __VA_ARGS__);
+#  define HTTP_PARSE_STATE_NAME(x) ymo_http_state_names[x]
 #else
-#define HTTP_PARSE_TRACE(fmt, ...)
-#define HTTP_PARSE_STATE_NAME(x)
+#  define HTTP_PARSE_TRACE(fmt, ...)
+#  define HTTP_PARSE_STATE_NAME(x)
 #endif /* YMO_HTTP_TRACE_PARSE */
 
 

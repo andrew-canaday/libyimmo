@@ -52,13 +52,9 @@ struct ymo_wsgi_exchange {
     struct ymo_wsgi_exchange* next;
     int                       done;
     int                       sent;
-    int                       no_pool;
+    int                       no_pool;   /* Gross */
     size_t                    body_read;
-#if YMO_WSGI_EXCHANGE_ATOMIC
     atomic_int_least16_t      refcnt;
-#else /* !YMO_WSGI_EXCHANGE_ATOMIC */
-    unsigned                  refcnt;
-#endif /* YMO_WSGI_EXCHANGE_ATOMIC */
 };
 
 
@@ -78,7 +74,14 @@ struct ymo_wsgi_exchange_pool {
  * the given session.
  *
  */
-ymo_wsgi_exchange_t* ymo_wsgi_exchange_create(ymo_wsgi_session_t* session);
+ymo_wsgi_exchange_t* ymo_wsgi_exchange_create(void);
+
+void ymo_wsgi_exchange_init(
+        ymo_wsgi_exchange_t* exchange,
+        ymo_wsgi_session_t* session,
+        ymo_http_request_t* request,
+        ymo_http_response_t* response
+        );
 
 /** Release a WSGI exchange.
  *
@@ -92,6 +95,40 @@ size_t ymo_wsgi_exchange_incref(ymo_wsgi_exchange_t* exchange);
 /** */
 size_t ymo_wsgi_exchange_decref(ymo_wsgi_exchange_t* exchange);
 
+#define YIMMO_WSGI_TRACE_REFCNT 0
+
+#if defined(YIMMO_WSGI_TRACE_REFCNT) && (YIMMO_WSGI_TRACE_REFCNT == 1)
+#  define _c_l "\033[00;31;m"
+#  define _c_r "\033[00;m"
+#else
+#  define _c_l
+#  define _c_r
+#endif
+
+
+#if defined(YIMMO_WSGI_TRACE_REFCNT) && (YIMMO_WSGI_TRACE_REFCNT == 1)
+
+#  define WSGI_EXCHANGE_INCREF(e) \
+    ( \
+        ymo_log_trace("\033[00;01;33;m%s:%i: ymo_wsgi_exchange_incref(%p)\033[00;m", __func__, __LINE__, (void*)e), \
+        ymo_wsgi_exchange_incref(e) \
+    )
+
+#  define WSGI_EXCHANGE_DECREF(e) \
+    ( \
+        ymo_log_trace("\033[00;01;33;m%s:%i: ymo_wsgi_exchange_decref(%p)\033[00;m", __func__, __LINE__, (void*)e), \
+        ymo_wsgi_exchange_decref(e) \
+    )
+
+#else
+
+#  define WSGI_EXCHANGE_INCREF(e) \
+    ymo_wsgi_exchange_incref(e)
+
+#  define WSGI_EXCHANGE_DECREF(e) \
+    ymo_wsgi_exchange_decref(e)
+
+#endif /* YIMMO_WSGI_TRACE_REFCNT */
 
 #endif /* YMO_WSGI_EXCHANGE_H */
 
