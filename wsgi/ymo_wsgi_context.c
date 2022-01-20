@@ -38,9 +38,6 @@
 #include "ymo_wsgi_context.h"
 #include "ymo_wsgi_worker.h"
 
-/* TODO: HACK HACK HACK: per-header NAME buffer size limit. */
-#define HDR_NAME_BUFFER_SIZE 256
-
 /** # ymo_wsgi_context.c
  * Contains the WSGI PEP3333 interface seen by python
  *
@@ -395,7 +392,7 @@ yimmo_context_t* ymo_wsgi_ctx_update_environ(PyObject* pEnviron, ymo_wsgi_exchan
 
     PyDict_SetItem(pEnviron, pEnvironKeyInput, YIMMO_CONTEXT_PY(ctx));
 
-    char hdr_field[HDR_NAME_BUFFER_SIZE] = "HTTP_";
+    char hdr_field[YMO_WSGI_HDR_NAME_MAX_LEN] = "HTTP_";
     char* e_hdr_name = &hdr_field[5];
 
     /* ---- end HACK ---- */
@@ -409,6 +406,9 @@ yimmo_context_t* ymo_wsgi_ctx_update_environ(PyObject* pEnviron, ymo_wsgi_exchan
             &request->headers, NULL, &hdr_name, &key_len, &hdr_value);
     while( iter )
     {
+        key_len < YMO_WSGI_HDR_NAME_MAX_LEN
+            ? key_len : YMO_WSGI_HDR_NAME_MAX_LEN;
+
         for( size_t i = 0; i <= key_len; i++ )
         {
             char c = hdr_name[i];
