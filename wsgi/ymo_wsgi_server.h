@@ -62,6 +62,17 @@ ymo_status_t ymo_wsgi_server_start(struct ev_loop* loop);
  *        Yimmo Callbacks
  *---------------------------------*/
 
+/** HTTP header callback, invoked by ``libyimmo_http``.
+ *
+ * See also: :c:type:`ymo_http_header_cb_t`
+ *
+ */
+ymo_status_t ymo_wsgi_server_header_cb(
+        ymo_http_session_t* http_session,
+        ymo_http_request_t* request,
+        ymo_http_response_t* response,
+        void* user_data);
+
 /** HTTP handler callback, invoked by ``libyimmo_http``.
  *
  * See also: :c:type:`ymo_http_cb_t`
