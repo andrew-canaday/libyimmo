@@ -60,8 +60,10 @@ AC_DEFUN([YMO_CHECK_DEPENDENCIES],[
     PKG_CHECK_MODULES([BSAT], [libbsat])
     PKG_CHECK_MODULES([PYTHON], [python-3.9-embed], [], [
     		   PKG_CHECK_MODULES([PYTHON], [python-3.8-embed], [YMO_NOTICE([Found python 3.8])], [
-    				      PKG_CHECK_MODULES([PYTHON], [python3], [YMO_NOTICE([Found python 3])])
-    				      ])
+    				      PKG_CHECK_MODULES([PYTHON], [python3-embed], [YMO_NOTICE([Found python 3])], [
+                              PKG_CHECK_MODULES([PYTHON], [python3], [YMO_NOTICE([Found python 3])])
+                              ])
+                          ])
     		   ])
 
 

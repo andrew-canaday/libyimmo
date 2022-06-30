@@ -86,6 +86,7 @@ ENTRYPOINT ["/opt/build/yimmo/ci/ws/yimmo-ws-echo"]
 # WSGI:
 #-------------------------------------------------------------------------------
 FROM yimmo-deps AS yimmo-wsgi
+ENV PKG_CONFIG_PATH=/usr/lib/aarch64-linux-gnu/pkgconfig
 
 RUN cd /opt/build/yimmo \
 	&& /opt/src/libyimmo/configure \
