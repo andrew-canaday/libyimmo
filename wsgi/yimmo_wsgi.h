@@ -79,6 +79,9 @@
 
 
 
+/** Header-field name max length */
+#define YMO_WSGI_HDR_NAME_MAX_LEN       256
+
 /** Number of queue nodes preallocated per thread worker.
  */
 #define YMO_WSGI_WORKER_QUEUE_POOL_SIZE 100

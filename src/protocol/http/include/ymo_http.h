@@ -445,6 +445,7 @@ struct ymo_http_request {
     size_t                body_received;    /* Body data received */
     size_t                content_length;   /* Content-length, per client */
     ymo_http_flags_t      flags;            /* Request flags */
+    void*                 user;             /* Arbitrary, per-request, user-data */
 };
 
 /** Responses
