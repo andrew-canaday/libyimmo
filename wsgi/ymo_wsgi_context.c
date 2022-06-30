@@ -406,7 +406,7 @@ yimmo_context_t* ymo_wsgi_ctx_update_environ(PyObject* pEnviron, ymo_wsgi_exchan
             &request->headers, NULL, &hdr_name, &key_len, &hdr_value);
     while( iter )
     {
-        key_len < YMO_WSGI_HDR_NAME_MAX_LEN
+        key_len = key_len < YMO_WSGI_HDR_NAME_MAX_LEN
             ? key_len : YMO_WSGI_HDR_NAME_MAX_LEN;
 
         for( size_t i = 0; i <= key_len; i++ )
