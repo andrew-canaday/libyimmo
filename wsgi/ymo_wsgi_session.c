@@ -235,4 +235,3 @@ void ymo_wsgi_session_exchange_done(ymo_wsgi_session_t* session)
     session->head = next;
 }
 
-

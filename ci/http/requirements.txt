@@ -1,4 +1,4 @@
 requests==2.25.0
-pytest==4.6.5
+pytest==7.1.*
 pytest-pythonpath==0.7.3
 pytest-runner==5.1

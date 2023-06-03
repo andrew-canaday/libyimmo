@@ -660,7 +660,7 @@ static inline void close_and_free_connection(
 #if YMO_ENABLE_TLS
     /* If the connection had SSL, let's clean that up now: */
     if( conn->ssl ) {
-        if ( conn->state == YMO_CONN_TLS_ESTABLISHED ) {
+        if( conn->state == YMO_CONN_TLS_ESTABLISHED ) {
             SERVER_TRACE("Cleaning up SSL for %i", conn->fd);
             SSL_shutdown(conn->ssl);
         }

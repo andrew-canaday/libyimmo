@@ -253,18 +253,18 @@ static void http_header_got_value(
             }
             break;
         case YMO_HTTP_HID_CONTENT_LENGTH:
-        HTTP_PARSE_TRACE("Got content length header: %.*s", (int)value_len, hdr_value);
-        {
-            long content_length;
-            char* end_ptr;
-            content_length =
-                strtol(hdr_value, &end_ptr, 10);
-            if( *end_ptr == '\0' ) {
-                exchange->request.content_length = \
-                    (size_t)content_length;
+            HTTP_PARSE_TRACE("Got content length header: %.*s", (int)value_len, hdr_value);
+            {
+                long content_length;
+                char* end_ptr;
+                content_length =
+                    strtol(hdr_value, &end_ptr, 10);
+                if( *end_ptr == '\0' ) {
+                    exchange->request.content_length = \
+                        (size_t)content_length;
+                }
             }
-        }
-        break;
+            break;
         case YMO_HTTP_HID_EXPECT:
             if( !ymo_strcasecmp(hdr_value, value_len, "100-continue", 12) ) {
                 exchange->request.flags |= YMO_HTTP_FLAG_EXPECT;

@@ -87,6 +87,7 @@ void ymo_wsgi_exchange_free(
     }
 }
 
+
 size_t ymo_wsgi_exchange_incref(ymo_wsgi_exchange_t* exchange)
 {
     size_t refcnt = atomic_fetch_add(&(exchange->refcnt), 1) + 1;
@@ -115,5 +116,4 @@ size_t ymo_wsgi_exchange_decref(ymo_wsgi_exchange_t* exchange)
     }
     return refcnt;
 }
-
 
