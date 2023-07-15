@@ -79,7 +79,7 @@ test_expect_100_continue() {
     EXPECT_STATUS="200" \
         ctest -0 \
         -H 'Expect: 100-continue' \
-        --data-binary "${0}" \
+        --data-binary "@${0}" \
         "${YMO_HTTP_TEST_URL_ROOT}/echo/body"
 }
 

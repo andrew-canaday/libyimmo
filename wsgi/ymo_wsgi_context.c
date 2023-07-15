@@ -455,7 +455,7 @@ hdr_skip_underscore:
     }
     if( request->content_length ) {
         YMO_DECREF_PYDICT_SETITEM(pEnviron, pEnvironKeyContentLength,
-                PyLong_FromSize_t(request->content_length));
+                PyUnicode_FromFormat("%zu", request->content_length));
     }
 ymo_wsgi_ctx_update_bail:
     ymo_wsgi_session_unlock(exchange->session);

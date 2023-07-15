@@ -39,16 +39,16 @@ RUN apt-get -qq install -y \
 
 RUN pip3 install flask
 
-ADD . /opt/src/libyimmo
 RUN cd /opt/src && git clone https://github.com/andrew-canaday/libbsat
 RUN cd /opt/src/libbsat && ./autogen.sh
-RUN cd /opt/src/libyimmo && ./autogen.sh
-
 RUN cd /opt/build/bsat \
 	&& /opt/src/libbsat/configure \
 		--silent \
 		--enable-silent-rules \
 	&& make install
+
+ADD . /opt/src/libyimmo
+RUN cd /opt/src/libyimmo && ./autogen.sh
 
 
 #-------------------------------------------------------------------------------
@@ -59,7 +59,8 @@ FROM yimmo-deps AS yimmo-test
 ENV YIMMO_SERVER_IDLE_TIMEOUT=2.0
 RUN cd /opt/build/yimmo \
 	&& /opt/src/libyimmo/configure \
-		--enable-examples --enable-wsgi \
+		--enable-examples \
+		--enable-wsgi \
 		CFLAGS="-DYMO_LOG_LEVEL_MAX=6 -DYMO_LOG_LEVEL_DEFAULT=3" \
 		YMO_WS_FRAME_MAX=0xffffffffffffffff \
 	&& make \

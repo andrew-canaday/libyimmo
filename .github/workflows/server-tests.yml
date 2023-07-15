@@ -17,7 +17,7 @@ jobs:
       IMAGE_NAME: "ghcr.io/${{ github.repository }}-ci:${{ github.ref_name }}" 
     steps:
       - name: Checkout libyimmo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: ${{ github.repository }}
           path: 'libyimmo'
@@ -64,7 +64,7 @@ jobs:
       IMAGE_NAME: "ghcr.io/${{ github.repository }}-ci:${{ github.ref_name }}" 
     steps:
       - name: Checkout libyimmo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: ${{ github.repository }}
           path: 'libyimmo'
@@ -140,7 +140,7 @@ jobs:
       IMAGE_NAME: "ghcr.io/${{ github.repository }}-ci:${{ github.ref_name }}" 
     steps:
       - name: Checkout libyimmo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: ${{ github.repository }}
           path: 'libyimmo'
@@ -191,7 +191,7 @@ jobs:
       IMAGE_NAME: "ghcr.io/${{ github.repository }}-ci:${{ github.ref_name }}"
     steps:
       - name: Checkout libyimmo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: ${{ github.repository }}
           path: 'libyimmo'
@@ -262,7 +262,7 @@ jobs:
       IMAGE_NAME: "ghcr.io/${{ github.repository }}-ci:${{ github.ref_name }}"
     steps:
       - name: Checkout libyimmo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: ${{ github.repository }}
           path: 'libyimmo'

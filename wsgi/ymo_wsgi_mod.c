@@ -192,9 +192,11 @@ ymo_status_t ymo_wsgi_init(ymo_wsgi_proc_t* w_proc)
 
     /* PEP 3333: */
     YMO_INCREF_PYDICT_SETITEM_STRING(pCommonEnviron, "SERVER_NAME", PyUnicode_FromString("yimmo-wsgi"));
-    YMO_INCREF_PYDICT_SETITEM_STRING(pCommonEnviron, "SERVER_PORT", PyLong_FromLong(w_proc->port));
+    YMO_INCREF_PYDICT_SETITEM_STRING(pCommonEnviron, "SERVER_PORT", PyUnicode_FromFormat("%i", w_proc->port));
     YMO_INCREF_PYDICT_SETITEM_STRING(pCommonEnviron, "SERVER_PROTOCOL", pUrlScheme);
-    YMO_INCREF_PYDICT_SETITEM_STRING(pCommonEnviron, "SCRIPT_NAME", PyUnicode_FromString(w_proc->module));
+
+    /* TODO: set from env? */
+    //YMO_INCREF_PYDICT_SETITEM_STRING(pCommonEnviron, "SCRIPT_NAME", PyUnicode_FromString(w_proc->module));
 
     YMO_INCREF_PYDICT_SETITEM_STRING(pCommonEnviron, "wsgi.version", pWsgiVersion);
     YMO_INCREF_PYDICT_SETITEM_STRING(pCommonEnviron, "wsgi.errors", pStderr); /* HACK! */
