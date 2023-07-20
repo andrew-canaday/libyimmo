@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+# import sys
 from flask import (
     Flask,
     Response,
@@ -91,43 +92,26 @@ def get_chunks():
     except:
         delay_ms = delay_ms_default
 
-    # --------------
-    # app-chunked:
-    #
-    # - If the 'app-chunked' flag is unset or false, yimmo will chunk the
-    #   response automatically, if Content-Length is set or — in the case that
-    #   it is not — if flask returns a single-item iterable.
-    #
-    # - If the 'app-chunked' flag is set, we generate the payload ahead of
-    #   time, and set the 'Transfer-Encoding' header manually. Yimmo should
-    #   handle this by just passing the data straight through.
-    use_generator = True
-    app_chunked = request.args.get('app-chunked', 'false')
-    if(app_chunked.lower() == 'true'):
-        use_generator = False
-
     # ----------------------
     # Create the response:
     def create_chunked_response():
+        t_last = time.time()
         for i in range(1,no_chunks+1):
-            y_str = f'Chunk#: {i: 4d}\n' + ('#' * (i%80)) + '\n'
-            # print(f'\033[00;32;mNext chunk: {y_str}\033[00;m', end='')
             if delay_ms:
                 time.sleep(delay_ms)
+            time_n = time.time()
+            time_d = time_n - t_last
+            t_last = time_n
+            y_str = (
+                    f'Chunk#: {i: 4d} ({time_d:3.3f}s)\n'
+                    + ('#' * ((i%80)+1)) + '\n'
+                    )
             yield y_str
-        # TODO: chunk terminal not sent without this None return.
-        #       (Probably, that means we're not catching StopIteration).
-        return None
 
-    if use_generator:
-        return app.response_class(
-            create_chunked_response(),
-            mimetype='text/plain',
-        )
-    else:
-        s = ''.join(f'{len(c):x}\r\n{c}' for c in create_chunked_response()) \
-            + '0\r\n\r\n'
-        return app.response_class(s, mimetype='text/plain')
+    return app.response_class(
+        create_chunked_response(),
+        mimetype='text/plain',
+    )
 
 
 # ---------------------------------------------------

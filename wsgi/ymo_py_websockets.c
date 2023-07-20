@@ -146,7 +146,7 @@ PyTypeObject yimmo_WebSocketType = {
  *
  *----------------------------------------------------------------------------*/
 PyObject* yimmo_init_websockets(
-        PyObject* self, PyObject* const* args, PyObject* kwargs)
+        PyObject* self, PyObject* args, PyObject* kwargs)
 {
     static char* kwlist[] = {
         "on_open",

@@ -230,40 +230,14 @@ static ymo_status_t ymo_wsgi_worker_issue_request(
 
     ymo_bucket_t* body_item = NULL;
     PyObject* item;
-    /* TODO: I think this has to be removed for services that might do
-     *       HTTP-based long-polling. Better to check to see if the
-     *       object provides a "len" method and check that. Else, abide
-     *       by the spec.
-     */
     while( is_open && (item = PyIter_Next(r_val))) {
-        /* So, here's the deal: the WSGI spec essentially says "any kind
-         * of buffering is immoral; if you have it, send it," which is
-         * somewhat reasonable, save for the fact that the whole network
-         * stack will feel a little nauseous about sending N >> 5 bytes,
-         * looping through a bunch of other FD's, and traversing the
-         * whole protocol call stack again to send the last 5 bytes
-         * (which, honestly, we can predict, if we're just *slightly*
-         * lax about this *one* aspect of the spec...)
-         *
-         * So, what we do here is this: at the risk of buffering two
-         * long-running chunks on occasion — go ahead and have a peek
-         * to see if there's anything left in the iterator (python gives
-         * us no non-blocking or timeout-able way to do this...), if
-         * there is: okay, fine. Send the first thing, queue the second,
-         * and repeat.
-         * If we don't: send the thing we have AND the terminal.
-         * The hope is: everyone will be happy when this works, and no
-         * one will notice the difference when it doesn't...
-         */
-        if( body_item ) {
-            /* Fine, we made a bad call last time. Admit it. Send the thing
-             * we should have sent last time RIGHT NOW and hope that the
-             * latency add was so small (ns or ms) that no one will ever
-             * know we were breaking the rules...
-             */
+        if( PyBytes_Check(item) ) {
+            Py_ssize_t content_len = PyBytes_GET_SIZE(item);
+            char* content = PyBytes_AS_STRING(item);
+            body_item = YMO_BUCKET_FROM_CPY(content, content_len);
+
             status =
                 ymo_wsgi_worker_response_body_append(exchange, body_item, 0);
-
             if( status != YMO_OKAY ) {
                 YMO_WSGI_TRACE("Whoops. Session closed with: %s",
                         strerror(status));
@@ -271,14 +245,12 @@ static ymo_status_t ymo_wsgi_worker_issue_request(
             }
             body_item = NULL;
         }
-
-        /* Else, hang on to one bit, okay? */
-        if( PyBytes_Check(item) ) {
-            Py_ssize_t content_len = PyBytes_GET_SIZE(item);
-            char* content = PyBytes_AS_STRING(item);
-            body_item = YMO_BUCKET_FROM_CPY(content, content_len);
-        }
         Py_DECREF(item);
+    }
+
+    if( PyErr_Occurred()) {
+        /* TODO: handle this... */
+        PyErr_Print();
     }
 
 wsgi_response_cancel:

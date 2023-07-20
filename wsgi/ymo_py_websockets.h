@@ -75,6 +75,6 @@ ymo_status_t ymo_wsgi_ws_recv_cb(
 void ymo_wsgi_ws_close_cb(ymo_ws_session_t* session, void* user_data);
 
 PyObject* yimmo_init_websockets(
-        PyObject* self, PyObject* const* args, PyObject* kwargs);
+        PyObject* self, PyObject* args, PyObject* kwargs);
 
 #endif /* YMO_PY_WEBSOCKETS_H */

@@ -97,12 +97,14 @@ ymo_status_t ymo_wsgi_init(ymo_wsgi_proc_t* w_proc)
     ymo_log_debug("Python Path:         %ls", py_path);
 #endif /* YMO_WSGI_DEBUG_PYTHON_EXEC */
 
-    ymo_log_notice("Notifying python of process fork");
+    if( w_proc->no_wsgi_proc > 1 ) {
+        ymo_log_notice("Notifying python of process fork");
 #if PY_VERSION_HEX <= 0x03070000
-    PyOS_AfterFork();
+        PyOS_AfterFork();
 #else
-    PyOS_AfterFork_Child();
+        PyOS_AfterFork_Child();
 #endif /* PY_VERSION_HEX */
+    }
 
     PyObject* m = ymo_wsgi_module_init();
     PyObject* pSysModules = PyImport_GetModuleDict();
@@ -196,7 +198,7 @@ ymo_status_t ymo_wsgi_init(ymo_wsgi_proc_t* w_proc)
     YMO_INCREF_PYDICT_SETITEM_STRING(pCommonEnviron, "SERVER_PROTOCOL", pUrlScheme);
 
     /* TODO: set from env? */
-    //YMO_INCREF_PYDICT_SETITEM_STRING(pCommonEnviron, "SCRIPT_NAME", PyUnicode_FromString(w_proc->module));
+    // YMO_INCREF_PYDICT_SETITEM_STRING(pCommonEnviron, "SCRIPT_NAME", PyUnicode_FromString(w_proc->module));
 
     YMO_INCREF_PYDICT_SETITEM_STRING(pCommonEnviron, "wsgi.version", pWsgiVersion);
     YMO_INCREF_PYDICT_SETITEM_STRING(pCommonEnviron, "wsgi.errors", pStderr); /* HACK! */
@@ -259,6 +261,7 @@ int ymo_wsgi_shutdown()
 
     /* If there was some exception: print it out (lazy...) */
     if( PyErr_Occurred() ) {
+        /* TODO: handle this... */
         PyErr_Print();
     }
 
@@ -275,7 +278,7 @@ int ymo_wsgi_shutdown()
  *---------------------------------------------------------------------------*/
 #if (YIMMO_PY_WEBSOCKETS == 1)
 static PyMethodDef yimmo_Methods[] = {
-    {"init_websockets",  yimmo_init_websockets,
+    {"init_websockets",  (PyCFunction)yimmo_init_websockets, // really: PyCFunctionWithKeywords
      METH_VARARGS | METH_KEYWORDS, INIT_WEBSOCKETS_DOC},
     {NULL, NULL, 0, NULL}        /* Sentinel */
 };
