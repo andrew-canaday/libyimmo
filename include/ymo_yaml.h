@@ -49,9 +49,7 @@ typedef struct ymo_yaml_node ymo_yaml_node_t;
 
 /** Doc Functions
  * -------------
- *
- *
- *---------------------------------------------------------------*/
+ */
 
 /** Load a yaml document from the given file path.
  *
