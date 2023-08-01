@@ -69,7 +69,7 @@ Buffering
 
 The core of libyimmo is oriented around handling *streams* of data
 efficiently — i.e. to facilitate use-cases where connections are potentially
-long-lived and data is sent at potentially irregular interfals (e.g. HTTP
+long-lived and data is sent at potentially irregular intervals (e.g. HTTP
 long-polling, WebSockets, etc).
 
 In order to facilitate incremental processing of HTTP post bodies,
@@ -189,7 +189,7 @@ supports chunked transfer encoding:
 
   Subsequent invocations of :c:func:`ymo_http_body_append` will re-arm the IO
   watcher for the request. The terminal chunk is automatically generated when
-  :c:func:`ymo_http_response_complete` is invoked.
+  :c:func:`ymo_http_response_finish` is invoked.
 
 If the user has appended data, but not "finished" the request and the client
 does not support chunked transfer encoding (i.e. HTTP 1.0 clients):
