@@ -20,6 +20,7 @@ API documentation for libyimmo.
    ymo_queue_h
    ymo_list_h
    ymo_util_h
+   ymo_yaml_h
 
 
 

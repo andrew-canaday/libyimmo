@@ -1,0 +1,34 @@
+simple_string: "Hello, world"
+simple_integer: 12345
+integer_fmts:
+  - 0x7f
+  - 127
+simple_float: 0.707
+simple_object:
+  key1: val1
+  key2: val2
+  key3: val3
+simple_list:
+  - item_0
+  - item_1
+  - item_2
+list_of_lists:
+  - [a, b, c]
+  - [1, 2, 3]
+combo_test:
+  some_key: some_val
+  nested_object:
+    a_string: "Word"
+    an_integer: 1
+    a_float: 3.1415927
+    a_sequence:
+      - "With just one element"
+    another_sequence:
+      - "This one has"
+      - two sentences
+    a_list:
+      - named_list: [x, y, z]
+      - just_an_item
+      - 'single quoted item'
+      - "double quoted item"
+      - [another, nested, list]

@@ -109,24 +109,24 @@ size_t ymo_wsgi_exchange_decref(ymo_wsgi_exchange_t* exchange);
 #if defined(YIMMO_WSGI_TRACE_REFCNT) && (YIMMO_WSGI_TRACE_REFCNT == 1)
 
 #  define WSGI_EXCHANGE_INCREF(e) \
-    ( \
-        ymo_log_trace("\033[00;01;33;m%s:%i: ymo_wsgi_exchange_incref(%p)\033[00;m", __func__, __LINE__, (void*)e), \
-        ymo_wsgi_exchange_incref(e) \
-    )
+        ( \
+            ymo_log_trace("\033[00;01;33;m%s:%i: ymo_wsgi_exchange_incref(%p)\033[00;m", __func__, __LINE__, (void*)e), \
+            ymo_wsgi_exchange_incref(e) \
+        )
 
 #  define WSGI_EXCHANGE_DECREF(e) \
-    ( \
-        ymo_log_trace("\033[00;01;33;m%s:%i: ymo_wsgi_exchange_decref(%p)\033[00;m", __func__, __LINE__, (void*)e), \
-        ymo_wsgi_exchange_decref(e) \
-    )
+        ( \
+            ymo_log_trace("\033[00;01;33;m%s:%i: ymo_wsgi_exchange_decref(%p)\033[00;m", __func__, __LINE__, (void*)e), \
+            ymo_wsgi_exchange_decref(e) \
+        )
 
 #else
 
 #  define WSGI_EXCHANGE_INCREF(e) \
-    ymo_wsgi_exchange_incref(e)
+        ymo_wsgi_exchange_incref(e)
 
 #  define WSGI_EXCHANGE_DECREF(e) \
-    ymo_wsgi_exchange_decref(e)
+        ymo_wsgi_exchange_decref(e)
 
 #endif /* YIMMO_WSGI_TRACE_REFCNT */
 

@@ -28,7 +28,7 @@
 
 #ifndef YMO_NET_H
 #define YMO_NET_H
-#include "ymo_config.h"
+#include "yimmo_config.h"
 
 #include <sys/socket.h>
 #if HAVE_FCNTL_H
@@ -72,20 +72,20 @@
 #if HAVE_DECL_EAGAIN && HAVE_DECL_EWOULDBLOCK
 /* EAGAIN and EWOULDBLOCK are present: */
     #define YMO_IS_BLOCKED(status) \
-    (status == EAGAIN || status == EWOULDBLOCK)
+            (status == EAGAIN || status == EWOULDBLOCK)
     #define YMO_WOULDBLOCK EWOULDBLOCK
 
 #elif HAVE_DECL_EAGAIN
 /* Only EAGAIN is present: */
     #define YMO_IS_BLOCKED(status) \
-    (status == EAGAIN)
+            (status == EAGAIN)
     #define EWOULDBLOCK EAGAIN
     #define YMO_WOULDBLOCK EAGAIN
 
 #elif HAVE_DECL_EWOULDBLOCK
 /* Only EWOULDBLOCK is present: */
     #define YMO_IS_BLOCKED(status) \
-    (status == EWOULDBLOCK)
+            (status == EWOULDBLOCK)
     #define EAGAIN EWOULDBLOCK
     #define YMO_WOULDBLOCK EWOULDBLOCK
 

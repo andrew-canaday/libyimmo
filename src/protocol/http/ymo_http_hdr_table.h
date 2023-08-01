@@ -71,8 +71,8 @@ YMO_FUNC_PURE ymo_http_hdr_id_t ymo_http_hdr_hash_ch(ymo_http_hdr_id_t h, char c
 #    define YMO_HTTP_HDR_HASH_INIT() 5
 #  endif /* YMO_HTTP_HDR_HASH_INIT */
 
-
-__attribute__((YMO_FUNC_PURE_P, YMO_FUNC_UNUSED_A)) static inline ymo_http_hdr_id_t ymo_http_hdr_hash_283_5(
+__attribute__((YMO_FUNC_PURE_P, YMO_FUNC_UNUSED_A))
+static inline ymo_http_hdr_id_t ymo_http_hdr_hash_283_5(
         const char* str_in, size_t* len)
 {
     const char* hdr_start = str_in;

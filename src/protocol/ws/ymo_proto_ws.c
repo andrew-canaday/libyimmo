@@ -18,7 +18,7 @@
  *
  *===========================================================================*/
 
-#include "ymo_config.h"
+#include "yimmo_config.h"
 
 #include "ymo_alloc.h"
 #include "ymo_blalloc.h"
@@ -60,9 +60,9 @@
 
 
 #define YMO_WS_SHOULD_CLOSE_ON_WRITE(s) \
-    ( (s->state == WS_SESSION_CLOSED) || \
-      (s->state == WS_SESSION_CLOSE_RECEIVED) || \
-      (s->state == WS_SESSION_ERROR) )
+        ( (s->state == WS_SESSION_CLOSED) || \
+          (s->state == WS_SESSION_CLOSE_RECEIVED) || \
+          (s->state == WS_SESSION_ERROR) )
 
 /* Buffering recv_cb used when YMO_WS_SERVER_BUFFERED is set: */
 static ymo_status_t ws_buffer_msg(

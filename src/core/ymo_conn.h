@@ -30,7 +30,7 @@
 #ifndef YMO_CONNECTION_H
 #define YMO_CONNECTION_H
 
-#include "ymo_config.h"
+#include "yimmo_config.h"
 
 #include <pthread.h>
 #include <bsat.h>

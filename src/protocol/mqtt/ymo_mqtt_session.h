@@ -24,7 +24,7 @@
 
 #ifndef YMO_MQTT_SESSION_H
 #define YMO_MQTT_SESSION_H
-#include "ymo_config.h"
+#include "yimmo_config.h"
 #include "yimmo.h"
 #include "core/ymo_bucket.h"
 #include "ymo_mqtt.h"
@@ -45,11 +45,11 @@ typedef struct ymo_mqtt_str {
 } ymo_mqtt_str_t;
 
 #define YMO_MQTT_STR_FREE(mqtt_str) \
-    if( mqtt_str.val ) { \
-        YMO_FREE(mqtt_str.val); \
-        mqtt_str.val = NULL;  \
-        mqtt_str.len = 0; \
-    }
+        if( mqtt_str.val ) { \
+            YMO_FREE(mqtt_str.val); \
+            mqtt_str.val = NULL;  \
+            mqtt_str.len = 0; \
+        }
 
 YMO_ENUM8_TYPEDEF(mqtt_parse_state) {
     MQTT_PARSE_FIXED_CTRLPACK,

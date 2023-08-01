@@ -24,7 +24,7 @@
 
 #ifndef YMO_MQTT_PROTO_MQTT_H
 #define YMO_MQTT_PROTO_MQTT_H
-#include "ymo_config.h"
+#include "yimmo_config.h"
 #include "yimmo.h"
 #include "ymo_mqtt.h"
 

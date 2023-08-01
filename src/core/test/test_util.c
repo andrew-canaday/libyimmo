@@ -134,18 +134,18 @@ int test_base64_encoded(void)
 
 
 #define assert_utf8_value(s, d, v) \
-    do { \
-        ymo_utf8_state_t state; \
-        ymo_utf8_state_reset(&state); \
-        int rc = ymo_check_utf8(&state, s, sizeof(s)-1, d); \
-        ymo_assert_test(rc == v, "Expected " #v " for " #s); \
-    } while( 0 );
+        do { \
+            ymo_utf8_state_t state; \
+            ymo_utf8_state_reset(&state); \
+            int rc = ymo_check_utf8(&state, s, sizeof(s)-1, d); \
+            ymo_assert_test(rc == v, "Expected " #v " for " #s); \
+        } while( 0 );
 
 #define assert_utf8_valid(s, d) \
-    assert_utf8_value(s, d, YMO_OKAY)
+        assert_utf8_value(s, d, YMO_OKAY)
 
 #define assert_utf8_invalid(s, d) \
-    assert_utf8_value(s, d, EILSEQ)
+        assert_utf8_value(s, d, EILSEQ)
 
 int test_utf8_validation(void)
 {

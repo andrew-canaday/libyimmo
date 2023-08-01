@@ -34,7 +34,7 @@
 #define YMO_BUCKET_SENDFILE  2
 #define YMO_BUCKET_FROM_FILE YMO_BUCKET_FSTREAM
 
-#include "ymo_config.h"
+#include "yimmo_config.h"
 #include <stddef.h>
 #include "yimmo.h"
 

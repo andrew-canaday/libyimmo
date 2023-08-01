@@ -87,15 +87,26 @@ static inline void ymo_list_insert(
 }
 
 
+static inline const ymo_list_head_t* ymo_list_last(const ymo_list_head_t* current)
+{
+    if( current ) {
+        while( current->next ) {
+            current = current->next;
+        }
+    }
+    return current;
+}
+
+
 /** Get the next item in a list. */
-static inline ymo_list_head_t* ymo_list_next(ymo_list_head_t* head)
+static inline const ymo_list_head_t* ymo_list_next(const ymo_list_head_t* head)
 {
     return head->next;
 }
 
 
 /** Get the previous item in a list. */
-static inline ymo_list_head_t* ymo_list_prev(ymo_list_head_t* head)
+static inline const ymo_list_head_t* ymo_list_prev(const ymo_list_head_t* head)
 {
     return head->prev;
 }
@@ -119,7 +130,7 @@ static inline ymo_list_head_t* ymo_list_prev(ymo_list_head_t* head)
  *
  */
 #define YMO_LIST_HEAD_M(name) \
-    ymo_list_head_t name
+        ymo_list_head_t name
 
 
 /** YMO_LIST_HEAD_M using a generic name.
@@ -127,7 +138,7 @@ static inline ymo_list_head_t* ymo_list_prev(ymo_list_head_t* head)
  * (See :c:macro:`YMO_LIST_HEAD_M`)
  */
 #define YMO_LIST_HEAD() \
-    ymo_list_head_t YMO_LIST_NAME_DEFAULT
+        ymo_list_head_t YMO_LIST_NAME_DEFAULT
 
 /** Initialize a list head object.
  *
@@ -139,7 +150,7 @@ static inline ymo_list_head_t* ymo_list_prev(ymo_list_head_t* head)
  *
  */
 #define YMO_LIST_INIT_M(p, m) \
-    ((p)->m->prev = (p)->m->next = NULL)
+        ((p)->m->prev = (p)->m->next = NULL)
 
 
 /** YMO_LIST_INIT_M using a generic name.
@@ -147,36 +158,36 @@ static inline ymo_list_head_t* ymo_list_prev(ymo_list_head_t* head)
  * (See :c:macro:`YMO_LIST_INIT_M`)
  */
 #define YMO_LIST_INIT(p) \
-    YMO_LIST_INIT_M(p, YMO_LIST_NAME_DEFAULT)
+        YMO_LIST_INIT_M(p, YMO_LIST_NAME_DEFAULT)
 
 
-/** Append an item to a list.
+/** Append an item to c list.
  *
  * .. code-block:: c
  *    :caption: Example
  *
- *    my_type_t a;
- *    my_type_t b;
+ *    my_type_t c;
+ *    my_type_t n;
  *
- *    YMO_LIST_INIT(&a, head);
- *    YMO_LIST_INIT(&b, head);
- *    YMO_LIST_APPEND_M(&a, &b, head);
+ *    YMO_LIST_INIT(&c, head);
+ *    YMO_LIST_INIT(&n, head);
+ *    YMO_LIST_APPEND_M(&c, &n, head);
  */
-#define YMO_LIST_APPEND_M(a, b, m) \
-    ymo_list_insert(NULL, &a->m, &b->m)
+#define YMO_LIST_APPEND_M(c, n, m) \
+        ymo_list_insert(&c->m, &n->m, NULL)
 
 
-/** YMO_LIST_APPEND_M using a generic name.
+/** YMO_LIST_APPEND_M using c generic name.
  *
  * (See :c:macro:`YMO_LIST_APPEND_M`)
  */
-#define YMO_LIST_APPEND(a, b) \
-    YMO_LIST_APPEND_M(a, b, YMO_LIST_NAME_DEFAULT)
+#define YMO_LIST_APPEND(c, n) \
+        YMO_LIST_APPEND_M(c, n, YMO_LIST_NAME_DEFAULT)
 
 
 /** */
 #define YMO_LIST_INSERT_M(p, c, n, m) \
-    ymo_list_insert(&p->m, &c->m, &n->m)
+        ymo_list_insert(p->m, c->m, n->m)
 
 
 /** YMO_LIST_INSERT_M using a generic name.
@@ -184,12 +195,12 @@ static inline ymo_list_head_t* ymo_list_prev(ymo_list_head_t* head)
  * (See :c:macro:`YMO_LIST_INSERT_M`)
  */
 #define YMO_LIST_INSERT(p, c, n) \
-    YMO_LIST_INSERT_M(p, c, n, YMO_LIST_NAME_DEFAULT)
+        YMO_LIST_INSERT_M(p, c, n, YMO_LIST_NAME_DEFAULT)
 
 
 /** */
 #define YMO_LIST_NEXT_M(p, t, m) \
-    ((t*)(((YMO_LIST_PTR_AR_TYPE)ymo_list_next(&p->m)) - offsetof(t,m)))
+        ((t*)(((YMO_LIST_PTR_AR_TYPE)ymo_list_next(&p->m)) - offsetof(t,m)))
 
 
 /** YMO_LIST_NEXT_M using a generic name.
@@ -197,12 +208,12 @@ static inline ymo_list_head_t* ymo_list_prev(ymo_list_head_t* head)
  * (See :c:macro:`YMO_LIST_NEXT_M`)
  */
 #define YMO_LIST_NEXT(p, t) \
-    YMO_LIST_NEXT_M(p, t, YMO_LIST_NAME_DEFAULT)
+        YMO_LIST_NEXT_M(p, t, YMO_LIST_NAME_DEFAULT)
 
 
 /** */
 #define YMO_LIST_PREV_M(p, t, m) \
-    ((t*)(((YMO_LIST_PTR_AR_TYPE)ymo_list_prev(&p->m)) - offsetof(t,m)))
+        ((t*)(((YMO_LIST_PTR_AR_TYPE)ymo_list_prev(&p->m)) - offsetof(t,m)))
 
 
 /** YMO_LIST_PREV_M using a generic name.
@@ -210,10 +221,21 @@ static inline ymo_list_head_t* ymo_list_prev(ymo_list_head_t* head)
  * (See :c:macro:`YMO_LIST_PREV_M`)
  */
 #define YMO_LIST_PREV(p, t) \
-    YMO_LIST_PREV_M(p, t, YMO_LIST_NAME_DEFAULT)
+        YMO_LIST_PREV_M(p, t, YMO_LIST_NAME_DEFAULT)
+
+
+/** */
+#define YMO_LIST_LAST_M(c, t, m) \
+        ((t*)(((YMO_LIST_PTR_AR_TYPE)ymo_list_last(&c->m)) - offsetof(t,m)))
+
+
+/** YMO_LIST_LAST_M using a generic name.
+ *
+ * (See :c:macro:`YMO_LIST_LAST_M`)
+ */
+#define YMO_LIST_LAST(c, t) \
+        YMO_LIST_LAST_M(c, t, YMO_LIST_NAME_DEFAULT)
 
 
 #endif /* YIMMO_LIST_H */
-
-
 

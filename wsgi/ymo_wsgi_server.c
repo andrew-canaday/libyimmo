@@ -167,7 +167,7 @@ ymo_server_t* ymo_wsgi_server_init(
     http_srv = ymo_server_create(&http_cfg, http_proto);
     if( http_srv ) {
         /* If we're going to fork, give libyimmo a heads up: */
-        if( proc->no_wsgi_proc > 1) {
+        if( proc->no_wsgi_proc > 1 ) {
             ymo_status_t mp_ok = ymo_server_pre_fork(http_srv);
             if( mp_ok ) {
                 ymo_log(YMO_LOG_ERROR, strerror(mp_ok));

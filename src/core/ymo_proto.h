@@ -43,7 +43,7 @@
 
 #ifndef YMO_PROTOCOL_H
 #define YMO_PROTOCOL_H
-#include "ymo_config.h"
+#include "yimmo_config.h"
 #include <stddef.h>
 #include "yimmo.h"
 

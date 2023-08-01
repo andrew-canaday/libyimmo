@@ -20,7 +20,7 @@
  *===========================================================================*/
 
 
-#include "ymo_config.h"
+#include "yimmo_config.h"
 #include <stdint.h>
 #include <stdio.h>
 
@@ -99,16 +99,16 @@ typedef uint16_t stride_t;
  *---------------------------------------------------------------*/
 /* Convenience macro for converting a single char to lowercase: */
 #define FAST_CHAR_TOLOWER(dst, src) \
-    c = *src++; \
-    mask = (((L_LOW - c) ^ (L_HIGH - c)) >> 2) & CASE_MASK; \
-    *dst++ = c ^ mask;
+        c = *src++; \
+        mask = (((L_LOW - c) ^ (L_HIGH - c)) >> 2)&CASE_MASK; \
+        *dst++ = c ^ mask;
 
 
 /* Convenience macro for converting a single char to lowercase: */
 #define FAST_CHAR_TOUPPER(dst, src) \
-    c = *src++; \
-    mask = (((U_LOW - c) ^ (U_HIGH - c)) >> 2) & CASE_MASK; \
-    *dst++ = c ^ mask;
+        c = *src++; \
+        mask = (((U_LOW - c) ^ (U_HIGH - c)) >> 2)&CASE_MASK; \
+        *dst++ = c ^ mask;
 
 
 /*---------------------------------------------------------------*
@@ -403,11 +403,11 @@ ymo_status_t ymo_check_utf8(
     };
 
 #define quartet(c,p) ( \
-        (c << 24) | \
-        (*(p) << 16) | \
-        (*(p+1) << 8)  | \
-        (*(p+2)) \
-        )
+            (c << 24) | \
+            (*(p) << 16) | \
+            (*(p+1) << 8)  | \
+            (*(p+2)) \
+            )
 
     const char* p = buffer;
     while( len-- )

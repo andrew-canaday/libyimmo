@@ -23,7 +23,7 @@
 
 #ifndef YMO_HTTP_PARSE_H
 #define YMO_HTTP_PARSE_H
-#include "ymo_config.h"
+#include "yimmo_config.h"
 #include <stddef.h>
 #include "yimmo.h"
 #include "ymo_http.h"

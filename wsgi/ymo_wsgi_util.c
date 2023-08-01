@@ -20,7 +20,7 @@
  *===========================================================================*/
 
 #define PY_SSIZE_T_CLEAN
-#include "ymo_config.h"
+#include "yimmo_config.h"
 
 #include <Python.h>
 #include <stdio.h>

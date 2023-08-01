@@ -28,7 +28,6 @@
 #include <Python.h>
 #include <pthread.h>
 
-#define YMO_WSGI_SESSION_INTERNALS
 #include "ymo_alloc.h"
 #include "ymo_log.h"
 #include "ymo_wsgi_session.h"

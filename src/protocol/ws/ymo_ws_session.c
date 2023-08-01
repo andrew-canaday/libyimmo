@@ -19,7 +19,7 @@
  *
  *===========================================================================*/
 
-#include "ymo_config.h"
+#include "yimmo_config.h"
 #include "ymo_log.h"
 #include "ymo_util.h"
 #include "yimmo.h"

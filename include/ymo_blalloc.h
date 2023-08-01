@@ -75,7 +75,7 @@ ymo_blalloc_t* ymo_blalloc_create(size_t n) YMO_FUNC_MALLOC;
  * e.g. my_type_t* my_var = YMO_BLALLOC(block, my_type_t)
  */
 #define YMO_BLALLOC(b,t) \
-    ymo_blalloc(b, alignof(t), sizeof(t))
+        ymo_blalloc(b, alignof(t), sizeof(t))
 
 /** Allocate a type from the block (prefer :c:macro:`YMO_BLALLOC` ).
  *

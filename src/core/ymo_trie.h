@@ -21,7 +21,7 @@
 #ifndef YMO_TRIE_H
 #define YMO_TRIE_H
 
-#include "ymo_config.h"
+#include "yimmo_config.h"
 
 #include <stdint.h>
 #include <stdio.h>

@@ -19,7 +19,7 @@
  *
  *===========================================================================*/
 
-#include "ymo_config.h"
+#include "yimmo_config.h"
 
 #include <string.h>
 
@@ -57,24 +57,24 @@ const char* CTRL_PACK_NAMES[] = {
 
 /* Given a control packet type, get the associated name. */
 #define CTRL_PACK_NAME(msg_type) \
-    CTRL_PACK_NAMES[ (msg_type>>4) - 1]
+        CTRL_PACK_NAMES[ (msg_type>>4) - 1]
 
 /* Consume a 16-bit unsigned int from the char buffer "src", incrementing
  * the pointer as a side effect. */
 #define PARSE_CONSUME_UINT16(dst, src) \
-    dst = ((uint16_t)(*src++)) << 8; \
-    dst += (uint16_t)(*src++)
+        dst = ((uint16_t)(*src++)) << 8; \
+        dst += (uint16_t)(*src++)
 
 /* Consume an 8-bit unsigned int from the char buffer "src", incrementing
  * the pointer as a side effect. */
 #define PARSE_CONSUME_UINT8(dst, src) \
-    dst = (uint8_t)(*src++)
+        dst = (uint8_t)(*src++)
 
 /* Consume the string of length "len" from the char buffer "src", incrementing
  * the pointer as a side effect. */
 #define PARSE_CONSUME_STRVAL(dst, src, len) \
-    memcpy(dst, src, len); \
-    src += len
+        memcpy(dst, src, len); \
+        src += len
 
 /* CAUTION: hacky + no mem checking.
  * Initialize a ymo_mqtt_str_t object from data in a message buffer:
@@ -84,9 +84,9 @@ const char* CTRL_PACK_NAMES[] = {
  * - Increment the "src" pointer as a side effect.
  */
 #define PARSE_STRDUP(dst, src) \
-    PARSE_CONSUME_UINT16(dst.len, src); \
-    dst.val = YMO_ALLOC(dst.len); \
-    PARSE_CONSUME_STRVAL(dst.val, src, dst.len)
+        PARSE_CONSUME_UINT16(dst.len, src); \
+        dst.val = YMO_ALLOC(dst.len); \
+        PARSE_CONSUME_STRVAL(dst.val, src, dst.len)
 
 
 /*---------------------------------------------------------------*
@@ -223,11 +223,11 @@ static inline ymo_status_t mqtt_parse_payload(ymo_mqtt_session_t* session)
             /* Convenience macro used to copy special fields out of the
              * payload. */
                 #define PARSE_CONNECT_FIELD(dst, flag) \
-    if( session->connect_flags & flag ) { \
-        PARSE_STRDUP(session->dst, current); \
-        ymo_log_trace("%s: %.*s", #flag, \
+                        if( session->connect_flags & flag ) { \
+                            PARSE_STRDUP(session->dst, current); \
+                            ymo_log_trace("%s: %.*s", #flag, \
                     session->dst.len, session->dst.val); \
-    }
+                        }
 
             PARSE_CONNECT_FIELD(will_topic, CONNECT_WILL_FLAG);
             PARSE_CONNECT_FIELD(will_msg, CONNECT_WILL_FLAG);
@@ -271,7 +271,7 @@ ssize_t ymo_mqtt_parse_fixed_ctrlpack(
 {
     /* Convenience macro to keep our switch tidy: */
     #define ASSERT_CTRL_FLAG(flag_val) \
-    if( msg_flags != flag_val ) { goto ctrl_inval; };
+            if( msg_flags != flag_val ) { goto ctrl_inval; };
 
     /* Probably, this is the start of the message, but we check in case we
      * previously received only one byte: */

@@ -39,7 +39,7 @@ AC_USE_SYSTEM_EXTENSIONS
 YMO_TERM_CHECK()
 YMO_MSG_RESULT() AC_MSG_RESULT([$1])
 m4_pushdef([AC_MSG_RESULT], [{
-        AS_IF([test "x$ymo_configure_has_color" == "x1" ],[
+        AS_IF([test "x$yimmo_configure_has_color" == "x1" ],[
             AS_CASE(["x$1"],
                 [xyes*], [ymo_color_l="\\033@<:@00;32;m"],
                 [xno*], [ymo_color_l="\\033@<:@01;31;m"],
@@ -226,7 +226,7 @@ AC_ARG_ENABLE([py-websockets],
         [Build py-websockets programs]))
 
 AM_CONDITIONAL([BUILD_PY_WEBSOCKETS],[test "x$enable_py_websockets" = "xyes"])
-AS_IF([test "x$enable_py_websockets" = "xyes"],
+AS_IF([test "x$enable_py_websockets" = "xyes"],[
 		YMO_ENABLED([yimmo-wsgi WebSockets])
 		AC_DEFINE([YIMMO_PY_WEBSOCKETS],[1],[Do build optional websockets support into yimmo-wsgi])
 	],[
@@ -302,7 +302,7 @@ AS_IF([test "x$enable_verbose_assert" = "xyes"], [
 ##          Output:
 ##-----------------------------
 YMO_BOX([Generating output files])
-AC_CONFIG_HEADERS([src/core/ymo_config.h])
+AC_CONFIG_HEADERS([src/core/yimmo_config.h])
 
 ## yimmo general output files:
 AC_CONFIG_FILES([
@@ -321,6 +321,7 @@ AC_CONFIG_FILES([
     include/Makefile
     src/core/Makefile
     src/core/test/Makefile
+    src/core/test/yaml_test.yml
     src/core/libyimmo-${YIMMO_VERSION_MAJOR}.${YIMMO_VERSION_MINOR}.pc:src/core/libyimmo.pc.in
     ])
 

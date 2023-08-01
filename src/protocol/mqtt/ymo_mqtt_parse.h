@@ -23,7 +23,7 @@
 
 #ifndef YMO_MQTT_PARSE_H
 #define YMO_MQTT_PARSE_H
-#include "ymo_config.h"
+#include "yimmo_config.h"
 #include "yimmo.h"
 #include "ymo_mqtt.h"
 #include "ymo_mqtt_session.h"

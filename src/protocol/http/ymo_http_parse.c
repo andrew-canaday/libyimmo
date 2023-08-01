@@ -20,7 +20,7 @@
 
 /* HACK HACK: for strdup */
 #define _POSIX_C_SOURCE 200809L
-#include "ymo_config.h"
+#include "yimmo_config.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -72,17 +72,17 @@
  * - https://www.iana.org/assignments/http-methods/http-methods.xhtml
  */
 #define IS_HTTP_METHOD_TOKEN(c) ( \
-        (((uint8_t)c) >= 'A' && ((uint8_t)c) <= 'Z') || \
-        (((uint8_t)c) == '-') \
-        )
+            (((uint8_t)c) >= 'A' && ((uint8_t)c) <= 'Z') || \
+            (((uint8_t)c) == '-') \
+            )
 
 
 #define IS_HTTP_HDR_FIELD_TOKEN(c) ( \
-        (((uint8_t)c) >= '0' && ((uint8_t)c) <= '9') || \
-        (((uint8_t)c) >= 'A' && ((uint8_t)c) <= 'Z') || \
-        (((uint8_t)c) >= 'a' && ((uint8_t)c) <= 'z') || \
-        (((uint8_t)c) == '-') \
-        )
+            (((uint8_t)c) >= '0' && ((uint8_t)c) <= '9') || \
+            (((uint8_t)c) >= 'A' && ((uint8_t)c) <= 'Z') || \
+            (((uint8_t)c) >= 'a' && ((uint8_t)c) <= 'z') || \
+            (((uint8_t)c) == '-') \
+            )
 
 
 /*---------------------------------------------------------------*

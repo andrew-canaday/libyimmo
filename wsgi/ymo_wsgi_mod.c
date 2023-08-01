@@ -27,7 +27,7 @@
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 #include "ymo_log.h"
-#include "ymo_config.h"
+#include "yimmo_config.h"
 
 #include "yimmo_wsgi.h"
 #include "ymo_wsgi_mod.h"

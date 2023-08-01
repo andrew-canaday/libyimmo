@@ -49,30 +49,34 @@ libyimmo_la_CFLAGS=\
 	-I@top_builddir@/include \
 	-I@top_srcdir@/include \
 	-DYMO_SOURCE="\"$(<F)\"" \
+	@OPENSSL_INCLUDES@ \
 	@BSAT_CFLAGS@ \
 	@PTHREAD_CFLAGS@
 
 # TODO: pthreads should be conditional
 libyimmo_la_LDFLAGS=\
 	-version-info @YMO_LIB_VERSION@ \
+	@OPENSSL_LDFLAGS@ \
+	@OPENSSL_LIBS@ \
 	@BSAT_LIBS@ \
 	@LIBS@ \
 	@PTHREAD_LIBS@
 
 libyimmo_la_SOURCES=\
+	yimmo.c \
 	ymo_alloc.c \
-	ymo_server.c \
-	ymo_conn.c \
-	ymo_util.c \
-	ymo_env.c \
-	ymo_net.c \
-	ymo_bucket.c \
-	ymo_trie.c \
-	ymo_proto.c \
 	ymo_blalloc.c \
+	ymo_bucket.c \
+	ymo_conn.c \
+	ymo_env.c \
 	ymo_list.c \
+	ymo_net.c \
+	ymo_proto.c \
 	ymo_queue.c \
-	yimmo.c
+	ymo_server.c \
+	ymo_trie.c \
+	ymo_util.c \
+	ymo_yaml.c
 
 pkgconfig_DATA=\
 	@PACKAGE_NAME@-@YIMMO_VERSION_MAJOR@.@YIMMO_VERSION_MINOR@.pc

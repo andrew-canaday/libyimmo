@@ -36,7 +36,7 @@
 #include "yimmo_wsgi.h"
 
 #define INIT_WEBSOCKETS_DOC \
-    PyDoc_STR( \
+        PyDoc_STR( \
         "init_websockets(on_open, on_message, on_close)\n" \
         "--\n\n" \
         "Enable websockets upgrades and define callbacks for \n" \

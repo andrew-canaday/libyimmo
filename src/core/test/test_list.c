@@ -25,7 +25,7 @@
 #include <ctype.h>
 #include <string.h>
 
-#include "ymo_config.h"
+#include "yimmo_config.h"
 #include "yimmo.h"
 #include "ymo_alloc.h"
 #include "ymo_list.h"

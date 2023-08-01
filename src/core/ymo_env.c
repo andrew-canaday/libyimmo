@@ -20,7 +20,7 @@
  *===========================================================================*/
 
 
-#include "ymo_config.h"
+#include "yimmo_config.h"
 
 #include <stdlib.h>
 #include <stdint.h>
@@ -41,7 +41,7 @@ int ymo_env_as_long(const char* env_name, long* value, long* def_val)
     }
 
     char* endptr;
-    long env_l = strtol(env_s, &endptr, 10);
+    long env_l = strtol(env_s, &endptr, 0);
     if( *endptr == '\0' ) {
         *value = env_l;
         return 0;

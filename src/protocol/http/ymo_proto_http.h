@@ -24,7 +24,7 @@
 
 #ifndef YMO_HTTP_PROTO_HTTP_H
 #define YMO_HTTP_PROTO_HTTP_H
-#include "ymo_config.h"
+#include "yimmo_config.h"
 #include "yimmo.h"
 #include "ymo_http.h"
 #include "core/ymo_net.h"

@@ -33,7 +33,8 @@ yimmo_HEADERS=\
 	ymo_list.h \
 	ymo_log.h \
 	ymo_queue.h \
-	ymo_util.h
+	ymo_util.h \
+	ymo_yaml.h
 
 
 # NOTE: This will overwrite the major-version directory, even if installing

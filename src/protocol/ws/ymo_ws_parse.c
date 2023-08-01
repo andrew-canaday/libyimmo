@@ -18,7 +18,7 @@
  *
  *===========================================================================*/
 
-#include "ymo_config.h"
+#include "yimmo_config.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -45,7 +45,7 @@
  *  Declarations
  *---------------------------------------------------------------*/
 #define YMO_WS_FLAGS_RESERVED(f) \
-    (f & (YMO_WS_FLAG_RSV1 | YMO_WS_FLAG_RSV2 | YMO_WS_FLAG_RSV3) )
+        (f & (YMO_WS_FLAG_RSV1 | YMO_WS_FLAG_RSV2 | YMO_WS_FLAG_RSV3) )
 
 
 

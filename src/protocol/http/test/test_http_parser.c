@@ -24,7 +24,7 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 
-#include "ymo_config.h"
+#include "yimmo_config.h"
 #include "ymo_attrs.h"
 
 #include "yimmo.h"

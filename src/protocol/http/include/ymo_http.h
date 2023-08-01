@@ -896,11 +896,11 @@ ymo_server_t* ymo_http_simple_init(
  *    - validation
  */
 #define YMO_HTTP_STATUS_CHR3_TO_INT(s) \
-    ( \
-        ((s[0] & 0xf) * 100) + \
-        ((s[1] & 0xf) * 10) + \
-        (s[2] & 0xf) \
-    )
+        ( \
+            ((s[0] & 0xf) * 100) + \
+            ((s[1] & 0xf) * 10) + \
+            (s[2] & 0xf) \
+        )
 
 #endif /* YMO_HTTP_H */
 

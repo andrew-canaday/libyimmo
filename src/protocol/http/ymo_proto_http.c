@@ -18,7 +18,7 @@
  *
  *===========================================================================*/
 
-#include "ymo_config.h"
+#include "yimmo_config.h"
 
 #include "ymo_alloc.h"
 #include <string.h>

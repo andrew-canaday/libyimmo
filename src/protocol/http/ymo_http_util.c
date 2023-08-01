@@ -18,7 +18,7 @@
  *
  *===========================================================================*/
 
-#include "ymo_config.h"
+#include "yimmo_config.h"
 #include "core/ymo_server.h"
 #include "ymo_http.h"
 #include "ymo_log.h"

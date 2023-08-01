@@ -39,35 +39,35 @@
 
 /** */
 #define YMO_INCREF_PYDICT_SETITEM(d, k, v) \
-    { \
-        PyObject* _v_py_tmp = v; \
-        Py_INCREF(_v_py_tmp); \
-        PyDict_SetItem(d, k, _v_py_tmp); \
-    }
+        { \
+            PyObject* _v_py_tmp = v; \
+            Py_INCREF(_v_py_tmp); \
+            PyDict_SetItem(d, k, _v_py_tmp); \
+        }
 
 /** */
 #define YMO_DECREF_PYDICT_SETITEM(d, k, v) \
-    { \
-        PyObject* _v_py_tmp = v; \
-        PyDict_SetItem(d, k, _v_py_tmp); \
-        Py_DECREF(_v_py_tmp); \
-    }
+        { \
+            PyObject* _v_py_tmp = v; \
+            PyDict_SetItem(d, k, _v_py_tmp); \
+            Py_DECREF(_v_py_tmp); \
+        }
 
 /** */
 #define YMO_INCREF_PYDICT_SETITEM_STRING(d, k, v) \
-    { \
-        PyObject* _v_py_tmp = v; \
-        Py_INCREF(_v_py_tmp); \
-        PyDict_SetItemString(d, k, _v_py_tmp); \
-    }
+        { \
+            PyObject* _v_py_tmp = v; \
+            Py_INCREF(_v_py_tmp); \
+            PyDict_SetItemString(d, k, _v_py_tmp); \
+        }
 
 /** */
 #define YMO_DECREF_PYDICT_SETITEM_STRING(d, k, v) \
-    { \
-        PyObject* _v_py_tmp = v; \
-        PyDict_SetItemString(d, k, _v_py_tmp); \
-        Py_DECREF(_v_py_tmp); \
-    }
+        { \
+            PyObject* _v_py_tmp = v; \
+            PyDict_SetItemString(d, k, _v_py_tmp); \
+            Py_DECREF(_v_py_tmp); \
+        }
 
 
 /**---------------------------------

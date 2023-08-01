@@ -35,6 +35,8 @@ config.h.in
 config.h.in~
 ymo_config.h.in
 ymo_config.h.in~
+yimmo_config.h.in
+yimmo_config.h.in~
 config.sub
 configure
 depcomp

@@ -39,7 +39,15 @@
         </style>
         <script>
             var no_lines = 0;
-            var ws = new WebSocket("ws://127.0.0.1:8081/");
+            var wsScheme = "ws:";
+
+            if( location.protocol == "https:" ) {
+                wsScheme = "wss:";
+            }
+
+            var wsUrl = wsScheme + "//" + location.host;
+            console.log("Websocket URL: " + wsUrl);
+            var ws = new WebSocket(wsUrl);
             ws.onopen = function() {
                 var d = document.getElementById('msg_in');
                 d.innerHTML += "<p class=\"status\">WebSocket: Open</p>";

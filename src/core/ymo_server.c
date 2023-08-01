@@ -20,7 +20,7 @@
  *===========================================================================*/
 
 #define _GNU_SOURCE
-#include "ymo_config.h"
+#include "yimmo_config.h"
 
 #include <stdio.h>
 #include <assert.h>
@@ -41,10 +41,12 @@
 #include "ymo_server.h"
 #include "ymo_conn.h"
 #include "ymo_net.h"
-#include "ymo_tls.h"
 #include "ymo_env.h"
 
-#define YMO_SERVER_TRACE 0
+#ifndef YMO_SERVER_TRACE
+#  define YMO_SERVER_TRACE 1
+#endif
+
 #if defined(YMO_SERVER_TRACE) && YMO_SERVER_TRACE == 1
 # define SERVER_TRACE(fmt, ...) ymo_log_trace(fmt, __VA_ARGS__);
 # define SERVER_TRACE_UUID(fmt, ...) ymo_log_trace_uuid(fmt, __VA_ARGS__);
@@ -53,6 +55,7 @@
 # define SERVER_TRACE_UUID(fmt, ...)
 #endif /* YMO_SERVER_TRACE */
 
+#include "ymo_tls.h"
 
 /*---------------------------------------------------------------*
  *  Utility Prototypes:
@@ -134,6 +137,9 @@ ymo_status_t ymo_server_init(ymo_server_t* server)
             ymo_log_fatal("SSL context initialization failed.");
             goto server_init_close_and_bail;
         }
+    } else {
+        ymo_log_info("No TLS cert or path provided.");
+        server->config.use_tls = 0;
     }
 
     /* Set socket traits: */
@@ -491,13 +497,13 @@ do_read:
         goto do_read;
     }
 
-#if YMO_ENABLE_TLS && defined(CHECK_SSL_PENDING) && CHECK_SSL_PENDING
+#if YMO_ENABLE_TLS && defined(YMO_CHECK_SSL_PENDING) && YMO_CHECK_SSL_PENDING
     if( (conn->state == YMO_CONN_TLS_ESTABLISHED
          || conn->state == YMO_CONN_TLS_CLOSING)
         && SSL_pending(conn->ssl) ) {
         goto do_read;
     }
-#endif /* CHECK_SSL_PENDING */
+#endif /* YMO_CHECK_SSL_PENDING */
     return;
 
 read_check_parse_error:
@@ -589,6 +595,8 @@ static void ymo_conn_accept(ymo_server_t* server, int client_fd)
     }
 
     if( ymo_init_ssl(server, conn, client_fd) ) {
+        SERVER_TRACE("SSL init failed: %s (%i)",
+                strerror(errno), errno);
         close_and_free_connection(server, conn, 1);
         return;
     }
@@ -642,8 +650,6 @@ static ymo_status_t conn_proto_init(
         if( init_status != YMO_OKAY ) {
             SERVER_TRACE("Protocol ready invocation failed: %s (%i)",
                     strerror(errno), errno);
-            proto->vtable.conn_cleanup_cb(
-                    proto->data, conn, conn->proto_data);
         }
     } else {
         SERVER_TRACE_UUID("No ready callback for %s",

@@ -20,7 +20,9 @@ jobs:
       - name: Set up base system
         run: |
           sudo apt update
-          sudo apt-get -qq install -y libev-dev
+          sudo apt-get -qq install -y \
+            libev-dev \
+            libyaml-dev
           mkdir -p ./build/bsat
           mkdir -p ./build/yimmo
 

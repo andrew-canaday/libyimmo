@@ -48,7 +48,7 @@
 
 #ifndef YMO_SERVER_H
 #define YMO_SERVER_H
-#include "ymo_config.h"
+#include "yimmo_config.h"
 
 #if defined(YIMMO_WSGI) && (YIMMO_WSGI == 1)
 #include <stdatomic.h>

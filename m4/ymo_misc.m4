@@ -135,7 +135,8 @@ AC_DEFUN([YMO_WARN],[
 # -------------------------------------------------------------------
 AC_DEFUN([YMO_ERROR],[
         AS_IF([test "x$ymo_configure_has_color" == "x1"],[
-                AC_MSG_ERROR([\\033@<:@0;04;31;m$1\\033@<:@00;m])
+                ymo_err_msg=`printf "\\033@<:@0;04;31;m%s\\033@<:@00;m" "$1"`
+                AC_MSG_ERROR([$ymo_err_msg])
             ],[
                 AC_MSG_ERROR([$1])
         ])

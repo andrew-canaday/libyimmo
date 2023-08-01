@@ -24,7 +24,7 @@
 
 #ifndef YMO_WS_PROTO_WS_H
 #define YMO_WS_PROTO_WS_H
-#include "ymo_config.h"
+#include "yimmo_config.h"
 #include "yimmo.h"
 #include "ymo_ws.h"
 #include "core/ymo_net.h"

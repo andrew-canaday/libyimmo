@@ -72,10 +72,10 @@
 /** Function used to report assertion failure and abort
  */
 #define ymo_assert_test_fail_fmt(fmt, ...) \
-    fprintf(YMO_ASSERT_STREAM_OUT, \
+        fprintf(YMO_ASSERT_STREAM_OUT, \
         " - \033[00;31mFAIL: "fmt " (%s:%s:%i)\033[00;m\n", \
         __VA_ARGS__, YMO_SOURCE, __func__, __LINE__); \
-    ymo_assert_test_abort();
+        ymo_assert_test_abort();
 
 #endif /* ymo_assert_test_fail_fmt */
 
@@ -86,8 +86,8 @@
 /** Function used to report assertion failure and abort
  */
 #define ymo_assert_test_fail(test_desc) \
-    ymo_assert_test_fail_fmt("%s", test_desc); \
-    ymo_assert_test_abort();
+        ymo_assert_test_fail_fmt("%s", test_desc); \
+        ymo_assert_test_abort();
 
 #endif /* ymo_assert_test_fail */
 
@@ -98,11 +98,11 @@
 /** Function used to report assertion success, if verbose is defined
  */
 #define ymo_assert_test_pass_fmt(fmt, ...) \
-    if( YMO_ASSERT_VERBOSE ) { \
-        fprintf(YMO_ASSERT_STREAM_OUT, \
+        if( YMO_ASSERT_VERBOSE ) { \
+            fprintf(YMO_ASSERT_STREAM_OUT, \
         " - \033[00;32mPASS: "fmt " (%s:%s:%i)\033[00;m\n", \
         __VA_ARGS__, YMO_SOURCE, __func__, __LINE__); \
-    }
+        }
 
 #endif /* ymo_asser_test_pass_fmt */
 
@@ -124,12 +124,12 @@
 /** Convenience macro used to execute tests and report failure
  */
 #define ymo_assert_test_fmt(test_cond, fmt, ...) \
-    do { \
-        if( !(test_cond) ) { \
-            ymo_assert_test_fail_fmt(fmt, __VA_ARGS__); \
-        }; \
-        ymo_assert_test_pass_fmt(fmt, __VA_ARGS__); \
-    } while( 0 )
+        do { \
+            if( !(test_cond) ) { \
+                ymo_assert_test_fail_fmt(fmt, __VA_ARGS__); \
+            }; \
+            ymo_assert_test_pass_fmt(fmt, __VA_ARGS__); \
+        } while( 0 )
 
 #else
 #define ymo_assert_test_fmt(test_cond, fmt, ...) ((void)0)
@@ -144,12 +144,12 @@
 /** Convenience macro used to execute tests and report failure
  */
 #define ymo_assert_test(test_cond, test_desc) \
-    do { \
-        if( !(test_cond) ) { \
-            ymo_assert_test_fail(test_desc); \
-        }; \
-        ymo_assert_test_pass(test_desc); \
-    } while( 0 )
+        do { \
+            if( !(test_cond) ) { \
+                ymo_assert_test_fail(test_desc); \
+            }; \
+            ymo_assert_test_pass(test_desc); \
+        } while( 0 )
 
 #else
 #define ymo_assert_test(test_cond, test_desc) ((void)0)

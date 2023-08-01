@@ -21,7 +21,7 @@
 #ifndef YMO_PROTO_TEST_H
 #define YMO_PROTO_TEST_H
 
-#include "ymo_config.h"
+#include "yimmo_config.h"
 
 #include <stdlib.h>
 #include <unistd.h>

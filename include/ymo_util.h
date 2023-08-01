@@ -71,22 +71,22 @@ typedef union ymo_utf8_state {
 /** Fast single-char to lower macro.
  */
 #define YMO_TOLOWER(c) \
-    (c ^ (( ((0x40 - c) ^ (0x5a - c)) >> 2) & 0x20))
+        (c ^ (( ((0x40 - c) ^ (0x5a - c)) >> 2) & 0x20))
 
 /** Fast single-char to upper macro.
  */
 #define YMO_TOUPPER(c) \
-    (c ^ (( ((0x60 - c) ^ (0x7a - c)) >> 2) & 0x20))
+        (c ^ (( ((0x60 - c) ^ (0x7a - c)) >> 2) & 0x20))
 
 /** Given a string length in bytes, return the number of bytes required to
  * store the same string, base64 encoded.
  *
  */
 #define YMO_BASE64_LEN(len) \
-    ( (4*(len+2)) / 3)
+        ( (4*(len+2)) / 3)
 
 #define YMO_PTR_ALIGN_MASK_TYPE \
-    (void*)
+        (void*)
 
 #define YMO_PTR_ALIGN_MASK (sizeof(YMO_PTR_ALIGN_MASK_TYPE) - 1)
 

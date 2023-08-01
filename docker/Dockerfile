@@ -32,6 +32,7 @@ RUN apt-get -qq install -y \
 		automake \
 		pkg-config \
 		libev-dev \
+		libyaml-dev \
                 uuid-dev \
 		libssl-dev \
 		python3-dev \

@@ -33,7 +33,8 @@ docs-local:
 		@top_srcdir@/include/ymo_log.h \
 		@top_srcdir@/include/ymo_queue.h \
 		@top_srcdir@/include/ymo_list.h \
-		@top_srcdir@/include/ymo_util.h
+		@top_srcdir@/include/ymo_util.h \
+		@top_srcdir@/include/ymo_yaml.h
 	$(C2SPHINX) \
 		-s \
 		-e "EXT=rst" \

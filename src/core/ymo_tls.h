@@ -40,9 +40,11 @@
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 
+#define YMO_CHECK_SSL_PENDING 1
 #define CONN_SSL(conn) (conn->ssl && ( \
                             conn->state == YMO_CONN_OPEN || \
-                            conn->state == YMO_CONN_TLS_ESTABLISHED \
+                            conn->state == YMO_CONN_TLS_ESTABLISHED || \
+                            conn->state == YMO_CONN_TLS_HANDSHAKE \
                             ))
 
 /*---------------------------------------------------------------*
@@ -103,6 +105,8 @@ static inline ymo_status_t ymo_init_ssl(
             ymo_log_warning("Failed to set the SSL fd for %i", client_fd);
             return EPROTO;
         } else {
+            SERVER_TRACE("TLS state: HANDSHAKE (conn: %p, fd: %i)",
+                    (void*)conn, conn->id, NULL);
             conn->state = YMO_CONN_TLS_HANDSHAKE;
         }
     }
@@ -113,6 +117,8 @@ static inline ymo_status_t ymo_init_ssl(
 
 static inline ymo_status_t ymo_server_ssl_handshake(ymo_conn_t* conn)
 {
+    SERVER_TRACE("Do TLS HANDSHAKE (conn: %p, fd: %i)",
+            (void*)conn, conn->id, NULL);
     ERR_clear_error();
 
     /* If we haven't completed the SSL handshake, let's try now: */
@@ -121,6 +127,8 @@ static inline ymo_status_t ymo_server_ssl_handshake(ymo_conn_t* conn)
         accept_rc = SSL_accept(conn->ssl);
 
         if( accept_rc == 1 ) {
+            SERVER_TRACE("TLS state: ESTABLISHED (conn: %p, fd: %i)",
+                    (void*)conn, conn->id, NULL);
             conn->state = YMO_CONN_TLS_ESTABLISHED;
             return YMO_OKAY;
         }

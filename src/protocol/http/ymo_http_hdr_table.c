@@ -21,7 +21,7 @@
 
 
 #define _POSIX_C_SOURCE 200809L
-#include "ymo_config.h"
+#include "yimmo_config.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -53,20 +53,23 @@ const char* ymo_http_hdr_hash_override_method(void)
     && (HAVE_FUNC_ATTRIBUTE_WEAK == 1) \
     && defined(YMO_HTTP_HDR_HASH_ALLOW_WEAK) \
     && YMO_HTTP_HDR_HASH_ALLOW_WEAK
-__attribute__((YMO_FUNC_PURE_P weak)) ymo_http_hdr_id_t ymo_http_hdr_hash_init(void)
+__attribute__((YMO_FUNC_PURE_P weak))
+ymo_http_hdr_id_t ymo_http_hdr_hash_init(void)
 {
     return 5;
 }
 
 
-__attribute__((YMO_FUNC_PURE_P weak)) ymo_http_hdr_id_t ymo_http_hdr_hash_ch(
+__attribute__((YMO_FUNC_PURE_P weak))
+ymo_http_hdr_id_t ymo_http_hdr_hash_ch(
         ymo_http_hdr_id_t h, char c)
 {
     return (h*283) + (c & 0xdf);
 }
 
 
-__attribute__((YMO_FUNC_PURE_P weak)) ymo_http_hdr_id_t ymo_http_hdr_hash(
+__attribute__((YMO_FUNC_PURE_P weak))
+ymo_http_hdr_id_t ymo_http_hdr_hash(
         const char* str_in, size_t* len)
 {
     const char* hdr_start = str_in;
@@ -87,7 +90,7 @@ __attribute__((YMO_FUNC_PURE_P weak)) ymo_http_hdr_id_t ymo_http_hdr_hash(
 
 /* TODO: allow override for this too / optional strcmp, at least! */
 #define YMO_HTTP_HDR_CMP(current, hdr, h_id) \
-    current->h_id == h_id
+        current->h_id == h_id
 
 ymo_http_hdr_table_t* ymo_http_hdr_table_create()
 {

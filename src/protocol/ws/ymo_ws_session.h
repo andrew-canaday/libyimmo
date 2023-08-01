@@ -24,7 +24,7 @@
 
 #ifndef YMO_WS_SESSION_H
 #define YMO_WS_SESSION_H
-#include "ymo_config.h"
+#include "yimmo_config.h"
 #include <stdio.h>
 #include <arpa/inet.h>
 

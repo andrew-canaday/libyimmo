@@ -44,14 +44,16 @@ check_PROGRAMS=\
 	test_basic \
 	test_list \
 	test_util \
-	test_trie
+	test_trie \
+	test_yaml
 
 TESTS=\
 	test_assert \
 	test_basic \
 	test_list \
 	test_util \
-	test_trie
+	test_trie \
+	test_yaml
 
 # EOF
 

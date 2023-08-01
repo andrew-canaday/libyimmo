@@ -101,6 +101,8 @@
 
 #define YMO_TAP_OUTPUT_BUFFER_SIZE 2048
 
+const char* ymo_tap_exec = NULL;
+
 const char* ymo_tap_indent(const char* fmt, ...)
 {
     static char indent[YMO_TAP_OUTPUT_BUFFER_SIZE];
@@ -131,9 +133,9 @@ const char* ymo_tap_indent(const char* fmt, ...)
 
 
 #define ymo_tap_assert_fail(fmt, ...) \
-    do { \
-        const char* msg = ymo_tap_indent(fmt, __VA_ARGS__); \
-        fprintf(YMO_TAP_STREAM_OUT, \
+        do { \
+            const char* msg = ymo_tap_indent(fmt, __VA_ARGS__); \
+            fprintf(YMO_TAP_STREAM_OUT, \
         "not ok %zu - assertion failed!\n" \
         "  location:  %s:%s:%i\n" \
         "  assertion: %s\n\n", \
@@ -141,24 +143,24 @@ const char* ymo_tap_indent(const char* fmt, ...)
         YMO_SOURCE, __func__, __LINE__, \
         msg \
         ); \
-    } while( 0 ); \
-    return YMO_TAP_STATUS_FAIL
+        } while( 0 ); \
+        return YMO_TAP_STATUS_FAIL
 
 
 /** Pass a unit test with the given message.
  */
 #define YMO_TAP_PASS(msg) \
-    fprintf(YMO_TAP_STREAM_OUT, "ok %zu - %s\n", \
+        fprintf(YMO_TAP_STREAM_OUT, "ok %zu - %s\n", \
         tap_test_num, msg); \
-    return YMO_TAP_STATUS_PASS
+        return YMO_TAP_STATUS_PASS
 
 
 /** Pass a unit test with the given message.
  */
 #define YMO_TAP_FAIL(msg) \
-    fprintf(YMO_TAP_STREAM_OUT, "not ok %zu - %s\n", \
+        fprintf(YMO_TAP_STREAM_OUT, "not ok %zu - %s\n", \
         tap_test_num, msg); \
-    return YMO_TAP_STATUS_FAIL
+        return YMO_TAP_STATUS_FAIL
 
 #include "ymo_assert.h"
 
@@ -193,14 +195,14 @@ typedef int (*ymo_tap_setup_fn_t)(void);
  *
  */
 #define YMO_TAP_TEST_FN(fn) \
-    ((ymo_tap_test_t) { .name = #fn, .test_fn = fn })
+        ((ymo_tap_test_t) { .name = #fn, .test_fn = fn })
 
 /** Macro used to terminate the list of arguments to :c:func:`ymo_tap_run`
  * or :c:macro:`YMO_TAP_RUN`.
  *
  */
 #define YMO_TAP_TEST_END() \
-    ((ymo_tap_test_t) { .name = NULL, .test_fn = NULL })
+        ((ymo_tap_test_t) { .name = NULL, .test_fn = NULL })
 
 
 /** :param ymo_tap_test_fn_t: an initialization function to run before
@@ -278,9 +280,10 @@ int ymo_tap_run(
  *
  */
 #define YMO_TAP_RUN(...) \
-    int main(int argc, char** argv) { \
-        ymo_log_init(); \
-        return ymo_tap_run(__VA_ARGS__); \
-    }
+        int main(int argc, char** argv) { \
+            ymo_tap_exec = argv[0]; \
+            ymo_log_init(); \
+            return ymo_tap_run(__VA_ARGS__); \
+        }
 
 #endif /* YMO_TAP_H */

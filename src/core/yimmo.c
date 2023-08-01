@@ -21,7 +21,7 @@
 
 
 #define _GNU_SOURCE
-#include "ymo_config.h"
+#include "yimmo_config.h"
 
 #include <stdlib.h>
 #include <stdarg.h>

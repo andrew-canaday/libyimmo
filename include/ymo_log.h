@@ -143,7 +143,7 @@ ymo_log_level_t ymo_log_set_level_by_name(const char* level_name);
 
 /** Compile-time FATAL log function/convenience macro */
 #define ymo_log_fatal(...) \
-    ymo_log(YMO_LOG_FATAL, __VA_ARGS__)
+        ymo_log(YMO_LOG_FATAL, __VA_ARGS__)
 
 #else
 #define ymo_log_fatal(...) ((void)0)
@@ -154,7 +154,7 @@ ymo_log_level_t ymo_log_set_level_by_name(const char* level_name);
 
 /** Compile-time ERROR log function/convenience macro */
 #define ymo_log_error(...) \
-    ymo_log(YMO_LOG_ERROR, __VA_ARGS__)
+        ymo_log(YMO_LOG_ERROR, __VA_ARGS__)
 
 #else
 #define ymo_log_error(...) ((void)0)
@@ -165,7 +165,7 @@ ymo_log_level_t ymo_log_set_level_by_name(const char* level_name);
 
 /** Compile-time WARNING log function/convenience macro */
 #define ymo_log_warning(...) \
-    ymo_log(YMO_LOG_WARNING, __VA_ARGS__)
+        ymo_log(YMO_LOG_WARNING, __VA_ARGS__)
 
 #else
 #define ymo_log_warning(...) ((void)0)
@@ -176,7 +176,7 @@ ymo_log_level_t ymo_log_set_level_by_name(const char* level_name);
 
 /** Compile-time NOTICE log function/convenience macro */
 #define ymo_log_notice(...) \
-    ymo_log(YMO_LOG_NOTICE, __VA_ARGS__)
+        ymo_log(YMO_LOG_NOTICE, __VA_ARGS__)
 
 #else
 #define ymo_log_notice(...) ((void)0)
@@ -187,7 +187,7 @@ ymo_log_level_t ymo_log_set_level_by_name(const char* level_name);
 
 /** Compile-time INFO log function/convenience macro */
 #define ymo_log_info(...) \
-    ymo_log(YMO_LOG_INFO, __VA_ARGS__)
+        ymo_log(YMO_LOG_INFO, __VA_ARGS__)
 
 #else
 #define ymo_log_info(...) ((void)0)
@@ -196,17 +196,17 @@ ymo_log_level_t ymo_log_set_level_by_name(const char* level_name);
 
 #if YMO_LOG_LEVEL_MAX >= 5
 #define ymo_log_debug_uuid(fmt, id, ...) \
-    do \
-    { \
-        char id_str[37]; \
-        uuid_unparse(id, id_str); \
-        ymo_log(YMO_LOG_DEBUG, "%s:%i (%s): "fmt, \
+        do \
+        { \
+            char id_str[37]; \
+            uuid_unparse(id, id_str); \
+            ymo_log(YMO_LOG_DEBUG, "%s:%i (%s): "fmt, \
         __func__, __LINE__, id_str, __VA_ARGS__); \
-    } while( 0 )
+        } while( 0 )
 
 /** Compile-time DEBUG log function/convenience macro */
 #define ymo_log_debug(fmt, ...) \
-    ymo_log(YMO_LOG_DEBUG, "%s:%i: "fmt, __func__, __LINE__, __VA_ARGS__)
+        ymo_log(YMO_LOG_DEBUG, "%s:%i: "fmt, __func__, __LINE__, __VA_ARGS__)
 
 #else
 #define ymo_log_debug_uuid(fmt, id, ...) ((void)0)
@@ -216,17 +216,17 @@ ymo_log_level_t ymo_log_set_level_by_name(const char* level_name);
 
 #if YMO_LOG_LEVEL_MAX >= 6
 #define ymo_log_trace_uuid(fmt, id, ...) \
-    do \
-    { \
-        char id_str[37]; \
-        uuid_unparse(id, id_str); \
-        ymo_log(YMO_LOG_TRACE, "%s:%s:%i (%s): "fmt, \
+        do \
+        { \
+            char id_str[37]; \
+            uuid_unparse(id, id_str); \
+            ymo_log(YMO_LOG_TRACE, "%s:%s:%i (%s): "fmt, \
         YMO_SOURCE, __func__, __LINE__, id_str, __VA_ARGS__); \
-    } while( 0 )
+        } while( 0 )
 
 /** Compile-time TRACE log function/convenience macro */
 #define ymo_log_trace(fmt, ...) \
-    ymo_log(YMO_LOG_TRACE, "%s:%s:%i: "fmt, YMO_SOURCE, __func__, __LINE__, __VA_ARGS__)
+        ymo_log(YMO_LOG_TRACE, "%s:%s:%i: "fmt, YMO_SOURCE, __func__, __LINE__, __VA_ARGS__)
 
 #else
 #define ymo_log_trace_uuid(fmt, id, ...) ((void)0)

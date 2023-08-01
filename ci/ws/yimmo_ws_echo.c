@@ -52,7 +52,7 @@
 
 
 #define OUT_FMT(fmt, ...) \
-    fprintf(stderr, "%s: " fmt "\n", e_name, __VA_ARGS__)
+        fprintf(stderr, "%s: " fmt "\n", e_name, __VA_ARGS__)
 
 #define OUT_MSG(msg) OUT_FMT("%s", msg)
 

@@ -68,5 +68,15 @@ AC_DEFUN([YMO_CHECK_DEPENDENCIES],[
 
 
     AX_CHECK_OPENSSL([],[AC_MSG_ERROR([openssl required to build libyimmo])])
+    PKG_CHECK_MODULES([YAML], [libyaml], [], [
+        AC_CHECK_HEADERS([yaml.h])
+        AC_CHECK_LIB([yaml],[yaml_get_version_string])
+
+        # Bail if either of yaml.h or -lyaml is not present:
+        AS_IF([test "x$ac_cv_header_yaml_h" != "xyes" \
+            -o "x$ac_cv_lib_yaml_yaml_get_version_string" != "xyes"],[
+            YMO_ERROR([libyaml is required for build!])
+        ])
+    ])
 ])
 

@@ -24,7 +24,7 @@
 
 #ifndef YMO_HTTP_RESPONSE_H
 #define YMO_HTTP_RESPONSE_H
-#include "ymo_config.h"
+#include "yimmo_config.h"
 
 #include "yimmo.h"
 #include "core/ymo_bucket.h"

@@ -41,11 +41,11 @@
  *
  *----------------------------------------------------------------------------*/
 #define ymo_wsgi_ws_argcheck(arg) \
-    if( arg != NULL && !PyCallable_Check(arg) ) { \
-        PyErr_SetString(PyExc_TypeError, \
+        if( arg != NULL && !PyCallable_Check(arg) ) { \
+            PyErr_SetString(PyExc_TypeError, \
         "Parameter :\"" #arg "\" must be callable or None."); \
-        return NULL; \
-    }
+            return NULL; \
+        }
 
 
 /*----------------------------------------------------------------------------
@@ -53,9 +53,17 @@
  * Types:
  *
  *----------------------------------------------------------------------------*/
+
+typedef enum ymo_pyws_state {
+    YIMMO_PYWS_SESSION_OPEN,
+    YIMMO_PYWS_SESSION_CLOSING,
+    YIMMO_PYWS_SESSION_CLOSED,
+} ymo_pyws_state_t;
+
 struct yimmo_websocket {
     PyObject_HEAD
     ymo_ws_session_t* session;
+    ymo_pyws_state_t  state;
 };
 
 typedef struct ymo_wsgi_ws_callbacks {
@@ -102,6 +110,11 @@ static PyObject* yimmo_WebSocket_send(
         return NULL;
     }
 
+    if( self->state != YIMMO_PYWS_SESSION_OPEN ) {
+        /* TODO: we should raise an exception here. */
+        Py_RETURN_NONE;
+    }
+
     PyBytes_AsStringAndSize(args[0], &py_data, &py_len);
     long flags = PyLong_AsLong(args[1]);
     ymo_bucket_t* msg_out = YMO_BUCKET_FROM_CPY(py_data, py_len);
@@ -111,9 +124,9 @@ static PyObject* yimmo_WebSocket_send(
 
 
 static PyObject* yimmo_WebSocket_close(
-        yimmo_context_t* self, PyObject* const* args, Py_ssize_t nargs)
+        yimmo_websocket_t* self, PyObject* const* args, Py_ssize_t nargs)
 {
-    /* No-op */
+    self->state = YIMMO_PYWS_SESSION_CLOSING;
     Py_RETURN_NONE;
 }
 
@@ -191,6 +204,7 @@ ymo_status_t ymo_wsgi_ws_connect_cb(ymo_ws_session_t* session)
     if( ws ) {
         Py_INCREF(ws);
         ws->session = session;
+        ws->state = YIMMO_PYWS_SESSION_OPEN;
         ymo_ws_session_set_userdata(session, ws);
     } else {
         r_status = ENOMEM;
@@ -207,8 +221,8 @@ ymo_status_t ymo_wsgi_ws_connect_cb(ymo_ws_session_t* session)
     PyObject* r_val = PyObject_CallObject(
             ws_callbacks.on_open, pArgs);
 
-    if( !r_val ) {
-        r_status = EBADMSG;
+    if( !r_val || ws->state != YIMMO_PYWS_SESSION_OPEN ) {
+        r_status = ECONNRESET;
     } else if( r_val != Py_None ) {
         if( PyLong_Check(r_val) ) {
             r_status = PyLong_AsLong(r_val);
@@ -236,13 +250,18 @@ ymo_status_t ymo_wsgi_ws_recv_cb(
         return EINVAL;
     }
 
+    yimmo_websocket_t* ws = YIMMO_WEBSOCKET_C(user_data);
+    if( ws->state != YIMMO_PYWS_SESSION_OPEN ) {
+        return ECONNRESET;
+    }
+
     /* HACK HACK: for now, we'll just subject libyimmo to the GIL to get
      *            WS operational-ish.
      */
     PyGILState_STATE gstate = PyGILState_Ensure();
     PyObject* pArgs = PyTuple_New(3);
-    Py_INCREF(YIMMO_WEBSOCKET_PY(user_data));
-    PyTuple_SetItem(pArgs, 0, YIMMO_WEBSOCKET_PY(user_data));
+    Py_INCREF(YIMMO_WEBSOCKET_PY(ws));
+    PyTuple_SetItem(pArgs, 0, YIMMO_WEBSOCKET_PY(ws));
     PyTuple_SetItem(pArgs, 1, PyBytes_FromStringAndSize(data, len));
     PyTuple_SetItem(pArgs, 2, PyLong_FromLong(flags));
     PyObject* r_val = PyObject_CallObject(
@@ -266,6 +285,8 @@ ymo_status_t ymo_wsgi_ws_recv_cb(
 
 void ymo_wsgi_ws_close_cb(ymo_ws_session_t* session, void* user_data)
 {
+    yimmo_websocket_t* ws = YIMMO_WEBSOCKET_C(user_data);
+    ws->state = YIMMO_PYWS_SESSION_CLOSED;
     if( !ws_callbacks.on_close ) {
         return;
     }
