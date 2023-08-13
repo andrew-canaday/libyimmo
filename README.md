@@ -8,7 +8,7 @@
 # Disclaimer
 
 > :warning: **WARNING**: _This is my long running, spare time, for fun,
-> project._ Most of it works pretty well (it's [pretty _fast!_](#gisty-benchmarks)), but it also
+> project._ Most of it works pretty well (it's [pretty _fast!_](./doc/GISTY_BENCHMARKS.md)), but it also
 > bears the marks of being my on-again/off-again, personal C-refresher/protocol
 > exploration playground...
 >
@@ -117,6 +117,6 @@ Libyimmo compilation follows the standard GNU idiom:
 mkdir -p ./build && cd ./build
 ../configure --prefix=/usr/local && make && make check && make install
 ```
-### Gisty Benchmarks (Moved)
+### Gisty Benchmarks
 
-[Here](./doc/GISTY_BENCHMARKS.md)
+Moved [here](./doc/GISTY_BENCHMARKS.md).
