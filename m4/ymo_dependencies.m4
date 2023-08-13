@@ -58,8 +58,8 @@ AC_DEFUN([YMO_CHECK_DEPENDENCIES],[
     AX_CHECK_UUID_UTIL_LINUX([],
     [AC_MSG_ERROR([util-linux libuuid required to build libyimmo])])
     PKG_CHECK_MODULES([BSAT], [libbsat])
-    PKG_CHECK_MODULES([PYTHON], [python-3.9-embed], [], [
-    		   PKG_CHECK_MODULES([PYTHON], [python-3.8-embed], [YMO_NOTICE([Found python 3.8])], [
+    PKG_CHECK_MODULES([PYTHON], [python-3.11-embed], [], [
+    		   PKG_CHECK_MODULES([PYTHON], [python-3.10-embed], [YMO_NOTICE([Found python 3.10])], [
     				      PKG_CHECK_MODULES([PYTHON], [python3-embed], [YMO_NOTICE([Found python 3])], [
                               PKG_CHECK_MODULES([PYTHON], [python3], [YMO_NOTICE([Found python 3])])
                               ])

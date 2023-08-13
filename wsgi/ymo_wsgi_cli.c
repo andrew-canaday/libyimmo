@@ -89,6 +89,8 @@ void issue_startup_msg(ymo_wsgi_proc_t* w_proc)
             YIMMO_VERSION_MINOR,
             YIMMO_VERSION_PATCH);
 
+    printf("Python version: %i.%i.%i\n",
+            PY_MAJOR_VERSION, PY_MINOR_VERSION, PY_MICRO_VERSION);
     /* Log level info: */
     ymo_log_level_t level = ymo_log_get_level();
 
