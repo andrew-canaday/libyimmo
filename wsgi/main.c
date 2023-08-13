@@ -29,10 +29,12 @@
 #include <Python.h>
 #include <ev.h>
 #include <stdio.h>
+#include <getopt.h>
 #include <libgen.h>
 
 #include "ymo_log.h"
 #include "ymo_env.h"
+#include "ymo_yaml.h"
 
 #include "yimmo_wsgi.h"
 
@@ -43,13 +45,11 @@
 #include "ymo_wsgi_session.h"
 #include "ymo_wsgi_proc.h"
 #include "ymo_wsgi_util.h"
-
+#include "ymo_wsgi_config.h"
 
 /*---------------------------------*
  *           Prototypes:
  *---------------------------------*/
-static int get_module_app(ymo_wsgi_proc_t* w_proc, int argc, char** argv);
-static void config_from_env(ymo_wsgi_proc_t* w_proc);
 static struct ev_loop* get_ev_default_loop(void);
 static int init_http_server(ymo_wsgi_proc_t* proc);
 
@@ -81,33 +81,31 @@ static ymo_wsgi_proc_t w_proc = {
  *---------------------------------*/
 int main(int argc, char** argv)
 {
-    /* HACK: make stderr line-buffered for log output. */
-    setvbuf(stderr, NULL, _IOLBF, 0);
-
-    ymo_log_init();
-
     /* HACK: stash process name for worker adjustment later: */
     w_proc.proc_name = argv[0];
     w_proc.proc_name_len = strlen(w_proc.proc_name);
     w_proc.proc_name_buflen = w_proc.proc_name_len+1;
 
-    w_proc.module = getenv("YIMMO_WSGI_MODULE");
-    w_proc.app = getenv("YIMMO_WSGI_APP");
+    /* HACK: make stderr line-buffered for log output. */
+    setvbuf(stderr, NULL, _IOLBF, 0);
 
-    if( !w_proc.module || !w_proc.app ) {
-        errno = 0;
-        if( get_module_app(&w_proc, argc, argv) ) {
-            fprintf(stderr, "Unable to load module: %s", strerror(errno));
-            return -1;
-        }
-    }
+    ymo_log_init();
 
-    script_name = basename(w_proc.module);
+    /* Load config: */
+    ymo_wsgi_config_t config = {
+        .w_proc = &w_proc,
+        .argc = argc,
+        .argv = argv
+    };
+    ymo_wsgi_config(&config);
 
-    /* Say hello */
+    /* Say hello: */
     issue_startup_msg(&w_proc);
-    config_from_env(&w_proc);
+
     ymo_log_notice("WSGI app: %s", w_proc.app);
+    ymo_log_notice("Number of WSGI processes: %i", w_proc.no_wsgi_proc);
+    ymo_log_notice("Number of WSGI threads: %i", w_proc.no_wsgi_threads);
+    script_name = basename(w_proc.module);
 
     /* libev w_proc.loop init: */
     w_proc.loop = get_ev_default_loop();
@@ -144,32 +142,6 @@ int main(int argc, char** argv)
 }
 
 
-static void config_from_env(ymo_wsgi_proc_t* w_proc)
-{
-    /* Get the port from the env: */
-    long default_port = DEFAULT_HTTP_PORT;
-    ymo_env_as_long("YIMMO_WSGI_PORT", &w_proc->port, &default_port);
-
-    /* Get process configuration from env: */
-    w_proc->no_wsgi_proc = YIMMO_WSGI_NO_PROC;
-    ymo_env_as_long("YIMMO_WSGI_NO_PROC", &w_proc->no_wsgi_proc, NULL);
-
-    if( w_proc->no_wsgi_proc < 1 ) {
-        w_proc->no_wsgi_proc = YIMMO_WSGI_NO_PROC;
-    }
-    ymo_log_notice("Number of WSGI processes: %i", w_proc->no_wsgi_proc);
-
-    /* Get thread configuration from env: */
-    w_proc->no_wsgi_threads = YIMMO_WSGI_NO_THREADS;
-    ymo_env_as_long("YIMMO_WSGI_NO_THREADS", &w_proc->no_wsgi_threads, NULL);
-    if( w_proc->no_wsgi_threads < 1 ) {
-        w_proc->no_wsgi_threads = YIMMO_WSGI_NO_THREADS;
-    }
-    ymo_log_notice("Number of WSGI threads: %i", w_proc->no_wsgi_threads);
-    return;
-}
-
-
 static struct ev_loop* get_ev_default_loop(void)
 {
 #if defined(HAVE_EPOLL_CTL) && (HAVE_EPOLL_CTL == 1)
@@ -200,50 +172,6 @@ static int init_http_server(ymo_wsgi_proc_t* w_proc)
         return -1;
     }
 #endif /* YMO_WSGI_REUSEPORT */
-    return 0;
-}
-
-
-int get_module_app(ymo_wsgi_proc_t* w_proc, int argc, char** argv)
-{
-    size_t buf_len = 0;
-
-    for( int i = 1; i < argc; i++ )
-    {
-        buf_len += strlen(argv[i]);
-    }
-
-    char* module = malloc(buf_len+1);
-
-    if( !module ) {
-        errno = ENOMEM;
-        return -1;
-    }
-
-    module[0] = '\0';
-    char* dst = module;
-    for( int i = 1; i < argc; i++ )
-    {
-        size_t len = strlen(argv[i]);
-        strcat(dst, argv[i]);
-        dst += len;
-    }
-
-    char* app = strchr(module, ':');
-    if( app == NULL ) {
-        free(module);
-        errno = EINVAL;
-        return -1;
-    }
-
-    *app++ = '\0';
-    w_proc->module = module;
-    w_proc->app = app;
-
-    if( strlen(w_proc->module) == 0 || strlen(w_proc->app) == 0 ) {
-        errno = EINVAL;
-        return -1;
-    }
     return 0;
 }
 

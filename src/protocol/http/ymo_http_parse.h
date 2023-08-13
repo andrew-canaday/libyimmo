@@ -27,7 +27,6 @@
 #include <stddef.h>
 #include "yimmo.h"
 #include "ymo_http.h"
-#include "core/ymo_trie.h"
 #include "ymo_http_exchange.h"
 
 /** .. _HTTP Parser: */

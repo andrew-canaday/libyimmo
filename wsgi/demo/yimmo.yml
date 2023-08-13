@@ -1,0 +1,5 @@
+log_level: INFO
+wsgi:
+  port: 8081
+  no_proc: 2
+  no_threads: 2

@@ -70,6 +70,11 @@
 # define YIMMO_WSGI_NO_THREADS 1
 #endif /* YIMMO_WSGI_NO_THREADS */
 
+/** Default max (fs) path length: */
+#ifndef YIMMO_WSGI_MAX_PATH
+# define YIMMO_WSGI_MAX_PATH 1024
+#endif /* YIMMO_WSGI_MAX_PATH */
+
 #define YMO_WSGI_TRACE_WSGI 1
 #if defined(YMO_WSGI_TRACE_WSGI) && YMO_WSGI_TRACE_WSGI == 1
 #define YMO_WSGI_TRACE(fmt, ...) ymo_log_trace(fmt, __VA_ARGS__)

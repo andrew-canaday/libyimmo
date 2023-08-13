@@ -23,6 +23,7 @@
 #ifndef YMO_YAML_H
 #define YMO_YAML_H
 #include <stdio.h>
+#include <stdarg.h>
 
 /** Yimmo YAML
  * ==============
@@ -90,11 +91,17 @@ ymo_yaml_type_t ymo_yaml_node_type(const ymo_yaml_node_t* node);
  */
 const ymo_yaml_node_t* ymo_yaml_item_next(const ymo_yaml_node_t* list, const ymo_yaml_node_t* current);
 
+/** Given a set of keys, return the value of the first yaml node that matches. */
+const ymo_yaml_node_t* ymo_yaml_doc_get(ymo_yaml_doc_t* doc, ...);
+
+/** Given a set of keys, return the value of the first yaml node that matches. */
+const ymo_yaml_node_t* ymo_yaml_doc_vget(ymo_yaml_doc_t* doc, va_list args);
+
 /** Given a yaml object, return the value for the given key as a yaml node. */
 const ymo_yaml_node_t* ymo_yaml_object_get(const ymo_yaml_node_t* node, const char* key);
 
 /** Given a yaml node representing a mapping key, return the value node. */
-const ymo_yaml_node_t* ymo_yaml_key_value(const ymo_yaml_node_t* key);
+const ymo_yaml_node_t* ymo_yaml_node_child(const ymo_yaml_node_t* key);
 
 /** Given a yaml object, return the value as a string. */
 const char* ymo_yaml_node_as_str(const ymo_yaml_node_t* node);

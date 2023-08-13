@@ -123,6 +123,11 @@ static int main_proc_teardown(ymo_wsgi_proc_t* w_proc)
         ymo_log_notice("Child %i shut down", child_pid);
     }
     ymo_log_notice("Main process shutting down.");
+
+    if( w_proc->cfg ) {
+        ymo_yaml_doc_free(w_proc->cfg);
+        w_proc->cfg = NULL;
+    }
     return 0;
 }
 

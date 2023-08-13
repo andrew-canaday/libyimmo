@@ -132,6 +132,16 @@ int test_yaml_list(void)
 }
 
 
+int test_yaml_doc_get(void)
+{
+    ymo_assert_str_eq(
+            ymo_yaml_node_as_str(ymo_yaml_doc_get(
+                    doc, "combo_test", "nested_object", "a_string", NULL)),
+            "Word");
+    YMO_TAP_PASS(__func__);
+}
+
+
 int test_yaml_free(void)
 {
     ymo_yaml_doc_free(doc);
@@ -147,6 +157,7 @@ YMO_TAP_RUN(setup, NULL, NULL,
         YMO_TAP_TEST_FN(test_yaml_int_fmts),
         YMO_TAP_TEST_FN(test_yaml_float),
         YMO_TAP_TEST_FN(test_yaml_list),
+        YMO_TAP_TEST_FN(test_yaml_doc_get),
         YMO_TAP_TEST_FN(test_yaml_free),
         YMO_TAP_TEST_END()
         )

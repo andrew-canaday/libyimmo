@@ -118,6 +118,10 @@ static int worker_proc_teardown(
     int rc = ymo_wsgi_shutdown();
     ymo_server_free(w_proc->http_srv);
 
+    if( w_proc->cfg ) {
+        ymo_yaml_doc_free(w_proc->cfg);
+        w_proc->cfg = NULL;
+    }
     return rc;
 }
 

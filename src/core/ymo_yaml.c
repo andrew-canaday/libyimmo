@@ -215,6 +215,39 @@ const ymo_yaml_node_t* ymo_yaml_item_next(const ymo_yaml_node_t* list, const ymo
 }
 
 
+const ymo_yaml_node_t* ymo_yaml_doc_get(ymo_yaml_doc_t* doc, ...)
+{
+    va_list args;
+    va_start(args, doc);
+
+    return ymo_yaml_doc_vget(doc, args);
+}
+
+
+const ymo_yaml_node_t* ymo_yaml_doc_vget(ymo_yaml_doc_t* doc, va_list args)
+{
+    const ymo_yaml_node_t* node = NULL;
+    if( !doc ) {
+        goto yaml_doc_get_done;
+    }
+
+    const char* term;
+
+    node = ymo_yaml_doc_root(doc);
+    while( (term = va_arg(args, const char*)) )
+    {
+        if( !node ) {
+            break;
+        }
+        node = ymo_yaml_object_get(node, term);
+    }
+
+yaml_doc_get_done:
+    va_end(args);
+    return node;
+}
+
+
 const ymo_yaml_node_t* ymo_yaml_object_get(const ymo_yaml_node_t* node, const char* key)
 {
     const ymo_yaml_node_t* v_node = NULL;
@@ -249,7 +282,7 @@ yaml_object_get_done:
 }
 
 
-const ymo_yaml_node_t* ymo_yaml_key_value(const ymo_yaml_node_t* key)
+const ymo_yaml_node_t* ymo_yaml_node_child(const ymo_yaml_node_t* key)
 {
     const ymo_yaml_node_t* v_node = NULL;
     if( key && key->y_type == YMO_YAML_SCALAR && key->child ) {

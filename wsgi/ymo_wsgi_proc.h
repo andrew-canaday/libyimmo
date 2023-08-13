@@ -33,6 +33,7 @@
 # define YMO_WSGI_PWORKER_H
 # include <ev.h>
 
+#include "ymo_yaml.h"
 #include "ymo_wsgi_worker.h"
 
 /* Don't use SO_REUSEPORT on Darwin (connections are not distributed!) */
@@ -93,6 +94,7 @@ struct ymo_wsgi_proc {
     struct ev_loop* loop;
     char*           module;
     char*           app;
+    ymo_yaml_doc_t* cfg;
 };
 
 

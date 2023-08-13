@@ -133,12 +133,14 @@ ymo_status_t ymo_server_init(ymo_server_t* server)
 
     /* Configure SSL, if enabled: */
     if( server->config.cert_path && server->config.key_path ) {
+        ymo_log_notice("TLS enabled: ✅");
         if( (status = ymo_init_ssl_ctx(server)) ) {
             ymo_log_fatal("SSL context initialization failed.");
             goto server_init_close_and_bail;
         }
+        ymo_log_notice("TLS init okay: ✅");
     } else {
-        ymo_log_info("No TLS cert or path provided.");
+        ymo_log_notice("No TLS cert or path provided.");
         server->config.use_tls = 0;
     }
 
@@ -195,15 +197,11 @@ ymo_status_t ymo_server_init_socket(ymo_server_t* server, int fd)
 /* If we're going to fork and share a common listen FD, we
  * should try to determine if there's contention BEFORE
  * invoking accept() and checking for EAGAIN.
- *
- * Here, we use a quick hack: an atomic counter is used
- * as a mutex (really, we should use a POSIX trylock —
- * see todo item for ymo_multiproc_accept_cb).
  */
 ymo_status_t ymo_server_pre_fork(ymo_server_t* server)
 {
     if( server->accept_mutex ) {
-        ymo_log_warning("%s",
+        ymo_log_debug("%s",
                 "ymo_server_pre_fork already invoked. "
                 "(This isn't problematic. It's just not necessary)");
         return YMO_OKAY;
@@ -218,7 +216,7 @@ ymo_status_t ymo_server_pre_fork(ymo_server_t* server)
         return ENOMEM;
     }
 
-    /* Stick an atomic integer into the shared memory: */
+    /* Stick an mutex into the shared memory: */
     server->accept_mutex = shared;
     pthread_mutex_init(server->accept_mutex, NULL);
 
