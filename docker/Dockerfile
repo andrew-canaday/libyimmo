@@ -36,9 +36,8 @@ RUN apt-get -qq install -y \
                 uuid-dev \
 		libssl-dev \
 		python3-dev \
-		python3-pip
-
-RUN pip3 install flask
+		python3-pip \
+                python3-flask
 
 RUN cd /opt/src && git clone https://github.com/andrew-canaday/libbsat
 RUN cd /opt/src/libbsat && ./autogen.sh
