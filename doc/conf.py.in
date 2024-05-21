@@ -37,7 +37,7 @@ copyright = "@PACKAGE_COPYRIGHT@"[1:] # Strip off the leading copyright symbol
 author = "@PACKAGE_AUTHOR@"
 version = '@PACKAGE_VERSION@'
 release = '@PACKAGE_VERSION@'
-language = None
+language = 'en'
 
 exclude_patterns = [
         '_build',

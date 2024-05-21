@@ -30,8 +30,8 @@ The basic idea: use python to *handle* requests; use C for *I/O*.
    :maxdepth: 1
    :hidden:
 
-Usage
------
+Building
+--------
 
 .. note::
 
@@ -57,7 +57,53 @@ Usage
       ./configure --enable-wsgi && make
 
 
-Configuration is done through env vars.
+Usage
+-----
+
+
+```
+yimmo-wsgi LATEST
+Usage: yimmo-wsgi [OPTIONS] WSGI_MODULE:WSGI_APP
+
+Options:
+  --config, -c     : Path to the yimmo-wsgi config yaml
+  --log-level, -l  : Yimmo log level
+  --port, -P       : Port
+  --no-proc, -p    : Number of processes to run
+  --no-threads, -t : Number of worker threads per proc
+  --help, -h       : Display usage info (this)
+
+Environment Variables:
+  YIMMO_LOG_LEVEL           : libyimmo log level
+  YIMMO_SERVER_IDLE_TIMEOUT : socket-level idle disconnect timeout
+  YIMMO_WSGI_CONFIG         : yimmo wsgi config file path
+  YIMMO_WSGI_NO_PROC        : number of yimmo WSGI processes to run
+  YIMMO_WSGI_NO_THREADS     : number of worker threads per process
+  YIMMO_WSGI_MODULE         : WSGI module (if not provided as arg)
+  YIMMO_WSGI_APP            : WSGI app (if not provided as arg)
+  YIMMO_TLS_CERT_PATH       : TLS certificate path
+  YIMMO_TLS_KEY_PATH        : TLS private key path
+
+Configuration precedence (greatest to least):
+  - command line parameters
+  - environment variables
+  - config files
+
+# Config Example:
+---
+log_level: INFO
+wsgi:
+  port: 8081
+  tls:
+    cert: /path/to/site.crt
+    key: /path/to/cert.pem
+  no_proc: 2
+  no_threads: 2
+```
+
+Invocation
+~~~~~~~~~~
+
 The executable takes two arguments:
 
 #. a module name
@@ -148,11 +194,17 @@ Configuration
 
 The following settings control the ``yimmo-wsgi`` runtime:
 
-- ``YIMMO_LOG_LEVEL``: Log level. For more info, see :ref:`Logging <WSGI Logging>`
-- ``YIMMO_WSGI_PORT``: The port number to bind to.
-- ``YIMMO_WSGI_NO_PROC``: Number of ``yimmo-wsgi`` processes to run.
-- ``YIMMO_WSGI_NO_THREADS``: Number of ``yimmo-wsgi`` worker thread, **per_process**.
-- ``YIMMO_WSGI_USE_KQUEUE``: Set to ``1`` on BSD-like systems to use ``kqueue`` (defaults to ``0``, wich falls back to using ``select()``).
+ - ``YIMMO_LOG_LEVEL``: libyimmo log level
+ - ``YIMMO_SERVER_IDLE_TIMEOUT``: socket-level idle disconnect timeout
+ - ``YIMMO_WSGI_CONFIG``: yimmo wsgi config file path
+ - ``YIMMO_WSGI_NO_PROC``: number of yimmo WSGI processes to run
+ - ``YIMMO_WSGI_NO_THREADS``: number of worker threads per process
+ - ``YIMMO_WSGI_MODULE``: WSGI module (if not provided as arg)
+ - ``YIMMO_WSGI_APP``: WSGI app (if not provided as arg)
+ - ``YIMMO_TLS_CERT_PATH``: TLS certificate path
+ - ``YIMMO_TLS_KEY_PATH``: TLS private key path
+ - ``YIMMO_WSGI_PORT``: The port number to bind to.
+ - ``YIMMO_WSGI_USE_KQUEUE``: Set to ``1`` on BSD-like systems to use ``kqueue`` (defaults to ``0``, wich falls back to using ``select()``).
 
 
 TLS
