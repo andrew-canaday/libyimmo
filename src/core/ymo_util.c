@@ -39,6 +39,11 @@
 #endif /* YMO_UTIL_TRACE */
 
 
+/** Some of the usual pointer alignment hacks: */
+#define STRIDE_ALIGN    (SIZEOF_SIZE_T - 1)
+#define STRIDE_FLOOR(p) (((uintptr_t)p) & ~STRIDE_ALIGN)
+#define STRIDE_CEIL(p)  ((((uintptr_t)p) + STRIDE_ALIGN) & ~STRIDE_ALIGN)
+
 /*---------------------------------------------------------------*
  *  String case conversion macros:
  *---------------------------------------------------------------*/
@@ -138,8 +143,7 @@ void ymo_ntolower(char* dst, const char* src, size_t len)
     size_t no_iter = len / SIZEOF_SIZE_T;
 
     /* Number of single byte chunks to arrive at proper alignment: */
-    size_t align = ((SIZEOF_SIZE_T) - \
-                    ((stride_t)(src) % SIZEOF_SIZE_T)) % SIZEOF_SIZE_T;
+    size_t align = STRIDE_CEIL(src) - ((uintptr_t)src);
 
     /* Number of single byte chunks after main no_iter is done: */
     size_t remain = (len % SIZEOF_SIZE_T) - align;
@@ -224,8 +228,7 @@ void ymo_ntoupper(char* dst, const char* src, size_t len)
     size_t no_iter = len / SIZEOF_SIZE_T;
 
     /* Number of single byte chunks to arrive at proper alignment: */
-    size_t align = ((SIZEOF_SIZE_T) - \
-                    ((stride_t)(src) % SIZEOF_SIZE_T)) % SIZEOF_SIZE_T;
+    size_t align = STRIDE_CEIL(src) - ((uintptr_t)src);
 
     /* Number of single byte chunks after main no_iter is done: */
     size_t remain = (len % SIZEOF_SIZE_T) - align;
