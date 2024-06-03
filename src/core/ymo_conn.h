@@ -79,6 +79,7 @@ struct ymo_conn {
     bsat_timeout_t    idle_timeout;    /* Used to disconnect idle sessions */
     uuid_t            id;              /* Unique ID */
     int               fd;              /* The underlying file descriptor */
+    struct ev_loop*   loop;            /* EV loop that manages this connection. */
     struct ev_io      w_read;          /* Per-connection read watcher */
     struct ev_io      w_write;         /* Per-connection write watcher */
     ymo_conn_state_t  state;           /* Connection state */
@@ -108,7 +109,7 @@ typedef void (*ymo_ev_io_cb_t)(
  */
 ymo_conn_t* ymo_conn_create(
         ymo_server_t* server, ymo_proto_t* proto, int client_fd,
-        ymo_ev_io_cb_t read_cb, ymo_ev_io_cb_t write_cb);
+        struct ev_loop* loop, ymo_ev_io_cb_t read_cb, ymo_ev_io_cb_t write_cb);
 
 
 /** Start idle disconnect timer for a given conn.

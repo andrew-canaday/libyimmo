@@ -32,7 +32,6 @@
 #include <openssl/err.h>
 #endif /* YMO_ENABLE_TLS */
 
-/* TODO: Connection shouldn't need server internals.. */
 #include "yimmo.h"
 #include "ymo_log.h"
 #include "ymo_conn.h"
@@ -73,6 +72,12 @@ ymo_proto_t* ymo_conn_proto(const ymo_conn_t* conn)
 }
 
 
+struct ev_loop* ymo_conn_loop(const ymo_conn_t* conn)
+{
+    return conn->loop;
+}
+
+
 void ymo_conn_id(uuid_t dst, const ymo_conn_t* conn)
 {
     uuid_copy(dst, conn->id);
@@ -90,13 +95,14 @@ char* ymo_conn_id_str(const ymo_conn_t* conn)
 
 ymo_conn_t* ymo_conn_create(
         ymo_server_t* server, ymo_proto_t* proto, int client_fd,
-        ymo_ev_io_cb_t read_cb, ymo_ev_io_cb_t write_cb)
+        struct ev_loop* loop, ymo_ev_io_cb_t read_cb, ymo_ev_io_cb_t write_cb)
 {
     ymo_conn_t* conn = NULL;
     conn = YMO_NEW(ymo_conn_t);
     if( conn ) {
         conn->proto = proto;
         conn->fd = client_fd;
+        conn->loop = loop;
         ev_io_init(&conn->w_read, read_cb, client_fd, EV_READ);
         ev_io_init(&conn->w_write, write_cb, client_fd, EV_WRITE);
         conn->w_read.data = conn->w_write.data = (void*)conn;
@@ -185,7 +191,7 @@ void ymo_conn_rx_enable(ymo_conn_t* conn, int flag)
     CONN_TRACE("RX-->%i; State at invocation: %s (conn: %p, fd: %i)",
             flag, c_state_names[conn->state], (void*)conn, conn->fd);
 
-    io_toggle[flag & 0x01](conn->server->config.loop, &conn->w_read);
+    io_toggle[flag & 0x01](conn->loop, &conn->w_read);
 }
 
 
@@ -193,7 +199,7 @@ void ymo_conn_tx_enable(ymo_conn_t* conn, int flag)
 {
     CONN_TRACE("TX-->%i; State at invocation: %s (conn: %p, fd: %i)",
             flag, c_state_names[conn->state], (void*)conn, conn->fd);
-    io_toggle[flag & 0x01](conn->server->config.loop, &conn->w_write);
+    io_toggle[flag & 0x01](conn->loop, &conn->w_write);
 }
 
 
@@ -257,14 +263,14 @@ ymo_status_t ymo_conn_send_buckets(
 
 void ymo_conn_tx_now(ymo_conn_t* conn)
 {
-    ev_invoke(conn->server->config.loop, &conn->w_write, EV_WRITE);
+    ev_invoke(conn->loop, &conn->w_write, EV_WRITE);
     return;
 }
 
 
 void ymo_conn_rx_now(ymo_conn_t* conn)
 {
-    ev_invoke(conn->server->config.loop, &conn->w_read, EV_READ);
+    ev_invoke(conn->loop, &conn->w_read, EV_READ);
     return;
 }
 

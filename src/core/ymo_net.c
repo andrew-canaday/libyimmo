@@ -28,7 +28,6 @@
 #include <assert.h>
 
 #if HAVE_DECL_SENDFILE
-/* TODO: have most of these already: */
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/uio.h>

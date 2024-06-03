@@ -582,7 +582,8 @@ static void ymo_conn_accept(ymo_server_t* server, int client_fd)
 
     ymo_conn_t* conn = NULL;
     conn = ymo_conn_create(
-            server, server->proto, client_fd, ymo_read_cb, ymo_write_cb);
+            server, server->proto, client_fd,
+            server->config.loop, ymo_read_cb, ymo_write_cb);
 
     /* Bail on connection create failure: */
     if( !conn ) {

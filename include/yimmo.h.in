@@ -489,6 +489,13 @@ void ymo_server_free(ymo_server_t* server);
  */
 ymo_server_t* ymo_conn_server(const ymo_conn_t* conn);
 
+/** Given a connection, return a pointer to the managing ev_loop.
+ *
+ * :param conn: valid ymo_conn_t
+ * :returns: the struct ev_loop* used to manage the connection I/O
+ */
+struct ev_loop* ymo_conn_loop(const ymo_conn_t* conn);
+
 /** Given a connection, return a pointer to the current protocol
  *
  * :param conn: valid ymo_conn_t

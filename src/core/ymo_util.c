@@ -433,9 +433,9 @@ ymo_status_t ymo_check_utf8(
              *   ON an alignment boundary)
              * - we could do 128, 256, or 512 bits at a time with SIMD
              */
-            if( len >= 4 && ((quartet(c,p) & 0x80808080) == 0) ) {
-                len -= 4;
-                p += 4;
+            if( len >= 3 && ((quartet(c,p) & 0x80808080) == 0) ) {
+                len -= 3;
+                p += 3;
                 continue;
             }
 

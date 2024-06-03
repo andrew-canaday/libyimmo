@@ -141,8 +141,8 @@ static ymo_test_conn_t* test_conn_create(ymo_test_server_t* test_server)
     ymo_sock_nonblocking(test_conn->fd_read);
 
     test_conn->conn = ymo_conn_create(
-            test_server->server, test_server->proto,
-            test_conn->fd_send, ymo_read_cb, ymo_write_cb);
+            test_server->server, test_server->proto, test_conn->fd_send,
+            test_server->server->config.loop, ymo_read_cb, ymo_write_cb);
     if( !test_conn->conn ) {
         YMO_FREE(test_conn);
         return NULL;
