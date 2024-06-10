@@ -86,11 +86,17 @@ ymo_http_hdr_id_t ymo_http_hdr_hash(
 }
 
 
-#endif /* HAVE_FUNC_ATTRIBUTE_WEAK */
+__attribute__((YMO_FUNC_PURE_P weak))
+int ymo_http_hdr_cmp(
+        ymo_http_hdr_table_node_t* current,
+        const char*hdr,
+        ymo_http_hdr_id_t h_id)
+{
+    return current->h_id == h_id;
+}
 
-/* TODO: allow override for this too / optional strcmp, at least! */
-#define YMO_HTTP_HDR_CMP(current, hdr, h_id) \
-        current->h_id == h_id
+
+#endif /* HAVE_FUNC_ATTRIBUTE_WEAK */
 
 ymo_http_hdr_table_t* ymo_http_hdr_table_create()
 {
@@ -350,8 +356,11 @@ const char* ymo_http_hdr_table_get_id(
     ymo_http_hdr_id_t index = h_id % YMO_HDR_TABLE_BUCKET_SIZE;
     ymo_http_hdr_table_node_t* current = table->bucket[index];
     while( current ) {
-        /* TODO: compare strings to ensure it's not just hash collision. */
-        if( YMO_HTTP_HDR_CMP(current, hdr, h_id) ) {
+        /* TODO: compare strings to ensure it's not just hash collision.
+         *
+         * NOTE: this means we probably need to pass in the const char* anyway.
+         */
+        if( YMO_HTTP_HDR_CMP(current, NULL, h_id) ) {
             if( !current->buffer ) {
                 data = current->value;
             } else {

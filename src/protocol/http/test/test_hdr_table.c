@@ -429,7 +429,11 @@ static int test_collisions()
         }
     }
 
-    ymo_log_debug("Total collisions: %zu\n", no_collisions);
+    ymo_log_debug("Total collisions: %zu over the following %zu headers",
+            no_collisions, no_hdrs);
+    for( size_t i = 0; i < no_hdrs; i++ ) {
+        ymo_log_debug("  ✅ %s (%i)", LOTS_OF_HEADERS[i], hdr_ids[i]);
+    }
     ymo_assert(no_collisions == 0);
     YMO_TAP_PASS(__func__);
 }

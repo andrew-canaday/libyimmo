@@ -46,12 +46,21 @@
 #  define YMO_HDR_HASH_CH ymo_http_hdr_hash_ch
 #  define YMO_HTTP_HDR_HASH_INIT ymo_http_hdr_hash_init
 
-/** Default hash function used by header table.
- *
- */
+/** Default hash initialization function used by header table. */
 YMO_FUNC_PURE ymo_http_hdr_id_t ymo_http_hdr_hash_init(void);
+
+/** Default string hash function used by header table. */
 YMO_FUNC_PURE ymo_http_hdr_id_t ymo_http_hdr_hash(const char* str_in, size_t* len);
+
+/** Default char hash function used by header table (i.e. given a hash and a
+ * character, compute the updated hash). */
 YMO_FUNC_PURE ymo_http_hdr_id_t ymo_http_hdr_hash_ch(ymo_http_hdr_id_t h, char c);
+
+/** Default hash item comparison function used by header table. */
+YMO_FUNC_PURE_P int ymo_http_hdr_cmp(
+        ymo_http_hdr_table_node_t* current,
+        const char*hdr,
+        ymo_http_hdr_id_t h_id);
 
 #else
 
@@ -60,16 +69,29 @@ YMO_FUNC_PURE ymo_http_hdr_id_t ymo_http_hdr_hash_ch(ymo_http_hdr_id_t h, char c
  *--------------------------------------------------------------------------*/
 #  define YMO_HTTP_HDR_HASH_OVERRIDE_METHOD "preproc"
 #  ifndef YMO_HDR_HASH_FN
+/** Hash function definition used to override hash function in the absence
+ * of weak linking facilities.
+ */
 #    define YMO_HDR_HASH_FN ymo_http_hdr_hash_283_5
 #  endif /* YMO_HDR_HASH_FN */
 
 #  ifndef YMO_HDR_HASH_CH
+/** Char hash function used by header table (i.e. given a hash and a
+ * character, compute the updated hash) used in the absence of weak links. */
 #    define YMO_HDR_HASH_CH(h,c) ((h*283) + (c & 0xdf))
 #  endif /* YMO_HDR_HASH_CH */
 
 #  ifndef YMO_HTTP_HDR_HASH_INIT
+/** Default hash initialization function used by header table in the absence
+ * of weak links. */
 #    define YMO_HTTP_HDR_HASH_INIT() 5
 #  endif /* YMO_HTTP_HDR_HASH_INIT */
+
+/** Default hash item comparison function used by header table used when weak
+ * links are not available.*/
+#  ifndef YMO_HTTP_HDR_CMP
+#    define YMO_HTTP_HDR_CMP ymo_http_hdr_cmp
+#  endif /* YMO_HTTP_HDR_CMP */
 
 __attribute__((YMO_FUNC_PURE_P, YMO_FUNC_UNUSED_A))
 static inline ymo_http_hdr_id_t ymo_http_hdr_hash_283_5(
@@ -86,6 +108,16 @@ static inline ymo_http_hdr_id_t ymo_http_hdr_hash_283_5(
         *len = (size_t)(str_in - hdr_start)-1;
     }
     return h & YMO_HDR_TABLE_MASK;
+}
+
+
+__attribute__((YMO_FUNC_PURE_P, YMO_FUNC_UNUSED_A))
+static inline int ymo_http_hdr_cmp(
+        ymo_http_hdr_table_node_t* current,
+        const char*hdr,
+        ymo_http_hdr_id_t h_id)
+{
+    return current->h_id == h_id;
 }
 
 

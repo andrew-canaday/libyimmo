@@ -33,6 +33,13 @@
 #include <sys/uio.h>
 #endif /* HAVE_DECL_SENDFILE */
 
+#if YMO_ENABLE_TLS
+#include <openssl/bio.h>
+#include <openssl/ssl.h>
+#include <openssl/err.h>
+#endif /* YMO_ENABLE_TLS */
+
+
 #include "yimmo.h"
 #include "ymo_util.h"
 #include "ymo_log.h"
@@ -163,6 +170,59 @@ do_send:
     }
 }
 
+
+#if YMO_ENABLE_TLS
+/** Send buckets over the wire using TLS. */
+ymo_status_t ymo_net_send_buckets_tls(SSL* ssl, int fd, ymo_bucket_t** head)
+{
+    ymo_status_t status = YMO_OKAY;
+
+    if( !ssl ) {
+        return ymo_net_send_buckets(fd, head);
+    }
+
+    ymo_bucket_t* cur = *head;
+    size_t bytes_sent = 0;
+
+    do {
+        int send_rc = SSL_write_ex(ssl,
+                (const char*)(cur->data + cur->bytes_sent),
+                cur->len - cur->bytes_sent,
+                &bytes_sent);
+
+        if( send_rc > 0 ) {
+            cur->bytes_sent += bytes_sent;
+
+            if( cur->bytes_sent < cur->len ) {
+                status = EAGAIN;
+                break;
+            }
+            ymo_bucket_t* done = cur;
+            cur = cur->next;
+            ymo_bucket_free(done);
+        } else {
+            int ssl_err = SSL_get_error(ssl, send_rc);
+            if( YMO_SSL_WANT_RW(ssl_err) ) {
+                ymo_log_debug("SSL buffering on write to %i", fd);
+                status = EAGAIN;
+                break;
+            } else {
+                ymo_log_debug(
+                        "SSL write for connection on fd %i "
+                        "failed error code %i: (%s)",
+                        fd, ssl_err, ERR_reason_error_string(ssl_err));
+                status = ECONNABORTED;
+                break;
+            }
+        }
+    } while( cur );
+
+    *head = cur;
+    return status;
+}
+
+
+#endif /* YMO_ENABLE_TLS */
 
 #if YMO_BUCKET_FROM_FILE == YMO_BUCKET_SENDFILE
 static ymo_status_t ymo_net_bucket_sendfile(int fd, ymo_bucket_t** head_p)

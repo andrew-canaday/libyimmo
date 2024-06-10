@@ -31,7 +31,7 @@ jobs:
       # Dependencies:
       #------------------------------------
       - name: Checkout libbsat
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: 'andrew-canaday/libbsat'
           path: 'libbsat'
@@ -57,7 +57,7 @@ jobs:
       # - signing
       #--------------------------------------------------------------------
       - name: Checkout libyimmo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
           repository: ${{ github.repository }}

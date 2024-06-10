@@ -279,9 +279,7 @@ const ymo_queue_node_t* ymo_queue_tail(ymo_queue_t* queue)
 }
 
 
-/** Remove an item from the queue:
- * TODO: clean up branching
- **/
+/** Remove an item from the queue: */
 ymo_status_t ymo_queue_remove(ymo_queue_t* queue, ymo_queue_node_t** node_ptr)
 {
     ymo_queue_node_t* node = *node_ptr;

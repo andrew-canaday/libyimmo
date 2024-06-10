@@ -39,6 +39,11 @@
 #include <sys/ioctl.h>
 #endif /* HAVE_SYS_IOCTL_H */
 
+#if YMO_ENABLE_TLS
+#include <openssl/ssl.h>
+#endif /* YMO_ENABLE_TLS */
+
+
 #include "yimmo.h"
 #include "ymo_log.h"
 #include "ymo_bucket.h"
@@ -114,6 +119,13 @@
 /** Send a bucket chain over the socket given by ``fd``.
  */
 ymo_status_t ymo_net_send_buckets(int fd, ymo_bucket_t** head);
+
+#if YMO_ENABLE_TLS
+/** Send a bucket chain over the socket given by ``fd``.
+ */
+ymo_status_t ymo_net_send_buckets_tls(SSL* ssl, int fd, ymo_bucket_t** head);
+#endif /* YMO_ENABLE_TLS */
+
 
 /**---------------------------------------------------------------
  * Socket Trait Functions

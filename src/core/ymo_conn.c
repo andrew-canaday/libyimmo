@@ -26,12 +26,6 @@
 #include <string.h>
 #include <assert.h>
 
-#if YMO_ENABLE_TLS
-#include <openssl/bio.h>
-#include <openssl/ssl.h>
-#include <openssl/err.h>
-#endif /* YMO_ENABLE_TLS */
-
 #include "yimmo.h"
 #include "ymo_log.h"
 #include "ymo_conn.h"
@@ -210,53 +204,7 @@ ymo_status_t ymo_conn_send_buckets(
 #if !(YMO_ENABLE_TLS)
     return ymo_net_send_buckets(conn->fd, head_p);
 #else
-    /* HACK HACK HACK HACK
-     * TODO: add ymo_net_send_tls or similar to ymo_net.
-     */
-    ymo_status_t status = YMO_OKAY;
-
-    if( !conn->ssl ) {
-        return ymo_net_send_buckets(conn->fd, head_p);
-    }
-
-    ymo_bucket_t* cur = *head_p;
-    size_t bytes_sent = 0;
-
-    do {
-        int send_rc = SSL_write_ex(conn->ssl,
-                (const char*)(cur->data + cur->bytes_sent),
-                cur->len - cur->bytes_sent,
-                &bytes_sent);
-
-        if( send_rc > 0 ) {
-            cur->bytes_sent += bytes_sent;
-
-            if( cur->bytes_sent < cur->len ) {
-                status = EAGAIN;
-                break;
-            }
-            ymo_bucket_t* done = cur;
-            cur = cur->next;
-            ymo_bucket_free(done);
-        } else {
-            int ssl_err = SSL_get_error(conn->ssl, send_rc);
-            if( YMO_SSL_WANT_RW(ssl_err) ) {
-                ymo_log_debug("SSL buffering on write to %i", conn->fd);
-                status = EAGAIN;
-                break;
-            } else {
-                ymo_log_debug(
-                        "SSL write for connection on fd %i "
-                        "failed error code %i: (%s)",
-                        conn->fd, ssl_err, ERR_reason_error_string(ssl_err));
-                status = ECONNABORTED;
-                break;
-            }
-        }
-    } while( cur );
-
-    *head_p = cur;
-    return status;
+    return ymo_net_send_buckets_tls(conn->ssl, conn->fd, head_p);
 #endif /* YMO_ENABLE_TLS */
 }
 

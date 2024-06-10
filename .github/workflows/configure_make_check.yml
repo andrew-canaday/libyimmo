@@ -27,7 +27,7 @@ jobs:
       # Dependencies:
       #------------------------------------
       - name: Checkout libbsat
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: 'andrew-canaday/libbsat'
           path: 'libbsat'
@@ -50,7 +50,7 @@ jobs:
       # Checkout, configure, make, run tests, and make dist for libyimmo:
       #--------------------------------------------------------------------
       - name: Checkout libyimmo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: ${{ github.repository }}
           path: 'libyimmo'
