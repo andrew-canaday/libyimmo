@@ -57,7 +57,7 @@ YMO_FUNC_PURE ymo_http_hdr_id_t ymo_http_hdr_hash(const char* str_in, size_t* le
 YMO_FUNC_PURE ymo_http_hdr_id_t ymo_http_hdr_hash_ch(ymo_http_hdr_id_t h, char c);
 
 /** Default hash item comparison function used by header table. */
-YMO_FUNC_PURE_P int ymo_http_hdr_cmp(
+YMO_FUNC_PURE int ymo_http_hdr_cmp(
         ymo_http_hdr_table_node_t* current,
         const char*hdr,
         ymo_http_hdr_id_t h_id);
